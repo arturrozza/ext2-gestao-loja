@@ -45,6 +45,9 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   antes de subir o SDK.
 - **Drizzle 1.0 RC.** A API da 0.x é diferente: não existe mais a opção `schema` no `drizzle()` nem `casing` no config
   do kit. Ignore exemplos da 0.x.
+- **`apps/server/drizzle/` precisa existir** (por isso o `.gitkeep`). O migrator do Drizzle 1.0 falha com `ENOENT` se
+  a pasta não existir, mesmo sem nenhuma migration, e isso derrubava o pre-deploy no Railway. Localmente não aparece,
+  porque o `drizzle-kit migrate` dos testes cria a pasta: para validar a imagem, builde a partir de um clone limpo.
 - **Railway: Infrastructure as Code, não `railway.json`.** O Config as Code (`railway.json`/`railway.toml`) foi
   depreciado: services criados depois de 2026-08-28 ignoram o arquivo (o build caiu no Railpack) e os antigos param de
   lê-lo em 2026-12-01. Use só `.railway/railway.ts`. O `.railway/` tem `export default` liberado no Biome, porque o
