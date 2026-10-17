@@ -111,4 +111,53 @@ Existe um único `.env`, na raiz (copie do `.env.example`).
 | Postgres | `ext2` em localhost:5432 | `ext2_test` (mesmo container) |
 
 A imagem do server (`apps/server/Dockerfile`, com a raiz do repo como contexto de build) instala só as dependências de
-produção do server, roda as migrations e sobe a API.
+produção do server e sobe a API. As migrations não ficam no `CMD`: no compose, o `command` roda `src/db/migrate.ts`
+antes de subir; no Railway, elas são o pre-deploy.
+
+## CI/CD
+
+```
+push/PR ──▶ GitHub Actions (CI) ──✓──▶ Railway (só a main) ──▶ pre-deploy: migrations ──▶ deploy ──▶ healthcheck /health
+```
+
+### CI: `.github/workflows/ci.yml`
+
+Roda em todo push e em todo PR, com dois jobs:
+
+| Job | O que roda |
+| --- | --- |
+| `quality` | `biome ci .`, `bun run typecheck` (server + mobile), `expo-doctor` |
+| `test` | migrations + `bun run test` (unit + e2e) contra um Postgres 18 de serviço (`ext2_test`) |
+
+A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesma da imagem Docker.
+
+### CD do server: Railway
+
+- **Ambiente:** só `production`, que acompanha a branch `main`. PRs passam só pelo CI.
+- **Config as code:** `apps/server/railway.json` (build pelo Dockerfile, watch paths, pre-deploy, healthcheck,
+  restart policy). Para mudar o deploy, mude esse arquivo, não o dashboard.
+- **Wait for CI:** o Railway segura o deploy até o workflow passar. Se o CI falhar, o commit não vai para produção.
+- **Watch paths:** só mudanças em `apps/server/**`, `package.json`, `bun.lock` e `bunfig.toml` disparam deploy.
+- **Migrations:** o `preDeployCommand` roda `bun src/db/migrate.ts` num container com a imagem nova, antes de trocar a
+  versão. Se a migration falhar, o deploy é abortado e a versão anterior continua no ar.
+- **Banco:** Postgres gerenciado do Railway. O server recebe `DATABASE_URL=${{Postgres.DATABASE_URL}}` (rede privada).
+- **Variáveis:** o Railway injeta `PORT`. Fora isso, só o `DATABASE_URL`; variável nova do server também tem que ser
+  criada no service do Railway.
+
+#### Setup inicial no dashboard (uma vez)
+
+1. **New Project → Deploy from GitHub repo** → `gugeldev/ext.2`. Não preencha o Root Directory: o build usa a raiz do
+   repo como contexto.
+2. No service criado (renomeie para `server`), em **Settings → Config-as-code → Railway Config File**, coloque
+   `/apps/server/railway.json`.
+3. No canvas do projeto: **+ New → Database → PostgreSQL**.
+4. No service `server`, em **Variables**, crie `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`.
+5. Em **Settings → Source**: branch `main`, com **Wait for CI** ligado.
+6. Em **Settings → Networking → Generate Domain** (porta 3000, ou a que o Railway sugerir a partir do `PORT`).
+7. Faça um deploy e confira `https://<domínio>/health` → `{"status":"ok","database":"up"}`.
+
+### Mobile
+
+Ainda sem CD. O app não vai para as lojas: o plano é gerar um `.apk` (EAS Build, perfil com `buildType: apk`) para
+mandar ao cliente, possivelmente automatizado no push da `main`. O `EXPO_PUBLIC_API_URL` de um build desses precisa
+apontar para o domínio do Railway, não para a máquina local.

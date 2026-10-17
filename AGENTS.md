@@ -28,6 +28,7 @@ layout the docs recommend. If you have to deviate, document why in [`docs/stack.
 | Lint/format | Biome (root config) |
 | Git hooks | Husky: pre-commit runs `biome format`, commit-msg runs commitlint (Conventional Commits) |
 | Infra (local) | Docker Compose: postgres + server |
+| CI/CD | GitHub Actions (`.github/workflows/ci.yml`); server deployed to Railway from `main` (`apps/server/railway.json`) |
 
 ## Layout
 
@@ -81,6 +82,8 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   `products.controller.ts`, `home.screen.tsx`.
 - **Named exports only.** No `export default` unless a tool requires it (Expo Router routes in `apps/mobile/src/app`
   and `*.config.*` files). Enforced by Biome `noDefaultExport`.
+- **CI must stay green**: Railway only deploys `main` after the CI workflow passes. Deploy config lives in
+  `apps/server/railway.json`; a new server env var must also be created in the Railway service.
 - **Keep the docs current:** if you change the architecture, stack, a convention or the test strategy, update the
   matching file in `docs/` in the same change.
 
