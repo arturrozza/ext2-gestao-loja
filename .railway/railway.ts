@@ -45,9 +45,12 @@ export default defineRailway(() => {
 			restartPolicyType: "ON_FAILURE",
 			limitOverride: { containers: { cpu: 2, memoryBytes: 2000000000 } },
 		},
-		networking: { privateNetworkEndpoint: "ext2" },
-		// PORT is injected by Railway.
-		env: { DATABASE_URL: Postgres.env.DATABASE_URL },
+		networking: {
+			privateNetworkEndpoint: "ext2",
+			serviceDomains: { "ext2-production.up.railway.app": { port: 3000 } },
+		},
+		// PORT is pinned so it matches the domain's target port (Railway would inject 8080 otherwise).
+		env: { DATABASE_URL: Postgres.env.DATABASE_URL, PORT: "3000" },
 	});
 
 	return project("server", {

@@ -147,7 +147,8 @@ A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesm
 - **Healthcheck:** `/health`. A versão nova só entra no ar se responder; senão, a anterior continua.
 - **Banco:** Postgres gerenciado do Railway. O server recebe `DATABASE_URL: Postgres.env.DATABASE_URL` (rede privada).
 - **Variáveis:** são gerenciadas pelo arquivo (`variables: { managed: true }`): variável que não estiver lá é apagada no
-  apply. O Railway injeta `PORT`. Variável nova do server entra em `apps/server/src/env.ts`, no `.env.example` e no
+  apply. O `PORT` é fixado em `3000` (sem isso o Railway
+  injeta `8080` e o domínio, que aponta para a 3000, responde 502). Variável nova do server entra em `apps/server/src/env.ts`, no `.env.example` e no
   `env` do service em `.railway/railway.ts`.
 
 #### Alterando a infra
@@ -169,8 +170,8 @@ principalmente as linhas `Delete`.
 1. No dashboard: **New Project → Deploy from GitHub repo** → `gugeldev/ext.2`, e **+ New → Database → PostgreSQL**.
 2. Na raiz do repo: `railway link` e `railway config pull --variables=managed` para importar o projeto.
 3. Ajustar `.railway/railway.ts` (build, deploy, variáveis), `plan` e `apply`.
-4. Gerar o domínio em **Settings → Networking → Generate Domain** e rodar `railway config pull` de novo para ele
-   entrar no arquivo.
+4. Gerar o domínio (porta 3000) em **Settings → Networking → Generate Domain** e colocá-lo em
+   `networking.serviceDomains` no arquivo. Sem isso, o próximo apply apagaria o domínio.
 5. Conferir `https://<domínio>/health` → `{"status":"ok","database":"up"}`.
 
 ### Mobile
