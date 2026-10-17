@@ -23,8 +23,12 @@ export default defineRailway(() => {
 	});
 
 	const server = service("ext.2", {
+		// Deploys the `production` branch (releases are PRs main → production).
 		// checkSuites = "Wait for CI": deploys only after the GitHub Actions workflow passes.
-		source: github("gugeldev/ext.2", { branch: "main", checkSuites: true }),
+		source: github("gugeldev/ext.2", {
+			branch: "production",
+			checkSuites: true,
+		}),
 		build: {
 			buildEnvironment: "V3",
 			builder: "DOCKERFILE",

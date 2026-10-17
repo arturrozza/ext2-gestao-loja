@@ -3,9 +3,9 @@ name: CI
 # Railway's "Wait for CI" requires the workflow to run on push.
 on:
   push:
-    branches: [main]
+    branches: [main, production]
   pull_request:
-    branches: [main] # PRs targeting main
+    branches: [main, production] # PRs targeting these branches
 
 
 concurrency:

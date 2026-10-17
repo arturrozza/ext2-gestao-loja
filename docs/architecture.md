@@ -117,12 +117,12 @@ antes de subir; no Railway, elas são o pre-deploy.
 ## CI/CD
 
 ```
-push/PR ──▶ GitHub Actions (CI) ──✓──▶ Railway (só a main) ──▶ pre-deploy: migrations ──▶ deploy ──▶ healthcheck /health
+feat/x ──PR──▶ main (CI) ──PR de release──▶ production (CI) ──✓──▶ Railway ──▶ pre-deploy: migrations ──▶ deploy ──▶ healthcheck /health
 ```
 
 ### CI: `.github/workflows/ci.yml`
 
-Roda em push na `main` e em PRs abertos contra a `main`, com dois jobs:
+Roda em push e em PRs abertos contra a `main` ou a `production`, com dois jobs:
 
 | Job | O que roda |
 | --- | --- |
@@ -133,7 +133,9 @@ A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesm
 
 ### CD do server: Railway
 
-- **Ambiente:** só `production`, que acompanha a branch `main`. PRs passam só pelo CI.
+- **Ambiente:** só `production`, que acompanha a **branch `production`**. Push na `main` não faz deploy: só roda o CI.
+  O deploy acontece quando um PR de release (`main → production`) é mergeado. Ver "Branches e releases" em
+  [`conventions.md`](conventions.md).
 - **Infrastructure as Code:** toda a infra do projeto Railway (service `ext.2`, Postgres, volume, build, deploy,
   variáveis) fica em `.railway/railway.ts` (SDK `railway/iac`). **Não mude nada pelo dashboard**: mude o arquivo e
   aplique (ver abaixo). O formato antigo (`railway.json`, "Config as Code") foi depreciado pelo Railway e não vale
@@ -177,5 +179,5 @@ principalmente as linhas `Delete`.
 ### Mobile
 
 Ainda sem CD. O app não vai para as lojas: o plano é gerar um `.apk` (EAS Build, perfil com `buildType: apk`) para
-mandar ao cliente, possivelmente automatizado no push da `main`. O `EXPO_PUBLIC_API_URL` de um build desses precisa
+mandar ao cliente, possivelmente automatizado no push da `production`. O `EXPO_PUBLIC_API_URL` de um build desses precisa
 apontar para o domínio do Railway, não para a máquina local.

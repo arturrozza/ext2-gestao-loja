@@ -95,7 +95,15 @@ Ver [`testing.md`](testing.md).
 
 ## Git
 
-- Branch principal: `main`. Trabalhe em branches `feat/...`, `fix/...` e `chore/...`.
+- **Branches:**
+  - `main`: integração. Todo trabalho entra aqui por PR, a partir de branches `feat/...`, `fix/...` e `chore/...`.
+    Push na `main` **não** faz deploy.
+  - `production`: o que está no ar. Só recebe PRs de release vindos da `main`. Cada merge nela faz deploy no Railway
+    (depois do CI).
+- **Release:** abra um PR `main → production` (título `chore(release): <resumo>`, por exemplo
+  `gh pr create --base production --head main`) e mergeie com **merge commit**, nunca squash ou rebase. Com squash, a
+  `production` ganha commits que não existem na `main`, e as releases seguintes passam a dar conflito.
+- **Hotfix:** corrija na `main` e faça uma release. Não commite direto na `production`.
 - **Sempre Conventional Commits**, com o escopo sendo o módulo/feature afetado (em kebab-case). O commitlint
   (`@commitlint/config-conventional`) valida no hook `commit-msg` e recusa mensagens fora do padrão.
   - `feat(products): add product listing`
