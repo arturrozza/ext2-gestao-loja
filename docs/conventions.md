@@ -104,6 +104,7 @@ Ver [`testing.md`](testing.md).
   - `chore(deps): bump biome`
   - `docs(sales): add sales spec`
   - Tipos: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `chore`, `build`, `ci`, `revert`.
+- Commits e PRs **não mencionam Claude/IA**: nada de `Co-Authored-By` de agente nem linhas "Generated with".
 - O pre-commit (Husky) roda `bun run format` (Biome format no repo inteiro) e re-adiciona os arquivos que já estavam
   staged (`git update-index --again`). Ele só formata, não faz lint: rode `bun run check` antes de abrir PR. Arquivos
   fora do stage também podem ser reformatados.

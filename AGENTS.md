@@ -76,6 +76,7 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   in pt-BR.
 - **Conventional Commits, always**, scoped by module/feature: `feat(products): add product listing`,
   `fix(sales): round totals`, `chore(deps): bump biome`. Enforced by commitlint on `commit-msg`.
+  **Never mention Claude/AI in commits or PRs**: no `Co-Authored-By` trailers, no "Generated with" lines.
 - **File names are kebab-case** (enforced by Biome `useFilenamingConvention`). Role suffixes use a dot:
   `products.controller.ts`, `home.screen.tsx`.
 - **Named exports only.** No `export default` unless a tool requires it (Expo Router routes in `apps/mobile/src/app`
