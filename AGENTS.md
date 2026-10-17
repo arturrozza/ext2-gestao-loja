@@ -1,7 +1,8 @@
 # AGENTS.md
 
 Store management system: a mobile app (Expo) and an API (Bun + Elysia) in a Bun monorepo.
-**Online-first** (no offline sync) and **single-tenant** (a single store).
+**Online-first** (no offline sync) and **store-scoped**: every business table has a `store_id` taken from the session,
+but the MVP runs a single store with a single user (see `docs/architecture.md`).
 
 This file is the source of truth for agents (Claude Code, Codex, Cursor...). `CLAUDE.md` only imports it.
 Each app has its own `AGENTS.md` with app-specific rules:
@@ -71,8 +72,9 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   over, split it; don't use `biome-ignore` to dodge the rule.
 - **Definition of done:** `bun run check`, `bun run typecheck` and `bun run test` pass.
 - **Validation:** Elysia `t` for API HTTP contracts; Zod for env, domain rules `t` doesn't cover, and app forms.
-- **Features:** read the spec in `docs/features/` before implementing. If there is no spec, ask; don't invent
-  requirements.
+- **Features:** read the spec in `docs/features/` (plus `docs/domain.md`) before implementing. If there is no spec, or
+  the point is listed under "Dúvidas em aberto" / a pending decision in `docs/product.md`, ask; don't invent
+  requirements. Keep the original RF/RN/UC IDs in specs and tests.
 - **Language:** code, commits and `AGENTS.md` in English. Docs (`docs/`, `README.md`) and user-facing app text
   in pt-BR.
 - **Conventional Commits, always**, scoped by module/feature: `feat(products): add product listing`,
@@ -96,9 +98,12 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 
 ## Docs
 
+- [`docs/product.md`](docs/product.md) — product vision, modules, pending cross-cutting decisions
+- [`docs/domain.md`](docs/domain.md) — glossary (pt-BR → code names), entities, calculations (average cost, net profit)
+- [`docs/non-functional-requirements.md`](docs/non-functional-requirements.md) — RNF001–RNF020 and how the stack meets them
 - [`docs/getting-started.md`](docs/getting-started.md) — onboarding: fork, tool install, running everything locally
 - [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, env, Docker
 - [`docs/stack.md`](docs/stack.md) — tools, versions, official docs links, known constraints
 - [`docs/conventions.md`](docs/conventions.md) — naming, code style, validation, data, git
 - [`docs/testing.md`](docs/testing.md) — test strategy
-- [`docs/features/`](docs/features/) — feature specs ([template](docs/features/_template.md))
+- [`docs/features/`](docs/features/README.md) — one spec per module with RF/RN/UC IDs from the planning docs ([template](docs/features/_template.md))

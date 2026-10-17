@@ -7,7 +7,10 @@ Versões e ferramentas: [`stack.md`](stack.md).
 
 - **Online-first:** o app depende da API para ler e gravar. O TanStack Query cuida de cache, retry e refetch quando a
   rede volta (`onlineManager`) ou o app volta pro foreground (`focusManager`). Não existe banco local nem fila de sync.
-- **Single-tenant:** uma loja só. Sem colunas de tenant/organização no schema.
+- **Multi-loja no schema, uma loja na prática:** toda tabela de negócio tem `store_id`, e o server descobre a loja
+  pela sessão do usuário (nunca por parâmetro vindo do app) e filtra todas as consultas e escritas por ela. O MVP tem
+  uma loja e um usuário, criados por um comando de setup; não existe cadastro nem troca de loja no app. Para várias
+  lojas por usuário no futuro, basta trocar o vínculo usuário → loja por uma tabela de associação.
 
 ## Visão geral
 
@@ -31,11 +34,14 @@ apps/
   mobile/               @ext2/mobile — app Expo
 packages/               pacotes compartilhados (nenhum ainda)
 docs/
+  product.md            visão de produto, módulos e decisões pendentes
+  domain.md             glossário, entidades e cálculos
+  non-functional-requirements.md  requisitos não funcionais
   architecture.md       este arquivo
   stack.md              ferramentas, versões e restrições conhecidas
   conventions.md        código, validação, dados e git
   testing.md            estratégia de testes
-  features/             uma spec por feature (ver _template.md)
+  features/             uma spec por módulo (índice em features/README.md)
 ```
 
 ## Tipos ponta a ponta (Eden Treaty)

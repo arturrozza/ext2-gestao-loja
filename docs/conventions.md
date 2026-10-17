@@ -82,6 +82,10 @@ apps/mobile/src/
 ## Dados
 
 - Toda tabela usa `snakeCase.table(...)` e inclui `...timestamps` (`apps/server/src/db/schema/helpers.ts`).
+- **Escopo por loja:** toda tabela de negócio (produtos, compras, lotes, movimentações, vendas, revendedoras...) tem
+  `storeId` (FK para `stores`, obrigatório, com índice). O `storeId` vem da sessão, nunca do body/query/params, e todo
+  service recebe e filtra por ele. Unicidades de negócio são por loja (ex.: código de barras único por `storeId`).
+  Teste e2e de cada módulo cobre que uma loja não lê nem altera dados de outra (RNF004).
 - Dinheiro: `numeric(12, 2)` no banco e string decimal no app. Nunca float.
 - Datas: `timestamptz` (`timestamp({ withTimezone: true })`), gravadas em UTC. A conversão para o horário local
   (America/Sao_Paulo) acontece no app.
