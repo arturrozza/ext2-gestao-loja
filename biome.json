@@ -64,7 +64,8 @@
 				"apps/mobile/src/app/**",
 				"**/*.config.js",
 				"**/*.config.ts",
-				"**/*.config.mjs"
+				"**/*.config.mjs",
+				".railway/**"
 			],
 			"linter": {
 				"rules": {

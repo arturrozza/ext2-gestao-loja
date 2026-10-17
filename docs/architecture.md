@@ -134,27 +134,44 @@ A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesm
 ### CD do server: Railway
 
 - **Ambiente:** só `production`, que acompanha a branch `main`. PRs passam só pelo CI.
-- **Config as code:** `apps/server/railway.json` (build pelo Dockerfile, watch paths, pre-deploy, healthcheck,
-  restart policy). Para mudar o deploy, mude esse arquivo, não o dashboard.
-- **Wait for CI:** o Railway segura o deploy até o workflow passar. Se o CI falhar, o commit não vai para produção.
+- **Infrastructure as Code:** toda a infra do projeto Railway (service `ext.2`, Postgres, volume, build, deploy,
+  variáveis) fica em `.railway/railway.ts` (SDK `railway/iac`). **Não mude nada pelo dashboard**: mude o arquivo e
+  aplique (ver abaixo). O formato antigo (`railway.json`, "Config as Code") foi depreciado pelo Railway e não vale
+  para services novos.
+- **Wait for CI** (`checkSuites: true`): o Railway segura o deploy até o workflow passar. Se o CI falhar, o commit não
+  vai para produção.
+- **Build:** pelo `apps/server/Dockerfile`, com a raiz do repo como contexto (sem root directory).
 - **Watch paths:** só mudanças em `apps/server/**`, `package.json`, `bun.lock` e `bunfig.toml` disparam deploy.
 - **Migrations:** o `preDeployCommand` roda `bun src/db/migrate.ts` num container com a imagem nova, antes de trocar a
   versão. Se a migration falhar, o deploy é abortado e a versão anterior continua no ar.
-- **Banco:** Postgres gerenciado do Railway. O server recebe `DATABASE_URL=${{Postgres.DATABASE_URL}}` (rede privada).
-- **Variáveis:** o Railway injeta `PORT`. Fora isso, só o `DATABASE_URL`; variável nova do server também tem que ser
-  criada no service do Railway.
+- **Healthcheck:** `/health`. A versão nova só entra no ar se responder; senão, a anterior continua.
+- **Banco:** Postgres gerenciado do Railway. O server recebe `DATABASE_URL: Postgres.env.DATABASE_URL` (rede privada).
+- **Variáveis:** são gerenciadas pelo arquivo (`variables: { managed: true }`): variável que não estiver lá é apagada no
+  apply. O Railway injeta `PORT`. Variável nova do server entra em `apps/server/src/env.ts`, no `.env.example` e no
+  `env` do service em `.railway/railway.ts`.
 
-#### Setup inicial no dashboard (uma vez)
+#### Alterando a infra
 
-1. **New Project → Deploy from GitHub repo** → `gugeldev/ext.2`. Não preencha o Root Directory: o build usa a raiz do
-   repo como contexto.
-2. No service criado (renomeie para `server`), em **Settings → Config-as-code → Railway Config File**, coloque
-   `/apps/server/railway.json`.
-3. No canvas do projeto: **+ New → Database → PostgreSQL**.
-4. No service `server`, em **Variables**, crie `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`.
-5. Em **Settings → Source**: branch `main`, com **Wait for CI** ligado.
-6. Em **Settings → Networking → Generate Domain** (porta 3000, ou a que o Railway sugerir a partir do `PORT`).
-7. Faça um deploy e confira `https://<domínio>/health` → `{"status":"ok","database":"up"}`.
+Requer a CLI do Railway logada e linkada ao projeto (`railway login`, `railway link` na raiz do repo).
+
+```bash
+railway config pull --variables=managed   # só se algo mudou pelo dashboard: traz o estado atual para o arquivo
+railway config plan                       # mostra o que vai mudar (não aplica nada)
+railway config apply                      # aplica, pedindo confirmação
+```
+
+Fluxo: edite `.railway/railway.ts` → `plan` → commit → `apply` → push. Aplicando antes do push, o deploy disparado pelo
+push já sai com a config nova. Atenção: **recurso omitido no arquivo é deletado** no apply; leia o plan antes,
+principalmente as linhas `Delete`.
+
+#### Setup inicial (já feito)
+
+1. No dashboard: **New Project → Deploy from GitHub repo** → `gugeldev/ext.2`, e **+ New → Database → PostgreSQL**.
+2. Na raiz do repo: `railway link` e `railway config pull --variables=managed` para importar o projeto.
+3. Ajustar `.railway/railway.ts` (build, deploy, variáveis), `plan` e `apply`.
+4. Gerar o domínio em **Settings → Networking → Generate Domain** e rodar `railway config pull` de novo para ele
+   entrar no arquivo.
+5. Conferir `https://<domínio>/health` → `{"status":"ok","database":"up"}`.
 
 ### Mobile
 

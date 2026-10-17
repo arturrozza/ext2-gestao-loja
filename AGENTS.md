@@ -28,7 +28,7 @@ layout the docs recommend. If you have to deviate, document why in [`docs/stack.
 | Lint/format | Biome (root config) |
 | Git hooks | Husky: pre-commit runs `biome format`, commit-msg runs commitlint (Conventional Commits) |
 | Infra (local) | Docker Compose: postgres + server |
-| CI/CD | GitHub Actions (`.github/workflows/ci.yml`); server deployed to Railway from `main` (`apps/server/railway.json`) |
+| CI/CD | GitHub Actions (`.github/workflows/ci.yml`); server deployed to Railway from `main` (IaC in `.railway/railway.ts`) |
 
 ## Layout
 
@@ -82,8 +82,11 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   `products.controller.ts`, `home.screen.tsx`.
 - **Named exports only.** No `export default` unless a tool requires it (Expo Router routes in `apps/mobile/src/app`
   and `*.config.*` files). Enforced by Biome `noDefaultExport`.
-- **CI must stay green**: Railway only deploys `main` after the CI workflow passes. Deploy config lives in
-  `apps/server/railway.json`; a new server env var must also be created in the Railway service.
+- **CI must stay green**: Railway only deploys `main` after the CI workflow passes.
+- **Railway infra is code** (`.railway/railway.ts`, Infrastructure as Code). Never change it through the dashboard.
+  Edit the file, run `railway config plan`, show the plan to the user and only `railway config apply` with their
+  OK: anything omitted from the file (resources, variables) is deleted on apply. A new server env var also goes in
+  the service `env` there. See `docs/architecture.md` (CI/CD).
 - **Keep the docs current:** if you change the architecture, stack, a convention or the test strategy, update the
   matching file in `docs/` in the same change.
 

@@ -24,7 +24,7 @@ juntas.
 | commitlint | ^21 (config-conventional) | raiz | https://commitlint.js.org |
 | Docker Compose | — | infra local (postgres + server) | https://docs.docker.com/compose/ |
 | GitHub Actions | `setup-bun@v2`, `checkout@v7`, `cache@v6` | CI (`.github/workflows/ci.yml`) | https://docs.github.com/actions |
-| Railway | — | deploy do server + Postgres (production) | https://docs.railway.com |
+| Railway | CLI 5.70, SDK `railway` ^3.16 (IaC) | deploy do server + Postgres (production), infra em `.railway/railway.ts` | https://docs.railway.com/infrastructure-as-code |
 
 ## Catalog (versões compartilhadas)
 
@@ -45,6 +45,12 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   antes de subir o SDK.
 - **Drizzle 1.0 RC.** A API da 0.x é diferente: não existe mais a opção `schema` no `drizzle()` nem `casing` no config
   do kit. Ignore exemplos da 0.x.
+- **Railway: Infrastructure as Code, não `railway.json`.** O Config as Code (`railway.json`/`railway.toml`) foi
+  depreciado: services criados depois de 2026-08-28 ignoram o arquivo (o build caiu no Railpack) e os antigos param de
+  lê-lo em 2026-12-01. Use só `.railway/railway.ts`. O `.railway/` tem `export default` liberado no Biome, porque o
+  SDK exige.
+- **Railway CLI via Bun:** `bun add -g @railway/cli` precisa de `bun pm -g trust @railway/cli`, porque o postinstall
+  (que baixa o binário) é bloqueado por padrão.
 - **Biome:** `@tailwind` está liberado no CSS. O NativeWind 4 usa Tailwind 3, e o parser de Tailwind do Biome só
   conhece as diretivas da v4. O ícone gerado pelo Expo (`apps/mobile/assets/expo.icon`) fica fora do lint.
 
