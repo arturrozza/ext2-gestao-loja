@@ -10,6 +10,8 @@ Sistema de gerenciamento de loja: app mobile (Expo) e API (Bun + Elysia), num mo
 
 ## Começando
 
+Passo a passo completo: [`docs/getting-started.md`](docs/getting-started.md).
+
 ```bash
 bun install
 cp .env.example .env
@@ -21,6 +23,7 @@ Para desenvolver o server com hot reload, use `bun run db:up` + `bun run dev:ser
 
 ## Documentação
 
+- [`docs/getting-started.md`](docs/getting-started.md) — como rodar o projeto
 - [`docs/architecture.md`](docs/architecture.md) — como as partes se conectam, env, Docker
 - [`docs/stack.md`](docs/stack.md) — ferramentas, versões e restrições conhecidas
 - [`docs/conventions.md`](docs/conventions.md) — nomes, código, validação, dados, git
