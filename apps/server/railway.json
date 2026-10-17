@@ -1,0 +1,19 @@
+{
+	"$schema": "https://railway.com/railway.schema.json",
+	"build": {
+		"builder": "DOCKERFILE",
+		"dockerfilePath": "apps/server/Dockerfile",
+		"watchPatterns": [
+			"/apps/server/**",
+			"/package.json",
+			"/bun.lock",
+			"/bunfig.toml"
+		]
+	},
+	"deploy": {
+		"preDeployCommand": ["bun src/db/migrate.ts"],
+		"healthcheckPath": "/health",
+		"healthcheckTimeout": 60,
+		"restartPolicyType": "ON_FAILURE"
+	}
+}

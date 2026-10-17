@@ -1,6 +1,6 @@
 # Build context is the repo root (see docker-compose.yml).
 # Based on https://bun.sh/guides/ecosystem/docker, adapted for the Bun workspace.
-FROM oven/bun:1.4 AS base
+FROM oven/bun:1.4.2 AS base
 WORKDIR /usr/src/app
 
 # Install only the server's production deps. Every workspace manifest is copied
@@ -19,4 +19,4 @@ WORKDIR /usr/src/app/apps/server
 
 USER bun
 EXPOSE 3000/tcp
-CMD ["sh", "-c", "bun src/db/migrate.ts && bun src/index.ts"]
+CMD ["bun", "src/index.ts"]

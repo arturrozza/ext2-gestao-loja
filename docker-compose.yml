@@ -21,6 +21,8 @@ services:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
+    # Railway runs migrations as a pre-deploy step; locally we do it before starting.
+    command: ["sh", "-c", "bun src/db/migrate.ts && bun src/index.ts"]
     restart: unless-stopped
     environment:
       PORT: ${PORT}
