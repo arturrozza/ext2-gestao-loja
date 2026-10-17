@@ -122,7 +122,7 @@ push/PR ──▶ GitHub Actions (CI) ──✓──▶ Railway (só a main) �
 
 ### CI: `.github/workflows/ci.yml`
 
-Roda em todo push e em todo PR, com dois jobs:
+Roda em push na `main` e em PRs abertos contra a `main`, com dois jobs:
 
 | Job | O que roda |
 | --- | --- |
