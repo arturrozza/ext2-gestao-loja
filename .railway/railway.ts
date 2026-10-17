@@ -43,7 +43,8 @@ export default defineRailway(() => {
 			healthcheckPath: "/health",
 			healthcheckTimeout: 60,
 			restartPolicyType: "ON_FAILURE",
-			limitOverride: { containers: { cpu: 2, memoryBytes: 2000000000 } },
+			// Single-client API: small caps keep the bill low (Bun idles at a few tens of MB).
+			limitOverride: { containers: { cpu: 0.5, memoryBytes: 512000000 } },
 		},
 		networking: {
 			privateNetworkEndpoint: "ext2",
