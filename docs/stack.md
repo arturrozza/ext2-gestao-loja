@@ -23,7 +23,7 @@ juntas.
 | Husky | ^9 | raiz (pre-commit, commit-msg) | https://typicode.github.io/husky |
 | commitlint | ^21 (config-conventional) | raiz | https://commitlint.js.org |
 | Docker Compose | — | infra local (postgres + server) | https://docs.docker.com/compose/ |
-| GitHub Actions | `setup-bun@v2`, `checkout@v6` | CI (`.github/workflows/ci.yml`) | https://docs.github.com/actions |
+| GitHub Actions | `setup-bun@v2`, `checkout@v7`, `cache@v6` | CI (`.github/workflows/ci.yml`) | https://docs.github.com/actions |
 | Railway | — | deploy do server + Postgres (production) | https://docs.railway.com |
 
 ## Catalog (versões compartilhadas)
