@@ -24,7 +24,7 @@ juntas.
 | commitlint | ^21 (config-conventional) | raiz | https://commitlint.js.org |
 | Docker Compose | — | infra local (postgres + server) | https://docs.docker.com/compose/ |
 | GitHub Actions | `setup-bun@v2`, `checkout@v7`, `cache@v6` | CI (`.github/workflows/ci.yml`) | https://docs.github.com/actions |
-| Railway | CLI 5.70, SDK `railway` ^3.16 (IaC) | deploy do server + Postgres (production), infra em `.railway/railway.ts` | https://docs.railway.com/infrastructure-as-code |
+| Railway | CLI 5.70, SDK `railway` ^3.16 (IaC), action `railwayapp/config` (fixada num commit da `main`) | deploy do server + Postgres (production), infra em `.railway/railway.ts` | https://docs.railway.com/infrastructure-as-code |
 
 ## Catalog (versões compartilhadas)
 
@@ -52,6 +52,9 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   depreciado: services criados depois de 2026-08-28 ignoram o arquivo (o build caiu no Railpack) e os antigos param de
   lê-lo em 2026-12-01. Use só `.railway/railway.ts`. O `.railway/` tem `export default` liberado no Biome, porque o
   SDK exige.
+- **Action `railwayapp/config` fixada por SHA.** A release `v1` (1.2.0) só instala dependências com npm, que não
+  entende o `catalog:` do Bun. O suporte a Bun (`package-manager: bun`) está só na `main` dela (commit `f1f0c71`).
+  Volte para uma tag quando sair uma release com ele.
 - **Railway CLI via Bun:** `bun add -g @railway/cli` precisa de `bun pm -g trust @railway/cli`, porque o postinstall
   (que baixa o binário) é bloqueado por padrão.
 - **Biome:** `@tailwind` está liberado no CSS. O NativeWind 4 usa Tailwind 3, e o parser de Tailwind do Biome só

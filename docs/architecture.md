@@ -155,17 +155,28 @@ A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesm
 
 #### Alterando a infra
 
-Requer a CLI do Railway logada e linkada ao projeto (`railway login`, `railway link` na raiz do repo).
+O `apply` é feito pelo GitHub Actions (`.github/workflows/railway-config.yml`, action oficial `railwayapp/config`),
+não pelo terminal:
+
+1. Edite `.railway/railway.ts` numa branch e abra um PR para a `main`. O workflow roda o **plan** e comenta no PR o
+   que vai mudar no Railway (mudanças destrutivas aparecem marcadas). Revise principalmente as linhas `Delete`:
+   **recurso ou variável omitido no arquivo é deletado**.
+2. Mergeie na `main`. Nada é aplicado ainda.
+3. Na release (PR `main → production`), o workflow roda o plan de novo e, **no merge, aplica exatamente aquele plan**.
+   A infra muda junto com o código.
+
+O apply falha de propósito se o Railway mudou entre o plan e o merge (por exemplo, alguém mexeu no dashboard): reabra
+ou atualize o PR para gerar um plan novo. O token é o secret `RAILWAY_TOKEN` (project token do ambiente
+`production`).
+
+Localmente (CLI logada e linkada: `railway login`, `railway link` na raiz) dá para conferir antes de abrir o PR:
 
 ```bash
-railway config pull --variables=managed   # só se algo mudou pelo dashboard: traz o estado atual para o arquivo
 railway config plan                       # mostra o que vai mudar (não aplica nada)
-railway config apply                      # aplica, pedindo confirmação
+railway config pull --variables=managed   # só se algo mudou pelo dashboard: traz o estado atual para o arquivo
 ```
 
-Fluxo: edite `.railway/railway.ts` → `plan` → commit → `apply` → push. Aplicando antes do push, o deploy disparado pelo
-push já sai com a config nova. Atenção: **recurso omitido no arquivo é deletado** no apply; leia o plan antes,
-principalmente as linhas `Delete`.
+Não rode `railway config apply` na mão, a não ser numa emergência: o normal é aplicar pelo merge da release.
 
 #### Setup inicial (já feito)
 

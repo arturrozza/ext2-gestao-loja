@@ -7,7 +7,8 @@ import {
 	volume,
 } from "railway/iac";
 
-// Infrastructure as Code for Railway (production). Apply with `railway config plan` / `railway config apply`.
+// Infrastructure as Code for Railway (production). Change it through a PR: the "Railway config" workflow comments the
+// plan on the PR and applies it when the release PR (main → production) is merged.
 // Anything omitted here is deleted on apply — run `railway config pull` before editing if the dashboard changed.
 export default defineRailway(() => {
 	const Postgres = postgres("Postgres", { region: "us-east4-eqdc4a" });
