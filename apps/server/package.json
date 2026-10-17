@@ -1,0 +1,35 @@
+{
+	"name": "@ext2/server",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/app.ts"
+	},
+	"scripts": {
+		"dev": "bun --env-file=../../.env --watch src/index.ts",
+		"build": "bun build src/index.ts --target bun --outdir ./dist",
+		"start": "NODE_ENV=production bun dist/index.js",
+		"typecheck": "tsc --noEmit",
+		"test": "bun --env-file=../../.env --env-file=../../.env.test test",
+		"test:unit": "bun --env-file=../../.env --env-file=../../.env.test test src",
+		"test:e2e": "bun run db:migrate:test && bun --env-file=../../.env --env-file=../../.env.test test test/e2e",
+		"db:generate": "bun --env-file=../../.env --bun drizzle-kit generate",
+		"db:migrate": "bun --env-file=../../.env --bun drizzle-kit migrate",
+		"db:migrate:test": "bun --env-file=../../.env --env-file=../../.env.test --bun drizzle-kit migrate",
+		"db:studio": "bun --env-file=../../.env --bun drizzle-kit studio"
+	},
+	"dependencies": {
+		"@sinclair/typebox": "catalog:",
+		"drizzle-orm": "^1.0.0-rc.4",
+		"elysia": "catalog:",
+		"file-type": "catalog:",
+		"openapi-types": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@elysia/eden": "catalog:",
+		"@types/bun": "catalog:",
+		"drizzle-kit": "^1.0.0-rc.4",
+		"typescript": "catalog:"
+	}
+}

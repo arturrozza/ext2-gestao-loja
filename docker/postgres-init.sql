@@ -1,0 +1,1 @@
+CREATE DATABASE ext2_test;

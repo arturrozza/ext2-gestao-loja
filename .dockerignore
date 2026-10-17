@@ -1,0 +1,11 @@
+**/node_modules
+**/.env
+**/.env.*
+.git
+.husky
+.claude
+docs
+apps/mobile/*
+!apps/mobile/package.json
+apps/server/test
+apps/server/dist
