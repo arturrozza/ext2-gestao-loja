@@ -86,6 +86,7 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 
 ## Docs
 
+- [`docs/getting-started.md`](docs/getting-started.md) — onboarding: fork, tool install, running everything locally
 - [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, env, Docker
 - [`docs/stack.md`](docs/stack.md) — tools, versions, official docs links, known constraints
 - [`docs/conventions.md`](docs/conventions.md) — naming, code style, validation, data, git
