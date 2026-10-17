@@ -84,7 +84,8 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   and `*.config.*` files). Enforced by Biome `noDefaultExport`.
 - **Branches:** work lands on `main` via PRs (no deploy). Releases are PRs `main → production`, merged with a merge
   commit (never squash); Railway deploys `production` only after CI passes. Never push or commit to `production`
-  directly. See `docs/conventions.md` (Git).
+  directly. Both branches are protected by rulesets (PR only, CI checks required): always work on a branch and open a
+  PR with `gh pr create`; ask the user before merging. See `docs/conventions.md` (Git).
 - **Railway infra is code** (`.railway/railway.ts`, Infrastructure as Code). Never change it through the dashboard.
   Edit the file, run `railway config plan`, show the plan to the user and only `railway config apply` with their
   OK: anything omitted from the file (resources, variables) is deleted on apply. A new server env var also goes in

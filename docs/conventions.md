@@ -104,6 +104,11 @@ Ver [`testing.md`](testing.md).
   `gh pr create --base production --head main`) e mergeie com **merge commit**, nunca squash ou rebase. Com squash, a
   `production` ganha commits que não existem na `main`, e as releases seguintes passam a dar conflito.
 - **Hotfix:** corrija na `main` e faça uma release. Não commite direto na `production`.
+- **Proteção (rulesets do GitHub `main-protection` e `production-protection`):** as duas branches só aceitam PR, com os
+  checks `Lint, typecheck & doctor` e `Server tests` verdes, e bloqueiam force push e exclusão. A `main` aceita merge
+  commit ou squash; a `production`, só merge commit. Não há review obrigatório (projeto solo). Admins podem passar por
+  cima das regras só dentro de um PR (ex.: mergear com o CI quebrado numa emergência); push direto continua bloqueado.
+  Se o nome de um job do CI mudar, atualize os checks obrigatórios dos rulesets.
 - **Sempre Conventional Commits**, com o escopo sendo o módulo/feature afetado (em kebab-case). O commitlint
   (`@commitlint/config-conventional`) valida no hook `commit-msg` e recusa mensagens fora do padrão.
   - `feat(products): add product listing`
