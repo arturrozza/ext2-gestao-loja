@@ -4,14 +4,33 @@
 
 ## Server (`bun test`)
 
-| Tipo | Onde | Banco | Comando (em `apps/server`) |
+O sistema mexe com dinheiro e estoque: **toda mudança no server vem com testes em todas as camadas que ela toca**, de
+preferência escritos antes do código (TDD). Código sem teste não entra.
+
+| Camada | Onde | Banco | Comando (em `apps/server`) |
 | --- | --- | --- | --- |
 | Unit | `src/**/*.test.ts`, ao lado do código (ex.: `products.service.test.ts`) | nenhum | `bun run test:unit` |
-| E2E | `test/e2e/<module>.e2e.test.ts` (ex.: `products.e2e.test.ts`) | `ext2_test` | `bun run test:e2e` (migra o banco de teste antes) |
+| Integração | `test/integration/<module>.integration.test.ts` | `ext2_test` | `bun run test:integration` |
+| E2E | `test/e2e/<module>.e2e.test.ts` | `ext2_test` | `bun run test:e2e` |
 
-- Os scripts de teste carregam `.env` e, por cima, `.env.test` (na raiz), que aponta o `DATABASE_URL` para o
-  `ext2_test`. O banco de teste é criado pelo `docker/postgres-init.sql` no mesmo container do Postgres.
-- Os e2e usam o `app` em memória (sem abrir porta), com um client Eden tipado:
+- `bun run test` roda tudo, e `bun run test:coverage` roda tudo com cobertura (é o que o CI roda). Os scripts que
+  usam banco migram o `ext2_test` antes. Localmente, precisa do Postgres no ar (`bun run db:up` na raiz).
+- Os scripts carregam `.env` e, por cima, `.env.test` (na raiz), que aponta o `DATABASE_URL` para o `ext2_test`. O
+  banco de teste é criado pelo `docker/postgres-init.sql` no mesmo container do Postgres.
+- A config do `bun test` (cobertura) fica no `bunfig.toml` da raiz. Os scripts passam `--config=../../bunfig.toml`,
+  porque o Bun só lê o `bunfig.toml` do diretório onde roda.
+
+### O que cada camada cobre
+
+- **Unit:** regras puras, sem banco. Cálculos de dinheiro (custo médio, lucro, descontos, percentuais) e
+  arredondamento com casos de borda, validações de domínio e schemas Zod com regra própria.
+- **Integração:** services contra o Postgres de verdade, sem HTTP. É onde se prova o que só o banco garante:
+  - atomicidade: uma operação com várias escritas (ex.: venda + itens + baixa de estoque) grava tudo ou nada;
+  - constraints (unicidade por loja, FKs, `NOT NULL`);
+  - concorrência: duas operações simultâneas no mesmo estoque não deixam saldo errado nem negativo;
+  - escopo por loja: uma loja não lê nem altera dados de outra.
+- **E2E:** as rotas via HTTP, com o `app` em memória e um client Eden tipado. Toda rota tem o caminho feliz, um erro
+  de validação (422) e cada erro de domínio.
 
   ```ts
   import { treaty } from "@elysia/eden";
@@ -21,15 +40,25 @@
   const { data, status } = await api.health.get();
   ```
 
-- Se usar `app.handle(new Request(...))`, a URL precisa ser absoluta (`http://localhost/...`).
+  Se usar `app.handle(new Request(...))`, a URL precisa ser absoluta (`http://localhost/...`).
 
-### O que testar
+### Dados de teste
 
-- **Unit:** regras de negócio dos services (cálculos, validações de domínio) e schemas Zod com regras próprias.
-- **E2E:** toda rota tem pelo menos o caminho feliz e um erro de validação (422). Rotas com regra de negócio também
-  cobrem os erros de domínio.
-- Cada e2e cria os próprios dados e não depende da ordem dos testes. Quando surgirem as primeiras tabelas, criar um
-  helper em `test/` que limpa o banco (`TRUNCATE ... RESTART IDENTITY CASCADE`) no `beforeEach`.
+- Todo arquivo que usa o banco chama `useTestDatabase()` (`test/support/database.ts`): antes de cada teste, todas as
+  tabelas do schema `public` são truncadas (`TRUNCATE ... RESTART IDENTITY CASCADE`). O journal de migrations fica no
+  schema `drizzle` e não é apagado.
+- O reset só roda contra um banco cujo nome termina em `_test`; contra qualquer outro, ele lança erro.
+- Cada teste cria os próprios dados e não depende da ordem. Com as primeiras tabelas, criar factories em
+  `test/support/factories/<entidade>.ts` (ex.: `createProduct({ storeId, ...overrides })`), com padrões válidos e
+  sobrescrita só do que o teste precisa.
+- O `bun test` roda os arquivos em sequência, num processo só. Não ligue execução concorrente nos testes que usam
+  banco: eles compartilham o `ext2_test`.
+
+### Cobertura
+
+- Mínimo de **90% de linhas e de funções** (`coverageThreshold` no `bunfig.toml`). O CI falha abaixo disso.
+- O Bun só conta os arquivos que algum teste carrega: um módulo sem teste nenhum não baixa o número. O que garante a
+  cobertura é a regra de toda mudança vir com teste; o threshold pega o que ficou pela metade.
 
 ## Mobile
 

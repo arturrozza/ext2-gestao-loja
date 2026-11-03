@@ -65,9 +65,10 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
       # .env.test (committed) points DATABASE_URL to the ext2_test service above.
-      - name: Unit + e2e
+      # Migrates the test database, runs unit + integration + e2e and fails under the coverage threshold (bunfig.toml).
+      - name: Unit + integration + e2e (coverage)
         working-directory: apps/server
-        run: bun run db:migrate:test && bun run test
+        run: bun run test:coverage
 
   server-image:
     name: Server image

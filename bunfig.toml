@@ -1,3 +1,9 @@
 [install]
 # Expo SDK 57 + isolated linker produces duplicate native modules (expo-doctor). Revisit on SDK upgrades.
 linker = "hoisted"
+
+[test]
+# Read by the server test scripts through `--config=../../bunfig.toml`: bun only loads the bunfig in the cwd.
+# Enforced by `bun test --coverage` (`test:coverage`, run in CI).
+coverageThreshold = { lines = 0.9, functions = 0.9 }
+coveragePathIgnorePatterns = ["test/**"]

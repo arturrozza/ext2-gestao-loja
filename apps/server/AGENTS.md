@@ -14,9 +14,11 @@ All scripts load the root `.env` via `--env-file=../../.env` (test scripts add `
 ```bash
 bun run dev               # watch src/index.ts
 bun run typecheck
-bun run test              # everything (unit + e2e), needs postgres (`bun run db:up` at the root)
-bun run test:unit         # src/**/*.test.ts only
+bun run test              # everything (unit + integration + e2e), needs postgres (`bun run db:up` at the root)
+bun run test:unit         # src/**/*.test.ts only, no database
+bun run test:integration  # migrates the test DB, then runs test/integration
 bun run test:e2e          # migrates the test DB, then runs test/e2e
+bun run test:coverage     # everything with coverage; fails under 90% lines/functions (what CI runs)
 bun run db:generate       # generate a migration from the schema
 bun run db:migrate        # apply migrations to the dev DB
 bun run db:studio         # Drizzle Studio
@@ -41,7 +43,10 @@ src/
     <module>.service.ts           business logic, decoupled from Elysia (`<Module>Service`)
     <module>.model.ts             `t` schemas for request/response + derived types (`<Module>Model`)
     <module>.service.test.ts      unit tests next to the code
-test/e2e/             end-to-end tests, one file per module (<module>.e2e.test.ts)
+test/
+  support/            test helpers (database reset, factories)
+  integration/        services against the real test DB (<module>.integration.test.ts)
+  e2e/                HTTP through Eden, one file per module (<module>.e2e.test.ts)
 drizzle/              generated migrations (don't hand-edit, except custom migrations)
 Dockerfile
 ```
@@ -77,9 +82,17 @@ Dockerfile
 - Money: `numeric` (never `real`/`double`). Dates: `timestamp({ withTimezone: true })`.
 
 ### Tests
-- Unit: `*.test.ts` next to the code, no database.
-- E2E: `test/e2e/*.e2e.test.ts` via Eden's `treaty(app)` against `ext2_test`.
-- Every new route gets at least one success e2e and one validation-error e2e.
+This system handles money and stock: **every server change ships with tests in all three layers it touches**, written
+first when possible (TDD). Untested code doesn't merge.
+- Unit: `*.test.ts` next to the code, no database. Pure domain rules: money math, rounding, validations.
+- Integration: `test/integration/<module>.integration.test.ts`, services against `ext2_test`. Covers transactions
+  (all-or-nothing writes), constraints, concurrency (e.g. two sales on the same stock) and store scoping.
+- E2E: `test/e2e/<module>.e2e.test.ts` via Eden's `treaty(app)`. Every route: the success path, a validation error
+  (422) and each domain error.
+- Files that touch the database call `useTestDatabase()` (`test/support/database.ts`): every test starts empty.
+  Each test creates its own data (factories in `test/support/factories/`); never depend on test order.
+- Coverage: 90% lines and functions, enforced in CI (`test:coverage`). Bun only counts files a test loads, so a
+  module with no test at all doesn't lower the number: the rule above is what guarantees coverage, not the threshold.
 - More in [`docs/testing.md`](../../docs/testing.md).
 
 ### Env
