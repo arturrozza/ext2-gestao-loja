@@ -34,14 +34,10 @@ apps/
   mobile/               @ext2/mobile — app Expo
 packages/               pacotes compartilhados (nenhum ainda)
 docs/
-  product.md            visão de produto, módulos e decisões pendentes
-  domain.md             glossário, entidades e cálculos
-  non-functional-requirements.md  requisitos não funcionais
   architecture.md       este arquivo
   stack.md              ferramentas, versões e restrições conhecidas
   conventions.md        código, validação, dados e git
   testing.md            estratégia de testes
-  features/             uma spec por módulo (índice em features/README.md)
 ```
 
 ## Tipos ponta a ponta (Eden Treaty)

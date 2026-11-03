@@ -38,7 +38,7 @@ layout the docs recommend. If you have to deviate, document why in [`docs/stack.
 apps/server/     API (@ext2/server), with its own Dockerfile
 apps/mobile/     Expo app (@ext2/mobile)
 packages/        shared packages (create only when code is actually shared)
-docs/            architecture, stack, conventions, testing + features/ (specs), in pt-BR
+docs/            architecture, stack, conventions, testing, in pt-BR
 ```
 
 ## Commands (from the repo root)
@@ -72,9 +72,7 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   over, split it; don't use `biome-ignore` to dodge the rule.
 - **Definition of done:** `bun run check`, `bun run typecheck` and `bun run test` pass.
 - **Validation:** Elysia `t` for API HTTP contracts; Zod for env, domain rules `t` doesn't cover, and app forms.
-- **Features:** read the spec in `docs/features/` (plus `docs/domain.md`) before implementing. If there is no spec, or
-  the point is listed under "Dúvidas em aberto" / a pending decision in `docs/product.md`, ask; don't invent
-  requirements. Keep the original RF/RN/UC IDs in specs and tests.
+- **Features:** business rules come from the user. If a requirement is unclear, ask; don't invent requirements.
 - **Language:** code, commits and `AGENTS.md` in English. Docs (`docs/`, `README.md`) and user-facing app text
   in pt-BR.
 - **Conventional Commits, always**, scoped by module/feature: `feat(products): add product listing`,
@@ -98,12 +96,8 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 
 ## Docs
 
-- [`docs/product.md`](docs/product.md) — product vision, modules, pending cross-cutting decisions
-- [`docs/domain.md`](docs/domain.md) — glossary (pt-BR → code names), entities, calculations (average cost, net profit)
-- [`docs/non-functional-requirements.md`](docs/non-functional-requirements.md) — RNF001–RNF020 and how the stack meets them
 - [`docs/getting-started.md`](docs/getting-started.md) — onboarding: fork, tool install, running everything locally
 - [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, env, Docker
 - [`docs/stack.md`](docs/stack.md) — tools, versions, official docs links, known constraints
 - [`docs/conventions.md`](docs/conventions.md) — naming, code style, validation, data, git
 - [`docs/testing.md`](docs/testing.md) — test strategy
-- [`docs/features/`](docs/features/README.md) — one spec per module with RF/RN/UC IDs from the planning docs ([template](docs/features/_template.md))

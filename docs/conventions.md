@@ -85,7 +85,7 @@ apps/mobile/src/
 - **Escopo por loja:** toda tabela de negócio (produtos, compras, lotes, movimentações, vendas, revendedoras...) tem
   `storeId` (FK para `stores`, obrigatório, com índice). O `storeId` vem da sessão, nunca do body/query/params, e todo
   service recebe e filtra por ele. Unicidades de negócio são por loja (ex.: código de barras único por `storeId`).
-  Teste e2e de cada módulo cobre que uma loja não lê nem altera dados de outra (RNF004).
+  Teste e2e de cada módulo cobre que uma loja não lê nem altera dados de outra.
 - Dinheiro: `numeric(12, 2)` no banco e string decimal no app. Nunca float.
 - Datas: `timestamptz` (`timestamp({ withTimezone: true })`), gravadas em UTC. A conversão para o horário local
   (America/Sao_Paulo) acontece no app.
@@ -132,4 +132,3 @@ Ver [`testing.md`](testing.md).
   ao lado (`@AGENTS.md`).
 - `docs/architecture.md`, `docs/stack.md`, `docs/testing.md` e este arquivo descrevem o sistema. Atualize no mesmo PR
   da mudança.
-- Specs de feature ficam em `docs/features/<feature>.md`, a partir do `_template.md`.
