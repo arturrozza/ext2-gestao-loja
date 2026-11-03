@@ -100,7 +100,8 @@ Ver [`testing.md`](testing.md).
 ## Git
 
 - **Branches:**
-  - `main`: integração. Todo trabalho entra aqui por PR, a partir de branches `feat/...`, `fix/...` e `chore/...`.
+  - `main`: integração. Todo trabalho entra aqui por PR, a partir de branches `feat/...`, `fix/...` e `chore/...`. Com task
+    no Linear, o id entra no nome (`feat/mun-12-products-listing`) e o PR fecha a task (`Closes MUN-12`).
     Push na `main` **não** faz deploy.
   - `production`: o que está no ar. Só recebe PRs de release vindos da `main`. Cada merge nela faz deploy no Railway
     (depois do CI).
@@ -109,7 +110,7 @@ Ver [`testing.md`](testing.md).
   `production` ganha commits que não existem na `main`, e as releases seguintes passam a dar conflito.
 - **Hotfix:** corrija na `main` e faça uma release. Não commite direto na `production`.
 - **Proteção (rulesets do GitHub `main-protection` e `production-protection`):** as duas branches só aceitam PR, com os
-  checks `Lint, typecheck & doctor` e `Server tests` verdes, e bloqueiam force push e exclusão. A `main` aceita merge
+  checks `Lint, typecheck & doctor`, `Server tests` e `Server image` verdes, e bloqueiam force push e exclusão. A `main` aceita merge
   commit ou squash; a `production`, só merge commit. Não há review obrigatório (projeto solo). Admins podem passar por
   cima das regras só dentro de um PR (ex.: mergear com o CI quebrado numa emergência); push direto continua bloqueado.
   Se o nome de um job do CI mudar, atualize os checks obrigatórios dos rulesets.
@@ -122,9 +123,12 @@ Ver [`testing.md`](testing.md).
   - `docs(sales): add sales spec`
   - Tipos: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `chore`, `build`, `ci`, `revert`.
 - Commits e PRs **não mencionam Claude/IA**: nada de `Co-Authored-By` de agente nem linhas "Generated with".
-- O pre-commit (Husky) roda `bun run format` (Biome format no repo inteiro) e re-adiciona os arquivos que já estavam
-  staged (`git update-index --again`). Ele só formata, não faz lint: rode `bun run check` antes de abrir PR. Arquivos
-  fora do stage também podem ser reformatados.
+- O pre-commit (Husky) roda o `lint-staged`, que passa `biome check --write` (format, imports e lint com fixes
+  seguros) só nos arquivos staged, e depois o `bun run typecheck`. Erro de lint ou de tipo barra o commit; corrija a
+  causa, nunca use `--no-verify`.
+- **Skills do Claude Code** (`.claude/skills/`): `/pr-main` abre o PR para a `main`, acompanha o CI e mergeia (squash)
+  se passar; `/release-prod` abre o PR de release, confere o que precisa estar pronto antes do deploy, mergeia com merge
+  commit e acompanha o deploy.
 
 ## Docs
 
@@ -132,3 +136,4 @@ Ver [`testing.md`](testing.md).
   ao lado (`@AGENTS.md`).
 - `docs/architecture.md`, `docs/stack.md`, `docs/testing.md` e este arquivo descrevem o sistema. Atualize no mesmo PR
   da mudança.
+- Decisões (de produto ou técnicas) com o porquê vão em `docs/decisions.md`, a mais recente no topo.

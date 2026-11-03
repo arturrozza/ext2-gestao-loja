@@ -124,12 +124,13 @@ feat/x ──PR──▶ main (CI) ──PR de release──▶ production (CI) 
 
 ### CI: `.github/workflows/ci.yml`
 
-Roda em push e em PRs abertos contra a `main` ou a `production`, com dois jobs:
+Roda em push e em PRs abertos contra a `main` ou a `production`, com três jobs:
 
 | Job | O que roda |
 | --- | --- |
 | `quality` | `biome ci .`, `bun run typecheck` (server + mobile), `expo-doctor` |
 | `test` | migrations + `bun run test` (unit + e2e) contra um Postgres 18 de serviço (`ext2_test`) |
+| `server-image` | builda o `apps/server/Dockerfile` (o mesmo que a Railway usa), roda as migrations com a imagem e espera o `/health` responder |
 
 A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesma da imagem Docker.
 

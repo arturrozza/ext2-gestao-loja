@@ -28,4 +28,5 @@ Para desenvolver o server com hot reload, use `bun run db:up` + `bun run dev:ser
 - [`docs/stack.md`](docs/stack.md) — ferramentas, versões e restrições conhecidas
 - [`docs/conventions.md`](docs/conventions.md) — nomes, código, validação, dados, git
 - [`docs/testing.md`](docs/testing.md) — estratégia de testes
+- [`docs/decisions.md`](docs/decisions.md) — registro de decisões e o porquê
 - [`AGENTS.md`](AGENTS.md) — regras para agentes de IA

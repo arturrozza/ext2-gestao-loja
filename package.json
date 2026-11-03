@@ -23,6 +23,7 @@
 		"@commitlint/cli": "^21.2.3",
 		"@commitlint/config-conventional": "^21.2.3",
 		"husky": "^9.1.7",
+		"lint-staged": "^17.6.0",
 		"railway": "^3.16.0"
 	},
 	"scripts": {
@@ -38,5 +39,10 @@
 		"db:up": "docker compose up -d --wait postgres",
 		"up": "docker compose up -d --wait --build",
 		"down": "docker compose down"
+	},
+	"lint-staged": {
+		"*": [
+			"biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+		]
 	}
 }

@@ -27,7 +27,7 @@ layout the docs recommend. If you have to deviate, document why in [`docs/stack.
 | App | Expo SDK 57 (Expo Router), NativeWind 4 (Tailwind 3), TanStack Query 5, Zod |
 | HTTP client | Eden Treaty (`@elysia/eden`), types inferred from the API |
 | Lint/format | Biome (root config) |
-| Git hooks | Husky: pre-commit runs `biome format`, commit-msg runs commitlint (Conventional Commits) |
+| Git hooks | Husky: pre-commit runs lint-staged (`biome check --write` on staged files) + typecheck, commit-msg runs commitlint |
 | Infra (local) | Docker Compose: postgres + server |
 | CI/CD | GitHub Actions (`.github/workflows/ci.yml`); server deployed to Railway from the `production` branch (IaC in `.railway/railway.ts`) |
 
@@ -53,7 +53,7 @@ bun run dev:server     # API with watch on :3000 (don't run together with the Do
 bun run dev:mobile     # Expo dev server
 bun run check          # Biome lint + format + imports (read-only)
 bun run check:fix      # Biome with safe fixes
-bun run format         # Biome format on everything (what the pre-commit hook runs)
+bun run format         # Biome format on everything
 bun run typecheck      # tsc in every workspace
 bun run test           # API tests (unit + e2e; needs postgres up)
 ```
@@ -85,7 +85,8 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 - **Branches:** work lands on `main` via PRs (no deploy). Releases are PRs `main → production`, merged with a merge
   commit (never squash); Railway deploys `production` only after CI passes. Never push or commit to `production`
   directly. Both branches are protected by rulesets (PR only, CI checks required): always work on a branch and open a
-  PR with `gh pr create`; ask the user before merging. See `docs/conventions.md` (Git).
+  PR with `gh pr create`; ask the user before merging. The `/pr-main` and `/release-prod` skills run these flows
+  (running one is the go-ahead to merge). See `docs/conventions.md` (Git).
 - **Railway infra is code** (`.railway/railway.ts`, Infrastructure as Code). Never change it through the dashboard.
   Edit the file in a PR: the `Railway config` workflow comments the plan on the PR and applies it when the
   release PR (`main → production`) is merged. Don't run `railway config apply` by hand. Anything omitted from the file
@@ -94,6 +95,17 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 - **Keep the docs current:** if you change the architecture, stack, a convention or the test strategy, update the
   matching file in `docs/` in the same change.
 
+## Work tracking
+
+Tasks, ideas and bugs live in Linear (workspace `mundomadam`, team `Mundomadam`, key `MUN`), not in GitHub Issues.
+Use the project-local MCP connection `linear-ext2` (`mcp__linear-ext2__*`); the user-level `linear` connection points
+to another workspace, never use it here. A task's id goes in the branch (`feat/mun-12-products-listing`) and the PR
+(`Closes MUN-12`). When work on a task starts, move it to `In Progress` and assign it to the maintainer if unassigned.
+A `Closes` PR merged into `main` moves the task to `Waiting for Release`; it goes to `Done` only once the release that
+carries it is live. Linear's GitHub automation on merge must point at `Waiting for Release`, never `Done`.
+Skills: `/start-mundomadam` lists open tasks easiest first, `/pr-main` ships a branch to `main`, `/release-prod` ships
+`main` to `production`.
+
 ## Docs
 
 - [`docs/getting-started.md`](docs/getting-started.md) — onboarding: fork, tool install, running everything locally
@@ -101,3 +113,4 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 - [`docs/stack.md`](docs/stack.md) — tools, versions, official docs links, known constraints
 - [`docs/conventions.md`](docs/conventions.md) — naming, code style, validation, data, git
 - [`docs/testing.md`](docs/testing.md) — test strategy
+- [`docs/decisions.md`](docs/decisions.md) — decision log (what was decided and why), newest first
