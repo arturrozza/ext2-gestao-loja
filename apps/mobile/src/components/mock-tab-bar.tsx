@@ -9,7 +9,7 @@ import {
 	Plus,
 	ReceiptText,
 } from "lucide-react-native";
-import type { Ref } from "react";
+import type { ComponentRef, Ref } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/icon";
@@ -40,7 +40,7 @@ type TabButtonProps = TabTriggerSlotProps & {
 	icon: LucideIcon;
 	label: string;
 	badge: number;
-	ref?: Ref<View>;
+	ref?: Ref<ComponentRef<typeof View>>;
 };
 
 function TabButton({

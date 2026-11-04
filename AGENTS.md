@@ -24,7 +24,7 @@ layout the docs recommend. If you have to deviate, document why in [`docs/stack.
 | Monorepo / runtime | Bun (workspaces + catalog, `hoisted` linker) |
 | API | Elysia, Drizzle ORM 1.0 RC (`bun-sql`), PostgreSQL 18, Zod |
 | API tests | `bun test` (unit + e2e with Eden Treaty) |
-| App | Expo SDK 57 (Expo Router), NativeWind 4 (Tailwind 3), TanStack Query 5, Zod |
+| App | Expo SDK 58 (Expo Router), NativeWind 4 (Tailwind 3), TanStack Query 5, Zod |
 | HTTP client | Eden Treaty (`@elysia/eden`), types inferred from the API |
 | Lint/format | Biome (root config) |
 | Git hooks | Husky: pre-commit runs lint-staged (`biome check --write` on staged files) + typecheck, commit-msg runs commitlint |

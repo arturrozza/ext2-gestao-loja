@@ -1,6 +1,6 @@
 # AGENTS.md — mobile (`@ext2/mobile`)
 
-Expo app (SDK 57) + Expo Router + NativeWind 4 + TanStack Query 5 + Zod. Read the [root `AGENTS.md`](../../AGENTS.md) too.
+Expo app (SDK 58) + Expo Router + NativeWind 4 + TanStack Query 5 + Zod. Read the [root `AGENTS.md`](../../AGENTS.md) too.
 Prioritize mobile-first patterns, performance and cross-platform compatibility.
 
 ## Expo has changed: don't trust your memory
@@ -8,7 +8,7 @@ Prioritize mobile-first patterns, performance and cross-platform compatibility.
 Expo ships breaking changes every SDK. Before writing code that touches Expo, EAS or React Native APIs:
 
 1. Check the major version of `expo` in `package.json` (currently **57**).
-2. Read the versioned docs: `https://docs.expo.dev/versions/v57.0.0/`
+2. Read the versioned docs: `https://docs.expo.dev/versions/v58.0.0/`
 3. For anything else, use https://docs.expo.dev/llms.txt (index with corrections to common LLM misconceptions) and
    follow it to the specific page. Never answer from memory.
 

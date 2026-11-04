@@ -15,14 +15,14 @@ juntas.
 | Drizzle ORM / Kit | 1.0.0-rc (driver `bun-sql`) | server | https://orm.drizzle.team/docs/get-started/bun-sql-new |
 | PostgreSQL | 18 (Docker) | infra | https://www.postgresql.org/docs/18/ |
 | Zod | ^4 (catalog) | server, mobile | https://zod.dev |
-| Expo SDK | 57 (RN 0.86, React 19.2) | mobile | https://docs.expo.dev/versions/v57.0.0/ |
-| Expo Router | ~57 | mobile | https://docs.expo.dev/router/introduction/ |
+| Expo SDK | 58 (RN 0.88, React 19.3) | mobile | https://docs.expo.dev/versions/v58.0.0/ |
+| Expo Router | ~58 | mobile | https://docs.expo.dev/router/introduction/ |
 | NativeWind | 4.2.7 (Tailwind 3.4) | mobile | https://www.nativewind.dev/docs |
 | React Native Reusables | componentes copiados para `src/components/ui` (CLI `@react-native-reusables/cli`, variante NativeWind) | mobile: componentes base do design system | https://reactnativereusables.com/docs |
-| lucide-react-native | ^1.67 (+ `react-native-svg` 15.15) | mobile: ícones, via `Icon` do Reusables | https://lucide.dev/guide/packages/lucide-react-native |
-| expo-linear-gradient | ~57.0.2 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v57.0.0/sdk/linear-gradient/ |
+| lucide-react-native | ^1.67 (+ `react-native-svg` 15.16) | mobile: ícones, via `Icon` do Reusables | https://lucide.dev/guide/packages/lucide-react-native |
+| expo-linear-gradient | ~58 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v58.0.0/sdk/linear-gradient/ |
 | Plus Jakarta Sans | `@expo-google-fonts/plus-jakarta-sans` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |
-| EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~57 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |
+| EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~58 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |
 | TanStack Query | ^5 | mobile | https://tanstack.com/query/latest/docs/framework/react/react-native |
 | Biome | 2.5.15 (versão exata) | raiz | https://biomejs.dev |
 | Husky | ^9 | raiz (pre-commit, commit-msg) | https://typicode.github.io/husky |
@@ -46,8 +46,9 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   Expo.
 - **Peers do Elysia declarados explicitamente.** Sem eles, o Bun resolveu o TypeBox 0.27 (que vem do Jest via Expo)
   e o server quebrava.
-- **Expo SDK 57, não 58.** O NativeWind 4.2.7 só suporta oficialmente até o SDK 57. Confirme o suporte do NativeWind
-  antes de subir o SDK.
+- **NativeWind 4.2.7 no SDK 58 sem suporte oficial.** A doc do NativeWind só declara suporte até o SDK 57, e a v5 ainda
+  é RC (e exige Tailwind 4). As telas foram conferidas à mão no Expo Go e funcionaram. Se aparecer bug de estilo, comece
+  por aqui, e confirme o suporte do NativeWind antes de subir o SDK de novo.
 - **Drizzle 1.0 RC.** A API da 0.x é diferente: não existe mais a opção `schema` no `drizzle()` nem `casing` no config
   do kit. Ignore exemplos da 0.x.
 - **`apps/server/drizzle/` precisa existir** (por isso o `.gitkeep`). O migrator do Drizzle 1.0 falha com `ENOENT` se
@@ -67,9 +68,9 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
 - **`tailwind-merge` 3 com Tailwind 3.** A v3 do `tailwind-merge` foi feita para o Tailwind 4, mas é a versão que o
   template NativeWind do React Native Reusables usa, e funciona com as classes do app. Se o `cn()` resolver algum
   conflito errado, teste o `tailwind-merge` 2 (feito para o Tailwind 3).
-- **Cada peso da fonte é uma família.** No SDK 57 o `fontWeight` não escolhe o arquivo da fonte: use `font-sans`,
-  `font-sans-medium`, `font-sans-semibold` e `font-sans-bold`, nunca `font-medium`/`font-bold`. O carregamento em
-  array por peso só existe a partir do SDK 58. As fontes são carregadas com `useFonts` (em `src/lib/fonts.ts`), e não
+- **Cada peso da fonte é uma família.** O `fontWeight` não escolhe o arquivo da fonte: use `font-sans`,
+  `font-sans-medium`, `font-sans-semibold` e `font-sans-bold`, nunca `font-medium`/`font-bold`. O SDK 58 trouxe fontes
+  variáveis no `expo-font`, mas ainda não testamos se isso simplifica esse esquema. As fontes são carregadas com `useFonts` (em `src/lib/fonts.ts`), e não
   pelo config plugin, para os nomes serem iguais em iOS, Android e web e funcionar no Expo Go.
 - **Componentes do Reusables são código nosso.** Ao rodar o `add` de novo (ou com `--overwrite`), refaça a troca de
   `font-<peso>` pelas famílias acima.

@@ -12,6 +12,14 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-04: Subir para o Expo SDK 58 sem suporte oficial do NativeWind
+
+**Decisão:** o app foi para o SDK 58 (RN 0.88, React 19.3), mantendo o NativeWind 4.2.7, que só declara suporte até o
+SDK 57.
+**Por quê:** o Expo Go novo só roda o SDK 58, e o ciclo de vida por cenas do iOS 27 vem nele, então a subida viria de
+qualquer jeito. Migrar para o NativeWind 5 foi descartado: ainda é RC e exige Tailwind 4. As telas foram conferidas no
+Expo Go e funcionaram. Builds nativos do SDK 58 (EAS, com R8 ligado por padrão no Android) ainda não foram testados.
+
 ## 2026-11-04: Design system do app com React Native Reusables
 
 **Decisão:** os componentes base do app vêm do React Native Reusables (estilo shadcn/ui, variante NativeWind), copiados
