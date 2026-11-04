@@ -18,6 +18,10 @@ juntas.
 | Expo SDK | 57 (RN 0.86, React 19.2) | mobile | https://docs.expo.dev/versions/v57.0.0/ |
 | Expo Router | ~57 | mobile | https://docs.expo.dev/router/introduction/ |
 | NativeWind | 4.2.7 (Tailwind 3.4) | mobile | https://www.nativewind.dev/docs |
+| React Native Reusables | componentes copiados para `src/components/ui` (CLI `@react-native-reusables/cli`, variante NativeWind) | mobile: componentes base do design system | https://reactnativereusables.com/docs |
+| lucide-react-native | ^1.67 (+ `react-native-svg` 15.15) | mobile: ícones, via `Icon` do Reusables | https://lucide.dev/guide/packages/lucide-react-native |
+| expo-linear-gradient | ~57.0.2 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v57.0.0/sdk/linear-gradient/ |
+| Plus Jakarta Sans | `@expo-google-fonts/plus-jakarta-sans` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |
 | EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~57 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |
 | TanStack Query | ^5 | mobile | https://tanstack.com/query/latest/docs/framework/react/react-native |
 | Biome | 2.5.15 (versão exata) | raiz | https://biomejs.dev |
@@ -60,6 +64,15 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   (que baixa o binário) é bloqueado por padrão.
 - **Biome:** `@tailwind` está liberado no CSS. O NativeWind 4 usa Tailwind 3, e o parser de Tailwind do Biome só
   conhece as diretivas da v4. O ícone gerado pelo Expo (`apps/mobile/assets/expo.icon`) fica fora do lint.
+- **`tailwind-merge` 3 com Tailwind 3.** A v3 do `tailwind-merge` foi feita para o Tailwind 4, mas é a versão que o
+  template NativeWind do React Native Reusables usa, e funciona com as classes do app. Se o `cn()` resolver algum
+  conflito errado, teste o `tailwind-merge` 2 (feito para o Tailwind 3).
+- **Cada peso da fonte é uma família.** No SDK 57 o `fontWeight` não escolhe o arquivo da fonte: use `font-sans`,
+  `font-sans-medium`, `font-sans-semibold` e `font-sans-bold`, nunca `font-medium`/`font-bold`. O carregamento em
+  array por peso só existe a partir do SDK 58. As fontes são carregadas com `useFonts` (em `src/lib/fonts.ts`), e não
+  pelo config plugin, para os nomes serem iguais em iOS, Android e web e funcionar no Expo Go.
+- **Componentes do Reusables são código nosso.** Ao rodar o `add` de novo (ou com `--overwrite`), refaça a troca de
+  `font-<peso>` pelas famílias acima.
 
 ## Como atualizar
 

@@ -42,11 +42,11 @@ src/
   screens/<screen>/
     <screen>.screen.tsx        the screen component (`<Screen>Screen`), e.g. screens/home/home.screen.tsx
     partials/                  components used ONLY by this screen
-  components/                  components shared by more than one screen
+  components/                  components shared by more than one screen (ui/: design system base components)
   queries/<module>/            TanStack Query hooks + query keys per API module (mirrors server modules)
-  lib/                         api (Eden), query-client, env and utilities
+  lib/                         api (Eden), query-client, env, fonts, theme and utilities (cn)
   providers/                   global providers (QueryClient, SafeArea...)
-  global.css                   Tailwind directives (imported in the root _layout)
+  global.css                   Tailwind directives + design tokens (imported in the root _layout)
 ```
 
 Alias: `@/*` → `src/*`.
@@ -71,8 +71,16 @@ Alias: `@/*` → `src/*`.
 
 ### Styling (NativeWind)
 - Style with `className`. Use `StyleSheet`/`style` only when NativeWind can't do it (e.g. animated values).
-- Design tokens (colors, fonts, spacing) live in `tailwind.config.js` (`theme.extend`); no ad-hoc colors scattered
-  around the code.
+- Design system rules (tokens, surfaces, radius, header, navbar, animations, forms) live in `docs/conventions.md`
+  (Mobile: design system). Read it before building UI. In short: white page, light-gray filled surfaces (`bg-card`),
+  orange `bg-primary` for actions, black `bg-secondary` for highlights, **no shadows**, fully rounded controls (`rounded-full`), no default navigator header
+  (`ScreenHeader`), timing-based Reanimated animations, never `className` on `Animated.View`.
+- Screens use `ScreenLayout` (header + fade-in content + hairline under the header on scroll + bottom gradient behind the tab bar). Stack transitions are set in
+  the `_layout.tsx` files (`ios_from_right`, forms `fade_from_bottom`).
+- Font: Plus Jakarta Sans (`src/lib/fonts.ts`). Each weight is its own family: `font-sans`, `font-sans-medium`,
+  `font-sans-semibold`, `font-sans-bold`; never `font-medium`/`font-bold`.
+- Base components: React Native Reusables in `src/components/ui/` (ours to edit). Icons: lucide via `Icon`.
+- Render text with `Text` from `@/components/ui/text`. Merge classes with `cn()` (`@/lib/utils`).
 - New folders using `className` must be covered by `content` in `tailwind.config.js` (currently `./src/**/*`).
 
 ### Data (TanStack Query + Eden)

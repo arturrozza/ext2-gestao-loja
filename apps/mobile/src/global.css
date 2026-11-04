@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Design tokens (HSL channels). White page, light-gray filled surfaces, orange actions, black accents.
+   No shadows: depth comes from surface colors. Light theme only; mirrored in src/lib/theme.ts. */
+@layer base {
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 0 0% 10%;
+		--card: 0 0% 96%;
+		--card-foreground: 0 0% 10%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 0 0% 10%;
+		--primary: 20.5 90.2% 48.2%;
+		--primary-foreground: 0 0% 100%;
+		--secondary: 0 0% 11%;
+		--secondary-foreground: 0 0% 100%;
+		--muted: 0 0% 92%;
+		--muted-foreground: 0 0% 50%;
+		--accent: 0 0% 92%;
+		--accent-foreground: 0 0% 10%;
+		--destructive: 0 72.2% 50.6%;
+		--destructive-foreground: 0 0% 100%;
+		--border: 0 0% 91%;
+		--input: 0 0% 91%;
+		--ring: 20.5 90.2% 48.2%;
+		--radius: 1rem;
+	}
+}

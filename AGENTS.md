@@ -74,6 +74,9 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 - **Biome is the law.** Default config + `noExcessiveCognitiveComplexity` as an **error, max 10**. If a function goes
   over, split it; don't use `biome-ignore` to dodge the rule.
 - **Definition of done:** `bun run check`, `bun run typecheck` and `bun run test` pass.
+- **Verify only after the maintainer approves.** Unless the maintainer explicitly asks for it, don't run tests or
+  extra verification (bundles/`expo export`, builds, Docker, doctors) while working. Make the change, show it, and
+  run the definition-of-done checks only once the maintainer has reviewed it and is happy with it.
 - **Validation:** Elysia `t` for API HTTP contracts; Zod for env, domain rules `t` doesn't cover, and app forms.
 - **Features:** business rules come from the user. If a requirement is unclear, ask; don't invent requirements.
 - **Language:** code, commits and `AGENTS.md` in English. Docs (`docs/`, `README.md`) and user-facing app text

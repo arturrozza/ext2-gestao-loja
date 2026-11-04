@@ -69,6 +69,51 @@ apps/mobile/src/
 - Partial que passar a ser usado por outra screen sobe para `src/components/`.
 - Screens e partials buscam dados pelos hooks de `src/queries/`, nunca chamando o `api` direto.
 
+### Mobile: design system
+
+Referência visual: app de loja com fundo branco, superfícies cinza claro preenchidas, ações em terracota e destaques em
+preto. Adaptada: as cores principais do app são **branco, laranja e preto** e tudo é bem arredondado (Dribbble, enviada pelo mantenedor em 2026-11-04).
+
+- Os tokens ficam em `apps/mobile/src/global.css` (variáveis CSS em HSL) e são mapeados no `tailwind.config.js`.
+  `src/lib/theme.ts` espelha as cores para APIs sem `className`; mudou um token no CSS, mude lá também.
+  Use as classes semânticas, nunca cores soltas como `text-red-600`:
+  - `bg-background`: fundo da tela (branco).
+  - `bg-card`: superfície cinza clara preenchida (inputs, chips, tiles, blocos de total, botões secundários).
+  - `bg-primary`: laranja (`#EA580C`), para a ação principal e a seleção.
+  - `bg-secondary`: preto, para destaques (blocos de resumo).
+  - `text-muted-foreground`: texto secundário.
+  - `text-destructive`: erro e remoção.
+- **Sem sombras.** A profundidade vem da cor: superfície cinza sobre fundo branco, bloco preto para destaque. Itens de
+  lista são cards brancos com borda fina (`border border-border`) e um tile cinza à esquerda.
+- Raio: botões, inputs, chips, botões de ícone, pílulas de status, navbar e avatares `rounded-full`; cards, blocos e
+  campos de várias linhas `rounded-3xl`; tiles de imagem `rounded-2xl`.
+- Tipografia: Plus Jakarta Sans; títulos em `font-sans-semibold`, nunca bold pesado. Peso se escolhe pela família:
+  `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`. Dinheiro com `Price` (centavos menores).
+- Só tema claro por enquanto (`userInterfaceStyle: "light"` no `app.json`).
+- **Sem header padrão do navigator** (`headerShown: false`). Cada tela usa `ScreenHeader`: `variant="large"` nas raízes
+  das abas (título grande à esquerda) e o padrão nas telas internas (voltar em tile cinza, título centralizado, ação
+  à direita). Botões só de ícone usam `IconButton`.
+- Navbar: barra branca larga, com borda fina, ícone + nome em todas as abas (a ativa em laranja), contadores de pendências
+  nas abas (estoque baixo, acertos em aberto) e um botão "+" laranja ao lado para nova venda. Com `TabTrigger asChild`, descarte o
+  `style` que ele injeta no botão (senão o ícone sai do centro).
+- Toda tela monta em cima do `ScreenLayout` (`@/components/screen-layout`): header, conteúdo que entra com fade, uma
+  linha finíssima e bem clara sob o header que só aparece quando o conteúdo rola por baixo, e um degradê branco embaixo
+  para o conteúdo sumir suave atrás da navbar (`bottom="tabs"` nas abas). Cores em `DIVIDER` e `FADE`
+  (`src/lib/theme.ts`).
+- Transições entre telas: `ios_from_right` nas telas internas e `fade_from_bottom` nos formulários (no `Stack` do
+  `_layout.tsx`).
+- **Animações suaves, sem bounce:** Reanimated com `withTiming` (120–320 ms). `LinearTransition` quando itens entram,
+  saem ou expandem, e `FadeIn`/`FadeInDown` para conteúdo novo. Nada de `springify()`. Não ponha `className` em
+  `Animated.View`: use uma `View` dentro dele.
+- Detalhes de um item abrem no próprio card (`ExpandableRow`), sem navegar para outra tela.
+- Formulários: `FormField` (label + input + erro), `FormSection` (grupo com título), `ChoiceChips` (escolha única) e
+  `FormFooter` (resumo + botão). A validação é com Zod e o erro aparece embaixo do campo só depois da primeira tentativa
+  de envio.
+- Componentes base vêm do [React Native Reusables](https://reactnativereusables.com/docs) e ficam em
+  `src/components/ui/`. Para adicionar um: `bunx --bun @react-native-reusables/cli@latest add <componente>` (em
+  `apps/mobile`), depois troque `font-<peso>` pelas famílias, ajuste ao estilo acima e rode `bun run check:fix`.
+- Texto sempre pelo `Text` de `@/components/ui/text`, não o `Text` do React Native. Junte classes com `cn()`.
+
 ## Validação: `t` × Zod
 
 | Situação | Use |
