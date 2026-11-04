@@ -68,16 +68,25 @@ A tela inicial mostra o resumo do mês e os alertas ativos. A navegação do app
 - Exportação de relatórios.
 - Metas, equipes, agenda e impressão, presentes no Pedido OK.
 
-## Perguntas para o cliente
+## Validar com o cliente
 
-Ao ter a resposta, atualize o módulo afetado e apague a pergunta.
+O desenvolvimento segue com os padrões abaixo, que já estão nos módulos. Nada aqui bloqueia o trabalho: o cliente
+confirma ao testar. Se algo mudar, atualize o módulo e registre o porquê em [`../decisions.md`](../decisions.md).
 
-- Mais alguém além do dono vai usar o app? Essa pessoa pode ver custo e lucro?
-- A loja tem, ou pretende ter, mais de uma unidade?
-- A revendedora leva o produto e acerta depois (consignado), ou só ganha comissão?
-- Quantos produtos a loja tem hoje, e ela sabe o custo deles?
-- Qual é a taxa padrão do Mercado Livre e como o imposto é calculado hoje? A conta do lucro real bate com a dele?
-- Ele vende fiado ou parcelado e precisa acompanhar quem ainda deve?
-- Precisa de cadastro de clientes, ou basta digitar o nome?
-- O que usava de verdade no Pedido OK, por que quer sair e já precisou emitir pedido sem internet? O mantenedor lembra,
-  sem certeza, de uma reclamação sobre estoque editado na mão e custo calculado manualmente.
+**Antes de ele começar a usar:**
+
+- Quantos produtos a loja tem hoje, e ele sabe o custo deles? Com muitos produtos, vale uma importação por planilha em vez
+  de cadastrar um por um.
+
+**Nos testes:**
+
+| Ponto | Padrão adotado |
+| --- | --- |
+| Usuários | Só o dono. Mais gente é só criar conta; permissões entram se ele pedir |
+| Lojas | Uma loja |
+| Revendedora | Só comissão, sem consignado nem acerto (o mantenedor acha que é assim) |
+| Taxa do Mercado Livre e imposto | Percentuais configuráveis, editáveis em cada venda |
+| Conta do lucro real | Como em [Vendas](vendas.md#lucro-real) |
+| Fiado e parcelas | Fora do MVP; a condição de pagamento é só informativa |
+| Clientes | Cadastro opcional na venda |
+| Pedido OK | Ele compara ao usar; o mantenedor lembra, sem certeza, de reclamações sobre estoque editado na mão e custo calculado manualmente |

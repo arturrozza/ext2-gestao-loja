@@ -71,4 +71,4 @@ Controle do que falta receber, parcelas, fiado, importação do Mercado Livre e 
 ## Em aberto
 
 - Conferir com o cliente a conta do lucro real, o imposto e a taxa padrão:
-  [perguntas para o cliente](README.md#perguntas-para-o-cliente).
+  [validar com o cliente](README.md#validar-com-o-cliente).

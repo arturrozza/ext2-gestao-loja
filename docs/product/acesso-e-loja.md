@@ -25,4 +25,4 @@ Garantir que só quem é da loja acesse os dados dela e permitir manter os dados
 
 ## Em aberto
 
-- Quantos usuários e se há restrição de ver custo e lucro: [perguntas para o cliente](README.md#perguntas-para-o-cliente).
+- Quantos usuários e se há restrição de ver custo e lucro: [validar com o cliente](README.md#validar-com-o-cliente).

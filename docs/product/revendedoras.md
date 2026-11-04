@@ -30,4 +30,4 @@ Consignado e registro de acerto, até a resposta do cliente.
 ## Em aberto
 
 - A revendedora leva o produto e acerta depois? Se sim, este módulo e o estoque mudam:
-  [perguntas para o cliente](README.md#perguntas-para-o-cliente).
+  [validar com o cliente](README.md#validar-com-o-cliente).

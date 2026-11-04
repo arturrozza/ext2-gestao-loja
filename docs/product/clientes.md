@@ -1,7 +1,7 @@
 # Clientes
 
-> Módulo novo em relação à EXT1, inspirado no Pedido OK. Depende de confirmação do
-> [cliente](README.md#perguntas-para-o-cliente).
+> Módulo novo em relação à EXT1, inspirado no Pedido OK. O cliente confirma nos testes se usa (ver
+> [validar com o cliente](README.md#validar-com-o-cliente)).
 
 ## Objetivo
 
