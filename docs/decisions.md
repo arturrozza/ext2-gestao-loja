@@ -12,6 +12,46 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-04: Regras do produto revisadas com base na EXT1
+
+**Decisão:** os nove módulos, as funcionalidades e as regras foram revisados um a um e estão em
+[`product/`](product/README.md), que é a fonte da verdade. Os principais pontos que mudaram em relação à EXT1:
+
+- Mercado Livre sem integração, só como canal manual, com taxa sugerida.
+- Novo módulo Clientes, a confirmar com o cliente.
+- Estoque sem tela própria, dentro de Produtos.
+- Estoque e custo só entram pela compra, nunca no cadastro.
+- Unidades vencidas não entram na venda.
+- O desconto conta uma vez só no lucro real.
+- Códigos RF/RN abandonados.
+
+**Por quê:**
+
+- **Mercado Livre:** a importação não compensa agora, e a venda manual já cobre o canal.
+- **Clientes:** é central no Pedido OK, que o cliente usa hoje.
+- **Estoque em Produtos:** duas telas mostrariam a mesma lista.
+- **Estoque e custo pela compra:** o Pedido OK deixa editar estoque e custo no produto, e isso foi descartado para toda
+  unidade ter origem registrada e o custo médio ficar correto.
+- **Vencidos:** a saída pela validade mais próxima (RN025) entregaria justamente o produto vencido.
+- **Desconto:** o RN040 subtraía de novo o que o RN035 já tirava da receita.
+- **Códigos:** muita regra mudou e eles ficariam confusos.
+
+## 2026-11-04: Auditoria e integridade como regra geral
+
+**Decisão:** nada se apaga nem se reescreve, todo registro guarda autor e data, operações são atômicas, o banco também
+recusa estoque negativo, e as movimentações de estoque são um ledger imutável com quantidade, custo e custo médio
+resultante.
+**Por quê:** erros de estoque e custo contaminam o lucro de tudo o que vem depois, então precisam ser rastreáveis e
+recalculáveis.
+
+## 2026-11-04: Continuar online-first, com uma loja e dados separados por loja
+
+**Decisão:** sem offline no MVP. Toda tabela de negócio tem `store_id`, e o banco permite vários usuários por loja, mas o
+app começa com uma loja, sem troca de loja nem cadastro.
+**Por quê:** a internet quase não cai e há dados móveis, e offline exigiria banco local e sincronização. Se a falta de
+internet virar problema real, dá para acrescentar uma fila de vendas sem reescrever o app. Separar os dados por loja custa
+pouco agora; o caro é a parte de produto, que fica para depois.
+
 ## 2026-11-04: Subir para o Expo SDK 58 sem suporte oficial do NativeWind
 
 **Decisão:** o app foi para o SDK 58 (RN 0.88, React 19.3), mantendo o NativeWind 4.2.7, que só declara suporte até o
@@ -35,7 +75,7 @@ preferiu manter o laranja e o arredondado total: as cores principais são branco
 
 ## 2026-11-03: Regras de negócio entram aos poucos
 
-**Decisão:** os docs de produto (visão, domínio, requisitos não funcionais e specs por módulo) saíram do repo. As regras
-de negócio passam a vir do mantenedor, feature por feature, e cada uma que não for óbvia no código é registrada aqui.
-**Por quê:** as specs vinham dos documentos de planejamento, com conflitos e lacunas em aberto. Registrar só o que foi
-decidido de fato evita implementar regra que ninguém confirmou.
+**Decisão:** os docs de produto antigos saíram do repo. As regras passam a vir do mantenedor. **Mudou em 2026-11-04:** os
+docs de produto voltaram, reescritos e enxutos, em [`product/`](product/README.md), para um agente sem contexto entender o
+sistema. As regras não óbvias continuam sendo confirmadas com o mantenedor.
+**Por quê:** os docs antigos estavam poluídos, com conflitos e lacunas em aberto.

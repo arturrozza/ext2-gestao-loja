@@ -78,7 +78,9 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
   extra verification (bundles/`expo export`, builds, Docker, doctors) while working. Make the change, show it, and
   run the definition-of-done checks only once the maintainer has reviewed it and is happy with it.
 - **Validation:** Elysia `t` for API HTTP contracts; Zod for env, domain rules `t` doesn't cover, and app forms.
-- **Features:** business rules come from the user. If a requirement is unclear, ask; don't invent requirements.
+- **Features:** read the module in [`docs/product/`](docs/product/README.md) before implementing; it is the source of
+  truth for features and business rules. If a requirement is missing or unclear, ask; don't invent requirements. If a
+  rule changes, update the module in the same change and record why in `docs/decisions.md`.
 - **Language:** code, commits and `AGENTS.md` in English. Docs (`docs/`, `README.md`) and user-facing app text
   in pt-BR.
 - **Conventional Commits, always**, scoped by module/feature: `feat(products): add product listing`,
@@ -114,6 +116,7 @@ Skills: `/start-mundomadam` lists open tasks easiest first, `/pr-main` ships a b
 
 ## Docs
 
+- [`docs/product/`](docs/product/README.md) — what the system does: modules, features, business rules, open questions
 - [`docs/getting-started.md`](docs/getting-started.md) — onboarding: fork, tool install, running everything locally
 - [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, env, Docker
 - [`docs/stack.md`](docs/stack.md) — tools, versions, official docs links, known constraints

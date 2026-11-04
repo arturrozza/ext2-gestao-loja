@@ -34,6 +34,8 @@ apps/
   mobile/               @ext2/mobile — app Expo
 packages/               pacotes compartilhados (nenhum ainda)
 docs/
+  product/              módulos, funcionalidades e regras de negócio (fonte da verdade do produto)
+  decisions.md          o que foi decidido e por quê
   architecture.md       este arquivo
   stack.md              ferramentas, versões e restrições conhecidas
   conventions.md        código, validação, dados e git
