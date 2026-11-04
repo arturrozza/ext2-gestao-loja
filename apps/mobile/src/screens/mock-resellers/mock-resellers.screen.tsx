@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react-native";
+import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
 import { View } from "react-native";
 import { IconButton } from "@/components/icon-button";
 import { ScreenHeader } from "@/components/screen-header";
@@ -28,7 +28,7 @@ export function MockResellersScreen() {
 					title="Revendedoras"
 					right={
 						<IconButton
-							icon={Plus}
+							icon={PlusIcon}
 							label="Nova revendedora"
 							variant="primary"
 						/>

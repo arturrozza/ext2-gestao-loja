@@ -1,5 +1,6 @@
 import { Link } from "expo-router";
-import { MapPin, Sparkles } from "lucide-react-native";
+import { MapPinIcon } from "phosphor-react-native/src/icons/MapPin";
+import { SparkleIcon } from "phosphor-react-native/src/icons/Sparkle";
 import { View } from "react-native";
 import { ExpandableRow } from "@/components/expandable-row";
 import { Price } from "@/components/price";
@@ -28,7 +29,7 @@ function ProductSummary({ product }: { product: MockProduct }) {
 	return (
 		<View className="flex-row items-center gap-3">
 			<View className="h-16 w-16 items-center justify-center rounded-2xl bg-card">
-				<Icon as={Sparkles} size={22} className="text-muted-foreground" />
+				<Icon as={SparkleIcon} size={22} className="text-muted-foreground" />
 			</View>
 			<View className="flex-1 gap-1">
 				<Text className="font-sans-medium" numberOfLines={1}>
@@ -84,7 +85,7 @@ function ProductDetails({ product }: { product: MockProduct }) {
 				<Stat label="Mínimo" value={`${product.minStock} un.`} />
 			</View>
 			<View className="flex-row items-center gap-1.5 px-1">
-				<Icon as={MapPin} size={14} className="text-muted-foreground" />
+				<Icon as={MapPinIcon} size={14} className="text-muted-foreground" />
 				<Text className="text-muted-foreground text-sm">
 					{product.location}
 				</Text>

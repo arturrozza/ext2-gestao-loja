@@ -23,6 +23,14 @@ export function HomeScreen() {
 						<Text>Ver protótipo do ERP</Text>
 					</Button>
 				</Link>
+				<Link
+					href={{ pathname: "/mock/dashboard", params: { empty: "1" } }}
+					asChild
+				>
+					<Button size="lg" variant="outline">
+						<Text>Ver loja começando (vazia)</Text>
+					</Button>
+				</Link>
 				<Link href="/design-system" asChild>
 					<Button size="lg" variant="outline">
 						<Text>Ver design system</Text>

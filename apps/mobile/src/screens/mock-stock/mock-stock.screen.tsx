@@ -1,5 +1,6 @@
 import { Link, useRouter } from "expo-router";
-import { Plus, SlidersHorizontal } from "lucide-react-native";
+import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
+import { SlidersHorizontalIcon } from "phosphor-react-native/src/icons/SlidersHorizontal";
 import { useState } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -103,7 +104,7 @@ export function MockStockScreen() {
 					title="Estoque"
 					right={
 						<IconButton
-							icon={Plus}
+							icon={PlusIcon}
 							label="Novo produto"
 							onPress={() => router.push("/mock/new-product")}
 						/>
@@ -123,7 +124,7 @@ export function MockStockScreen() {
 						/>
 					</View>
 					<IconButton
-						icon={SlidersHorizontal}
+						icon={SlidersHorizontalIcon}
 						label="Filtros"
 						variant="primary"
 						onPress={() => setShowFilters(!showFilters)}

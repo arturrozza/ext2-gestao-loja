@@ -12,6 +12,43 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-04: Transições só com deslize, sem fade
+
+**Decisão:** toda tela entra deslizando da direita, formulários também (antes subiam com `fade_from_bottom`). O
+conteúdo não faz mais fade ao abrir a tela. A gaveta do "+" sobe deslizando de baixo, e só o fundo escurece. Na tela
+inicial, uma barra compacta com "Início" aparece no topo ao rolar, como o título grande do iOS.
+**Por quê:** o mantenedor achou as transições com fade ruins; o deslize é o padrão que a pessoa conhece do iPhone e
+do WhatsApp. A barra compacta mostra onde a pessoa está depois que a saudação sai da tela.
+
+## 2026-11-04: Ícones do Phosphor no lugar do Lucide
+
+**Decisão:** o app usa o [Phosphor](https://phosphoricons.com) (`phosphor-react-native`) em todos os ícones, pelo
+`Icon` de `src/components/ui/icon.tsx`. Cada ícone é importado pelo caminho dele, não pelo pacote inteiro.
+**Por quê:** pedido do mantenedor. O Phosphor tem pesos (`regular`, `fill`, `bold`...), o que permite, por exemplo, a
+aba ativa com o ícone preenchido. A importação por caminho é a recomendada pela doc do pacote: pelo índice, o app
+levaria os 1500 ícones.
+
+## 2026-11-04: Tela inicial e navegação
+
+**Decisão:** a tela inicial segue o app do Inter Empresas: card branco de destaque com o lucro real do mês e seções com
+carrossel de atalhos para todos os módulos (Dia a dia, Estoque, Gestão). Fundo cinza claro e cards brancos sem borda,
+ícones sem fundo, cantos `rounded-2xl`, header rolando com a página. A barra de abas fica com Início, Vendas e Estoque;
+a aba "Mais" saiu. O "+" da barra abre uma gaveta com nova venda, nova compra, novo produto e novo cliente. Badge de
+pendência só em Alertas.
+
+**Por quê:**
+
+- **"Mais" saiu:** a tela inicial já leva a todos os módulos, a aba repetia o mesmo menu.
+- **Gaveta no "+":** junta todo cadastro num lugar só. A nova venda passa a ter dois toques ("+" e "Nova venda") em
+  vez de um, o que o mantenedor aceitou ao aprovar a tela; o card e as pílulas de nova venda poluíam a tela.
+- **Sem card preto ou laranja:** pesavam demais. A profundidade vem do branco sobre o cinza, sem sombra.
+- **Badge só em Alertas:** com badge em vários lugares, nenhum chama atenção.
+- **Banner de alertas removido:** o número no atalho de Alertas já avisa.
+- **Olho que esconde os valores** no card de destaque, como em app de banco: o lojista usa o app no balcão, com
+  cliente vendo a tela.
+- **Tela do Mercado Livre sem acesso:** só abria pelo "Mais". A integração está fora do MVP; a tela do mock fica no
+  código até ser apagada ou reaproveitada.
+
 ## 2026-11-04: Regras do produto revisadas com base na EXT1
 
 **Decisão:** os nove módulos, as funcionalidades e as regras foram revisados um a um e estão em

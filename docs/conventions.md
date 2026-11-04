@@ -71,8 +71,10 @@ apps/mobile/src/
 
 ### Mobile: design system
 
-Referência visual: app de loja com fundo branco, superfícies cinza claro preenchidas, ações em terracota e destaques em
-preto. Adaptada: as cores principais do app são **branco, laranja e preto** e tudo é bem arredondado (Dribbble, enviada pelo mantenedor em 2026-11-04).
+Referência visual: app de loja com fundo branco, superfícies cinza claro preenchidas e ações em laranja (Dribbble,
+enviada pelo mantenedor em 2026-11-04), revista na tela inicial (MUN-9) com o Inter Empresas como referência: **fundo
+cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A tela inicial é o modelo; as outras telas do
+mock ainda seguem a versão antiga e migram aos poucos para as regras abaixo.
 
 - Os tokens ficam em `apps/mobile/src/global.css` (variáveis CSS em HSL) e são mapeados no `tailwind.config.js`.
   `src/lib/theme.ts` espelha as cores para APIs sem `className`; mudou um token no CSS, mude lá também.
@@ -80,38 +82,77 @@ preto. Adaptada: as cores principais do app são **branco, laranja e preto** e t
   - `bg-background`: fundo da tela (branco).
   - `bg-card`: superfície cinza clara preenchida (inputs, chips, tiles, blocos de total, botões secundários).
   - `bg-primary`: laranja (`#EA580C`), para a ação principal e a seleção.
-  - `bg-secondary`: preto, para destaques (blocos de resumo).
+  - `bg-secondary`: preto. **Não use em cards ou blocos** (o mantenedor vetou card preto); só em texto forte ou no
+    véu de fundo (`BACKDROP`).
   - `text-muted-foreground`: texto secundário.
   - `text-destructive`: erro e remoção.
-- **Sem sombras.** A profundidade vem da cor: superfície cinza sobre fundo branco, bloco preto para destaque. Itens de
-  lista são cards brancos com borda fina (`border border-border`) e um tile cinza à esquerda.
-- Raio: botões, inputs, chips, botões de ícone, pílulas de status, navbar e avatares `rounded-full`; cards, blocos e
-  campos de várias linhas `rounded-3xl`; tiles de imagem `rounded-2xl`.
+- **Sem sombras.** A profundidade vem da cor: card branco sobre fundo cinza claro (`ScreenLayout tone="muted"`), sem
+  borda. Em tela de fundo branco (as antigas), o card é branco com borda fina (`border border-border`).
+- **Nada de card preto nem card laranja cheio.** Laranja só em detalhes: variação, link, badge de ação, ícone de
+  destaque, botão principal.
+- Raio: botões, inputs, chips, botões de ícone, pílulas, badges, navbar e avatares `rounded-full`; cards, blocos e
+  campos de várias linhas `rounded-2xl`; pequenos elementos dentro de card `rounded-xl`. Nada de `rounded-3xl` (só o topo
+  da gaveta, `rounded-t-3xl`).
+- **Ícones soltos, sem tile** (quadradinho colorido ou cinza atrás). Cor padrão cinza: `text-foreground/50` nos cards,
+  `text-foreground/45` em detalhes (olho, seta). Cor cheia só quando o ícone carrega significado (laranja da variação,
+  vermelho de erro/alerta).
+- **Espaço generoso, mas sem exagero:** card principal `p-5`, cards de atalho `p-3.5`, `gap-7` entre blocos da tela.
+  Fontes discretas: título de seção `text-base`, nome de card `text-sm`, valor de destaque `text-[32px]`.
 - Tipografia: Plus Jakarta Sans; títulos em `font-sans-semibold`, nunca bold pesado. Peso se escolhe pela família:
   `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`. Dinheiro com `Price` (centavos menores).
 - Só tema claro por enquanto (`userInterfaceStyle: "light"` no `app.json`).
-- **Sem header padrão do navigator** (`headerShown: false`). Cada tela usa `ScreenHeader`: `variant="large"` nas raízes
-  das abas (título grande à esquerda) e o padrão nas telas internas (voltar em tile cinza, título centralizado, ação
-  à direita). Botões só de ícone usam `IconButton`.
-- Navbar: barra branca larga, com borda fina, ícone + nome em todas as abas (a ativa em laranja), contadores de pendências
-  nas abas (estoque baixo, acertos em aberto) e um botão "+" laranja ao lado para nova venda. Com `TabTrigger asChild`, descarte o
+- **Sem header padrão do navigator** (`headerShown: false`). Telas internas usam `ScreenHeader` (voltar em
+  círculo cinza, título centralizado, ação à direita). Raízes de aba com o título dentro do conteúdo (a inicial) não têm
+  header fixo: usam `compactTitle` no `ScreenLayout`. As raízes antigas ainda usam `ScreenHeader variant="large"` até
+  migrarem. Botões só de ícone usam `IconButton`.
+- Navbar: barra branca larga, com borda fina, ícone + nome em três abas (Início, Vendas, Estoque; a ativa em laranja) e
+  um botão "+" laranja ao lado. O "+" abre a gaveta de ações rápidas (`QuickActionsSheet`): nova venda, nova compra,
+  novo produto, novo cliente. Sem contadores nas abas. Com `TabTrigger asChild`, descarte o
   `style` que ele injeta no botão (senão o ícone sai do centro).
-- Toda tela monta em cima do `ScreenLayout` (`@/components/screen-layout`): header, conteúdo que entra com fade, uma
+- **Tela inicial** (o modelo):
+  - Um brilho laranja bem leve (`HOME_GLOW`: 12% no topo, 4% e 2% descendo) cobre a página e rola com ela. Mais que
+    isso fica laranja demais; só no topo deixa o resto cru.
+  - O título fica dentro do conteúdo (saudação: avatar + "Boa tarde," + nome da loja) e rola junto; o `compactTitle`
+    mostra "Início" no header de vidro ao rolar.
+  - Card de destaque: rótulo + olho que esconde os valores, lucro real do mês grande (toque abre o relatório), variação
+    contra o mês anterior, barrinhas dos últimos 7 dias (hoje em laranja cheio) e três números de apoio.
+  - Seções com título e um carrossel horizontal de cards quadrados brancos (ícone solto, nome, resumo).
+  - Badge vermelho (`bg-destructive`) com número só onde há pendência real: hoje, só em Alertas.
+  - Estado vazio (loja começando): tudo zerado, barras cinza baixinhas, Margem "—", resumos "Nenhuma ainda". Sem
+    passo a passo de onboarding (fora do MVP).
+- Toda tela monta em cima do `ScreenLayout` (`@/components/screen-layout`): header, o conteúdo (aparece direto, sem fade), uma
   linha finíssima e bem clara sob o header que só aparece quando o conteúdo rola por baixo, e um degradê branco embaixo
   para o conteúdo sumir suave atrás da navbar (`bottom="tabs"` nas abas). Cores em `DIVIDER` e `FADE`
   (`src/lib/theme.ts`).
-- Transições entre telas: `ios_from_right` nas telas internas e `fade_from_bottom` nos formulários (no `Stack` do
-  `_layout.tsx`).
+- Telas cujo título fica dentro do conteúdo (a inicial) passam `compactTitle` ao `ScreenLayout`: ao rolar, uma barra
+  compacta com o título centralizado aparece no topo, como o título grande do iOS, para a pessoa saber onde está. Ela é
+  de vidro fosco (`CompactHeader`: blur do `expo-blur` + véu branco `GLASS`), cobre a barra de status e tem uma linha
+  fina embaixo. O blur aparece animando a `intensity`, nunca a opacidade.
+- Sem barra de rolagem vertical visível nas telas (`showsVerticalScrollIndicator={false}` no `ScreenLayout`).
+- Transições entre telas: **todas** deslizam da direita (`ios_from_right`), formulários também. Nada de transição de
+  tela com fade (`fade`, `fade_from_bottom`) nem fade no conteúdo ao abrir a tela.
+- Gavetas (bottom sheets, como a do "+"): sobem deslizando de baixo com `withTiming` (abre ~320 ms com
+  `Easing.out(Easing.cubic)`, fecha ~220 ms) e descem ao fechar. Só o fundo escurecido (`BACKDROP`) muda de opacidade; a
+  gaveta nunca faz fade. `Modal` com `animationType="none"`; a animação é nossa.
 - **Animações suaves, sem bounce:** Reanimated com `withTiming` (120–320 ms). `LinearTransition` quando itens entram,
-  saem ou expandem, e `FadeIn`/`FadeInDown` para conteúdo novo. Nada de `springify()`. Não ponha `className` em
+  saem ou expandem, e `FadeIn` só para pedaços pequenos que surgem dentro da tela (erro de campo, detalhe
+  expandido), nunca na tela inteira. Nada de `springify()`. Não ponha `className` em
   `Animated.View`: use uma `View` dentro dele.
+- **Haptics** em todo toque, pelos helpers de `src/lib/haptics.ts` (nunca `expo-haptics` direto): `hapticTap` para abrir
+  card, linha ou link; `hapticSelect` para trocar aba, alternar, escolher chip ou mudar quantidade; `hapticPress` para a
+  ação principal (o "+", botões laranja; o `Button` já faz sozinho). Dentro de conteúdo que rola, a vibração vai no
+  `onPress` (ao soltar), não no `onPressIn`, para não vibrar quando a pessoa só começa a rolar. Na navbar e no header,
+  que não rolam, pode ser `onPressIn`.
 - Detalhes de um item abrem no próprio card (`ExpandableRow`), sem navegar para outra tela.
 - Formulários: `FormField` (label + input + erro), `FormSection` (grupo com título), `ChoiceChips` (escolha única) e
   `FormFooter` (resumo + botão). A validação é com Zod e o erro aparece embaixo do campo só depois da primeira tentativa
   de envio.
+- Ícones: [Phosphor](https://phosphoricons.com) pelo `Icon`, importando cada ícone pelo caminho dele
+  (`phosphor-react-native/src/icons/<Nome>`), nunca pelo pacote inteiro, que traz os 1500 ícones para o app. Peso
+  `regular` no geral e `fill` na aba ativa da navbar.
 - Componentes base vêm do [React Native Reusables](https://reactnativereusables.com/docs) e ficam em
   `src/components/ui/`. Para adicionar um: `bunx --bun @react-native-reusables/cli@latest add <componente>` (em
-  `apps/mobile`), depois troque `font-<peso>` pelas famílias, ajuste ao estilo acima e rode `bun run check:fix`.
+  `apps/mobile`), depois troque `font-<peso>` pelas famílias, os ícones do lucide pelos do Phosphor, ajuste ao estilo acima e rode `bun run check:fix`.
 - Texto sempre pelo `Text` de `@/components/ui/text`, não o `Text` do React Native. Junte classes com `cn()`.
 
 ## Validação: `t` × Zod

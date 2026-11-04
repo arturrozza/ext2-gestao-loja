@@ -1,10 +1,10 @@
-import type { LucideIcon } from "lucide-react-native";
 import { Pressable } from "react-native";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconType } from "@/components/ui/icon";
+import { hapticTap, withHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 type IconButtonProps = {
-	icon: LucideIcon;
+	icon: IconType;
 	label: string;
 	onPress?: () => void;
 	/** `surface`: light-gray tile (back, more). `primary`: orange tile (filter, add). */
@@ -22,7 +22,7 @@ export function IconButton({
 
 	return (
 		<Pressable
-			onPress={onPress}
+			onPress={withHaptic(hapticTap, onPress)}
 			accessibilityRole="button"
 			accessibilityLabel={label}
 			hitSlop={6}

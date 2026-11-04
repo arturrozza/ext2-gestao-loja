@@ -7,7 +7,7 @@ Prioritize mobile-first patterns, performance and cross-platform compatibility.
 
 Expo ships breaking changes every SDK. Before writing code that touches Expo, EAS or React Native APIs:
 
-1. Check the major version of `expo` in `package.json` (currently **57**).
+1. Check the major version of `expo` in `package.json` (currently **58**).
 2. Read the versioned docs: `https://docs.expo.dev/versions/v58.0.0/`
 3. For anything else, use https://docs.expo.dev/llms.txt (index with corrections to common LLM misconceptions) and
    follow it to the specific page. Never answer from memory.
@@ -72,14 +72,23 @@ Alias: `@/*` → `src/*`.
 ### Styling (NativeWind)
 - Style with `className`. Use `StyleSheet`/`style` only when NativeWind can't do it (e.g. animated values).
 - Design system rules (tokens, surfaces, radius, header, navbar, animations, forms) live in `docs/conventions.md`
-  (Mobile: design system). Read it before building UI. In short: white page, light-gray filled surfaces (`bg-card`),
-  orange `bg-primary` for actions, black `bg-secondary` for highlights, **no shadows**, fully rounded controls (`rounded-full`), no default navigator header
-  (`ScreenHeader`), timing-based Reanimated animations, never `className` on `Animated.View`.
-- Screens use `ScreenLayout` (header + fade-in content + hairline under the header on scroll + bottom gradient behind the tab bar). Stack transitions are set in
-  the `_layout.tsx` files (`ios_from_right`, forms `fade_from_bottom`).
+  (Mobile: design system). Read it before building UI. In short (the home screen is the model): light-gray page
+  (`tone="muted"`) with white borderless cards, orange `bg-primary` only for actions and details, **never black or
+  solid-orange cards**, **no shadows**, cards `rounded-2xl` and controls `rounded-full` (no `rounded-3xl`), loose icons
+  with no tile in a soft gray (`text-foreground/50`), no default navigator header (`ScreenHeader` or `compactTitle`),
+  timing-based Reanimated animations, never `className` on `Animated.View`.
+- Screens use `ScreenLayout` (header + content + hairline under the header on scroll + bottom gradient behind the tab
+  bar; `compactTitle` adds the iOS-style frosted-glass compact bar, `CompactHeader`, that appears on scroll; no vertical
+  scroll indicator). On Android, `expo-blur` only blurs inside a `BlurTargetView` passed as `blurTarget`. Every stack screen, forms included, slides
+  in from the right (`ios_from_right` in `_layout.tsx`). No fade screen transitions and no fade-in of whole screens.
+  Bottom sheets slide up with `withTiming` (`Modal animationType="none"`); only the backdrop fades.
 - Font: Plus Jakarta Sans (`src/lib/fonts.ts`). Each weight is its own family: `font-sans`, `font-sans-medium`,
   `font-sans-semibold`, `font-sans-bold`; never `font-medium`/`font-bold`.
-- Base components: React Native Reusables in `src/components/ui/` (ours to edit). Icons: lucide via `Icon`.
+- Base components: React Native Reusables in `src/components/ui/` (ours to edit). Icons: Phosphor (`phosphor-react-native`) via
+  `Icon`, one import per icon path (`import { HouseIcon } from "phosphor-react-native/src/icons/House"`), never the
+  barrel (it pulls all 1500 icons into the bundle). Default weight `regular`; `fill` for the active tab. Never lucide.
+- Haptics on every tap via `src/lib/haptics.ts` (`hapticTap`, `hapticSelect`, `hapticPress`), never `expo-haptics`
+  directly. Inside scroll content use `onPress`, not `onPressIn` (starting a scroll must not buzz).
 - Render text with `Text` from `@/components/ui/text`. Merge classes with `cn()` (`@/lib/utils`).
 - New folders using `className` must be covered by `content` in `tailwind.config.js` (currently `./src/**/*`).
 

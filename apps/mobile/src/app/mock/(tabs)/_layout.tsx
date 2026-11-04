@@ -10,7 +10,6 @@ export default function MockTabsLayout() {
 				<TabTrigger name="dashboard" href="/mock/dashboard" />
 				<TabTrigger name="sales" href="/mock/sales" />
 				<TabTrigger name="stock" href="/mock/stock" />
-				<TabTrigger name="more" href="/mock/more" />
 			</TabList>
 		</Tabs>
 	);

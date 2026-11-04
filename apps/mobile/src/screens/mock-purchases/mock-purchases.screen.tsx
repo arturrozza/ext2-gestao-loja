@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { Plus, Truck } from "lucide-react-native";
+import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
+import { TruckIcon } from "phosphor-react-native/src/icons/Truck";
 import { View } from "react-native";
 import { DetailLine } from "@/components/detail-line";
 import { ExpandableRow } from "@/components/expandable-row";
@@ -22,7 +23,7 @@ function PurchaseSummary({ purchase }: { purchase: MockPurchase }) {
 	return (
 		<View className="flex-row items-center gap-3">
 			<View className="h-14 w-14 items-center justify-center rounded-2xl bg-card">
-				<Icon as={Truck} size={22} className="text-muted-foreground" />
+				<Icon as={TruckIcon} size={22} className="text-muted-foreground" />
 			</View>
 			<View className="flex-1 gap-0.5">
 				<Text className="font-sans-medium">Compra #{purchase.id}</Text>
@@ -65,7 +66,7 @@ export function MockPurchasesScreen() {
 					title="Compras"
 					right={
 						<IconButton
-							icon={Plus}
+							icon={PlusIcon}
 							label="Registrar compra"
 							variant="primary"
 							onPress={() => router.push("/mock/new-purchase")}

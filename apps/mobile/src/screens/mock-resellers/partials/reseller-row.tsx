@@ -1,4 +1,4 @@
-import { Phone } from "lucide-react-native";
+import { PhoneIcon } from "phosphor-react-native/src/icons/Phone";
 import { View } from "react-native";
 import { DetailLine } from "@/components/detail-line";
 import { ExpandableRow } from "@/components/expandable-row";
@@ -69,7 +69,7 @@ function ResellerDetails({ reseller }: { reseller: MockReseller }) {
 					<Text>Registrar acerto</Text>
 				</Button>
 				<Button variant="outline" size="sm" className="flex-1">
-					<Icon as={Phone} size={16} />
+					<Icon as={PhoneIcon} size={16} />
 					<Text>{reseller.phone}</Text>
 				</Button>
 			</View>

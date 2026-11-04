@@ -1,52 +1,33 @@
-import { Link } from "expo-router";
 import type { TabTriggerSlotProps } from "expo-router/ui";
 import { TabTrigger } from "expo-router/ui";
-import {
-	House,
-	LayoutGrid,
-	type LucideIcon,
-	Package,
-	Plus,
-	ReceiptText,
-} from "lucide-react-native";
-import type { ComponentRef, Ref } from "react";
+import { HouseIcon } from "phosphor-react-native/src/icons/House";
+import { PackageIcon } from "phosphor-react-native/src/icons/Package";
+import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
+import { ReceiptIcon } from "phosphor-react-native/src/icons/Receipt";
+import { type ComponentRef, type Ref, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Icon } from "@/components/ui/icon";
+import { QuickActionsSheet } from "@/components/quick-actions-sheet";
+import { Icon, type IconType } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { MOCK_ALERTS, MOCK_PRODUCTS } from "@/lib/mock-erp-data";
+import { hapticPress, hapticSelect } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
-const lowStockCount = MOCK_PRODUCTS.filter((p) => p.stock < p.minStock).length;
-
 const TABS = [
-	{ name: "dashboard", label: "Início", icon: House, badge: 0 },
-	{ name: "sales", label: "Vendas", icon: ReceiptText, badge: 0 },
-	{ name: "stock", label: "Estoque", icon: Package, badge: lowStockCount },
-	{ name: "more", label: "Mais", icon: LayoutGrid, badge: MOCK_ALERTS.length },
+	{ name: "dashboard", label: "Início", icon: HouseIcon },
+	{ name: "sales", label: "Vendas", icon: ReceiptIcon },
+	{ name: "stock", label: "Estoque", icon: PackageIcon },
 ] as const;
 
-function Badge({ count }: { count: number }) {
-	return (
-		<View className="absolute -top-1.5 -right-2.5 h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1">
-			<Text className="font-sans-semibold text-[10px] text-primary-foreground leading-none">
-				{count}
-			</Text>
-		</View>
-	);
-}
-
 type TabButtonProps = TabTriggerSlotProps & {
-	icon: LucideIcon;
+	icon: IconType;
 	label: string;
-	badge: number;
 	ref?: Ref<ComponentRef<typeof View>>;
 };
 
 function TabButton({
 	icon,
 	label,
-	badge,
 	isFocused,
 	style: _triggerStyle,
 	...props
@@ -55,8 +36,9 @@ function TabButton({
 	// wins over className in NativeWind, which breaks the layout. Drop it and style via className only.
 	return (
 		<Pressable
+			onPressIn={hapticSelect}
 			{...props}
-			accessibilityLabel={badge > 0 ? `${label}, ${badge} pendentes` : label}
+			accessibilityLabel={label}
 			className={cn(
 				"h-14 flex-1 items-center justify-center gap-1 rounded-full px-1",
 				isFocused && "bg-primary/10",
@@ -66,9 +48,9 @@ function TabButton({
 				<Icon
 					as={icon}
 					size={20}
+					weight={isFocused ? "fill" : "regular"}
 					className={isFocused ? "text-primary" : "text-muted-foreground"}
 				/>
-				{badge > 0 ? <Badge count={badge} /> : null}
 			</View>
 			<Text
 				className={cn(
@@ -89,10 +71,11 @@ function TabButton({
 
 /**
  * Bottom navigation for the ERP mock: white bar (thin border) with icon + label for every tab (badges show pending counts) and an
- * orange "new sale" button next to it. Depth comes from color, no shadow.
+ * orange "+" button next to it that opens the quick actions sheet. Depth comes from color, no shadow.
  */
 export function MockTabBar() {
 	const insets = useSafeAreaInsets();
+	const [actionsOpen, setActionsOpen] = useState(false);
 
 	return (
 		<View
@@ -103,19 +86,23 @@ export function MockTabBar() {
 			<View className="flex-1 flex-row gap-2 rounded-full border border-border bg-background p-1.5">
 				{TABS.map((tab) => (
 					<TabTrigger key={tab.name} name={tab.name} asChild>
-						<TabButton icon={tab.icon} label={tab.label} badge={tab.badge} />
+						<TabButton icon={tab.icon} label={tab.label} />
 					</TabTrigger>
 				))}
 			</View>
-			<Link href="/mock/new-sale" asChild>
-				<Pressable
-					accessibilityRole="button"
-					accessibilityLabel="Nova venda"
-					className="h-14 w-14 items-center justify-center rounded-full bg-primary active:bg-primary/90"
-				>
-					<Icon as={Plus} size={24} className="text-primary-foreground" />
-				</Pressable>
-			</Link>
+			<Pressable
+				onPressIn={hapticPress}
+				accessibilityRole="button"
+				accessibilityLabel="Criar: venda, compra, produto ou cliente"
+				onPress={() => setActionsOpen(true)}
+				className="h-14 w-14 items-center justify-center rounded-full bg-primary active:bg-primary/90"
+			>
+				<Icon as={PlusIcon} size={24} className="text-primary-foreground" />
+			</Pressable>
+			<QuickActionsSheet
+				open={actionsOpen}
+				onClose={() => setActionsOpen(false)}
+			/>
 		</View>
 	);
 }

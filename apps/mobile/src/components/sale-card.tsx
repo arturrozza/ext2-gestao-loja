@@ -1,4 +1,7 @@
-import { ReceiptText, ShoppingBag, Store, Users } from "lucide-react-native";
+import { ReceiptIcon } from "phosphor-react-native/src/icons/Receipt";
+import { ShoppingBagIcon } from "phosphor-react-native/src/icons/ShoppingBag";
+import { StorefrontIcon } from "phosphor-react-native/src/icons/Storefront";
+import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import { View } from "react-native";
 import { DetailLine } from "@/components/detail-line";
 import { ExpandableRow } from "@/components/expandable-row";
@@ -28,20 +31,20 @@ const STATUS: Record<
 	canceled: { label: "Cancelada", tone: "danger" },
 };
 
-const CHANNEL_ICON: Record<Channel, typeof Store> = {
-	store: Store,
-	ml: ShoppingBag,
-	reseller: Users,
+const CHANNEL_ICON: Record<Channel, typeof StorefrontIcon> = {
+	store: StorefrontIcon,
+	ml: ShoppingBagIcon,
+	reseller: UsersIcon,
 };
 
 function SaleSummary({ sale }: { sale: MockSale }) {
 	return (
 		<View className="flex-row items-center gap-3">
-			<View className="h-14 w-14 items-center justify-center rounded-2xl bg-card">
+			<View className="w-8 items-center">
 				<Icon
 					as={CHANNEL_ICON[sale.channel]}
 					size={22}
-					className="text-muted-foreground"
+					className="text-foreground/50"
 				/>
 			</View>
 			<View className="flex-1 gap-1">
@@ -111,7 +114,7 @@ function SaleDetails({ sale }: { sale: MockSale }) {
 			<ProfitBox sale={sale} />
 			<View className="flex-row gap-2">
 				<Button variant="outline" size="sm" className="flex-1">
-					<Icon as={ReceiptText} size={16} />
+					<Icon as={ReceiptIcon} size={16} />
 					<Text>Recibo</Text>
 				</Button>
 				{sale.status !== "canceled" ? (

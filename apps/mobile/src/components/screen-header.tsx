@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeftIcon } from "phosphor-react-native/src/icons/ArrowLeft";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,7 +44,7 @@ export function ScreenHeader({
 			style={{ paddingTop: insets.top + 8 }}
 		>
 			{router.canGoBack() ? (
-				<IconButton icon={ArrowLeft} label="Voltar" onPress={router.back} />
+				<IconButton icon={ArrowLeftIcon} label="Voltar" onPress={router.back} />
 			) : (
 				<View className={SLOT} />
 			)}

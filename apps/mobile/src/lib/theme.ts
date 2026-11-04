@@ -31,6 +31,33 @@ export const FADE = {
 	clear: "rgba(255, 255, 255, 0)",
 } as const;
 
+/** Same fade over the light-gray page (`tone="muted"`, hsl 0 0% 96%). */
+export const FADE_MUTED = {
+	solid: "rgba(245, 245, 245, 1)",
+	half: "rgba(245, 245, 245, 0.6)",
+	clear: "rgba(245, 245, 245, 0)",
+} as const;
+
+/** Milky white over the blur of the compact header (frosted glass). */
+export const GLASS = "rgba(255, 255, 255, 0.45)";
+
+/** Bottom border of the compact glass header: stronger than `DIVIDER` so it reads over the blur. */
+export const HEADER_BORDER = "rgba(0, 0, 0, 0.16)";
+
+/**
+ * Warm wash over the whole home page (primary #EA580C): stronger at the top, a faint warmth down the page, fading out
+ * at the very end so it meets the gray fade behind the tab bar.
+ */
+export const HOME_GLOW = [
+	"rgba(234, 88, 12, 0.12)",
+	"rgba(234, 88, 12, 0.04)",
+	"rgba(234, 88, 12, 0.02)",
+	"rgba(234, 88, 12, 0)",
+] as const;
+
+/** Dim layer behind sheets and dialogs (the black token at 40%). */
+export const BACKDROP = "rgba(28, 28, 28, 0.4)";
+
 /** Very light hairline under the header when content scrolls beneath it. */
 export const DIVIDER = "rgba(0, 0, 0, 0.06)";
 

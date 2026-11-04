@@ -1,21 +1,30 @@
-import type { LucideIcon, LucideProps } from "lucide-react-native";
 import { cssInterop } from "nativewind";
+import type {
+	IconProps as PhosphorIconProps,
+	Icon as PhosphorIconType,
+} from "phosphor-react-native";
 import * as React from "react";
 import { TextClassContext } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 
-type IconProps = LucideProps & {
-	as: LucideIcon;
-} & React.RefAttributes<LucideIcon>;
+/** A Phosphor icon component (e.g. `HouseIcon`), passed to `Icon` through `as`. */
+export type IconType = PhosphorIconType;
+
+type IconProps = PhosphorIconProps & {
+	as: IconType;
+	className?: string;
+};
 
 function IconImpl({ as: IconComponent, ...props }: IconProps) {
 	return <IconComponent {...props} />;
 }
 
+// Maps NativeWind classes to Phosphor props: `text-*` → `color`, `size-*`/`h-*`/`w-*` → `size`.
 cssInterop(IconImpl, {
 	className: {
 		target: "style",
 		nativeStyleToProp: {
+			color: "color",
 			height: "size",
 			width: "size",
 		},
@@ -23,24 +32,16 @@ cssInterop(IconImpl, {
 });
 
 /**
- * A wrapper component for Lucide icons with Nativewind `className` support via `cssInterop`.
+ * Phosphor icon with NativeWind `className` support. Import each icon from its own path so the bundle only ships the
+ * icons in use:
  *
- * This component allows you to render any Lucide icon while applying utility classes
- * using `nativewind`. It avoids the need to wrap or configure each icon individually.
- *
- * @component
- * @example
  * ```tsx
- * import { ArrowRight } from 'lucide-react-native';
- * import { Icon } from '@/registry/components/ui/icon';
+ * import { ArrowRightIcon } from "phosphor-react-native/src/icons/ArrowRight";
  *
- * <Icon as={ArrowRight} className="text-red-500" size={16} />
+ * <Icon as={ArrowRightIcon} className="text-primary" size={16} />
  * ```
  *
- * @param {LucideIcon} as - The Lucide icon component to render.
- * @param {string} className - Utility classes to style the icon using Nativewind.
- * @param {number} size - Icon size (defaults to 14).
- * @param {...LucideProps} ...props - Additional Lucide icon props passed to the "as" icon.
+ * `weight` (`regular` by default) switches the style: `thin`, `light`, `regular`, `bold`, `fill`, `duotone`.
  */
 function Icon({
 	as: IconComponent,

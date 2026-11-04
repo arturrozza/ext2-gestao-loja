@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Platform, Pressable } from "react-native";
 import { TextClassContext } from "@/components/ui/text";
+import { hapticPress, hapticTap } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -99,7 +100,7 @@ const buttonTextVariants = cva(
 type ButtonProps = React.ComponentProps<typeof Pressable> &
 	VariantProps<typeof buttonVariants>;
 
-function Button({ className, variant, size, ...props }: ButtonProps) {
+function Button({ className, variant, size, onPress, ...props }: ButtonProps) {
 	return (
 		<TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
 			<Pressable
@@ -110,6 +111,13 @@ function Button({ className, variant, size, ...props }: ButtonProps) {
 				)}
 				role="button"
 				{...props}
+				onPress={(event) => {
+					// On press (release), not press-in, so starting a scroll on a button never buzzes.
+					// Primary (orange) buttons get a firmer tap than the others.
+					if (variant === "default" || variant == null) hapticPress();
+					else hapticTap();
+					onPress?.(event);
+				}}
 			/>
 		</TextClassContext.Provider>
 	);

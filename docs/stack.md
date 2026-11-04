@@ -19,7 +19,9 @@ juntas.
 | Expo Router | ~58 | mobile | https://docs.expo.dev/router/introduction/ |
 | NativeWind | 4.2.7 (Tailwind 3.4) | mobile | https://www.nativewind.dev/docs |
 | React Native Reusables | componentes copiados para `src/components/ui` (CLI `@react-native-reusables/cli`, variante NativeWind) | mobile: componentes base do design system | https://reactnativereusables.com/docs |
-| lucide-react-native | ^1.67 (+ `react-native-svg` 15.16) | mobile: ícones, via `Icon` do Reusables | https://lucide.dev/guide/packages/lucide-react-native |
+| expo-haptics | ~58.0 | mobile: vibração nos toques, pelos helpers de `src/lib/haptics.ts` | https://docs.expo.dev/versions/v58.0.0/sdk/haptics/ |
+| expo-blur | ~58.0 | mobile: vidro fosco do header compacto (`CompactHeader`) | https://docs.expo.dev/versions/v58.0.0/sdk/blur-view/ |
+| phosphor-react-native | ^3.0 (+ `react-native-svg` 15.16) | mobile: ícones, via `Icon` (`src/components/ui/icon.tsx`) | https://github.com/duongdev/phosphor-react-native |
 | expo-linear-gradient | ~58 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v58.0.0/sdk/linear-gradient/ |
 | Plus Jakarta Sans | `@expo-google-fonts/plus-jakarta-sans` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |
 | EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~58 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |

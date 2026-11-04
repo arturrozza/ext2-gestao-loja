@@ -27,7 +27,9 @@ A base são os documentos da EXT1 ([`gugeldev/ext.1`](https://github.com/gugelde
 | [Relatórios](relatorios.md) | Ver lucro, custos, canais, produtos e comissões por período |
 | [Alertas](alertas.md) | Ser avisado sobre estoque, validade, margem e produto parado |
 
-A tela inicial mostra o resumo do mês e os alertas ativos. A navegação do app ainda não foi decidida.
+A tela inicial mostra o resumo do mês e dá acesso a todos os módulos, agrupados em seções (Dia a dia, Estoque,
+Gestão). Os alertas ativos aparecem como um número no atalho de Alertas. Embaixo, uma barra com Início, Vendas e Estoque
+e um botão "+" que abre as ações de cadastro: nova venda, nova compra, novo produto e novo cliente.
 
 ## Regras gerais
 

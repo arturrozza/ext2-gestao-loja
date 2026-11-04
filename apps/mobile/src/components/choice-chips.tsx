@@ -1,5 +1,6 @@
 import { Pressable, ScrollView } from "react-native";
 import { Text } from "@/components/ui/text";
+import { hapticSelect, withHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 type ChoiceChipsProps<T extends string> = {
@@ -25,7 +26,7 @@ export function ChoiceChips<T extends string>({
 				return (
 					<Pressable
 						key={option.value}
-						onPress={() => onChange(option.value)}
+						onPress={withHaptic(hapticSelect, () => onChange(option.value))}
 						accessibilityRole="radio"
 						accessibilityState={{ selected }}
 						className={cn(

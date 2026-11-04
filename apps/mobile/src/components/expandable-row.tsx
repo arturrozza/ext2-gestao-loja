@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react-native";
+import { CaretDownIcon } from "phosphor-react-native/src/icons/CaretDown";
 import { type ReactNode, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
@@ -10,6 +10,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { Icon } from "@/components/ui/icon";
+import { hapticSelect, withHaptic } from "@/lib/haptics";
 
 const layoutTransition = LinearTransition.duration(240);
 
@@ -30,20 +31,16 @@ export function ExpandableRow({ summary, children }: ExpandableRowProps) {
 
 	return (
 		<Animated.View layout={layoutTransition}>
-			<View className="overflow-hidden rounded-3xl border border-border bg-background">
+			<View className="overflow-hidden rounded-2xl border border-border bg-background">
 				<Pressable
-					onPress={toggle}
+					onPress={withHaptic(hapticSelect, toggle)}
 					accessibilityRole="button"
 					accessibilityState={{ expanded: open }}
 					className="flex-row items-center gap-3 p-3 active:bg-card"
 				>
 					<View className="flex-1">{summary}</View>
 					<Animated.View style={chevronStyle}>
-						<Icon
-							as={ChevronDown}
-							size={18}
-							className="text-muted-foreground"
-						/>
+						<Icon as={CaretDownIcon} size={18} className="text-foreground/45" />
 					</Animated.View>
 				</Pressable>
 				{open ? (

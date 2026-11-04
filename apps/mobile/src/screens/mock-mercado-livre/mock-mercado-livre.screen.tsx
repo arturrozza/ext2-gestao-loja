@@ -1,4 +1,6 @@
-import { Link2, RefreshCw, ShoppingBag } from "lucide-react-native";
+import { ArrowsClockwiseIcon } from "phosphor-react-native/src/icons/ArrowsClockwise";
+import { LinkSimpleIcon } from "phosphor-react-native/src/icons/LinkSimple";
+import { ShoppingBagIcon } from "phosphor-react-native/src/icons/ShoppingBag";
 import { View } from "react-native";
 import { DetailLine } from "@/components/detail-line";
 import { Price } from "@/components/price";
@@ -19,7 +21,7 @@ function AccountCard() {
 			<View className="flex-row items-center gap-3">
 				<View className="h-12 w-12 items-center justify-center rounded-2xl bg-secondary-foreground/10">
 					<Icon
-						as={ShoppingBag}
+						as={ShoppingBagIcon}
 						size={22}
 						className="text-secondary-foreground"
 					/>
@@ -35,7 +37,11 @@ function AccountCard() {
 			</View>
 			<View className="flex-row gap-2">
 				<Button className="flex-1 bg-primary">
-					<Icon as={RefreshCw} size={16} className="text-primary-foreground" />
+					<Icon
+						as={ArrowsClockwiseIcon}
+						size={16}
+						className="text-primary-foreground"
+					/>
 					<Text>Sincronizar</Text>
 				</Button>
 				<Button className="flex-1 bg-secondary-foreground/10 active:bg-secondary-foreground/20">
@@ -69,7 +75,7 @@ function PendingCard({ order }: { order: PendingOrder }) {
 				/>
 			</View>
 			<Button variant="outline" size="sm">
-				<Icon as={Link2} size={16} />
+				<Icon as={LinkSimpleIcon} size={16} />
 				<Text>Associar a um produto</Text>
 			</Button>
 		</View>

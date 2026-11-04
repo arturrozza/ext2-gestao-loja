@@ -1,5 +1,7 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { Ellipsis, MapPin, Sparkles } from "lucide-react-native";
+import { DotsThreeIcon } from "phosphor-react-native/src/icons/DotsThree";
+import { MapPinIcon } from "phosphor-react-native/src/icons/MapPin";
+import { SparkleIcon } from "phosphor-react-native/src/icons/Sparkle";
 import { View } from "react-native";
 import { IconButton } from "@/components/icon-button";
 import { Price } from "@/components/price";
@@ -114,19 +116,23 @@ export function MockProductScreen() {
 			header={
 				<ScreenHeader
 					title="Produto"
-					right={<IconButton icon={Ellipsis} label="Mais opções" />}
+					right={<IconButton icon={DotsThreeIcon} label="Mais opções" />}
 				/>
 			}
 		>
 			<View className="items-center gap-4">
 				<View className="h-40 w-full items-center justify-center rounded-3xl bg-card">
-					<Icon as={Sparkles} size={48} className="text-muted-foreground" />
+					<Icon as={SparkleIcon} size={48} className="text-muted-foreground" />
 				</View>
 				<View className="w-full flex-row items-start justify-between gap-3">
 					<View className="flex-1 gap-1">
 						<Text className="font-sans-semibold text-xl">{product.name}</Text>
 						<View className="flex-row items-center gap-1.5">
-							<Icon as={MapPin} size={14} className="text-muted-foreground" />
+							<Icon
+								as={MapPinIcon}
+								size={14}
+								className="text-muted-foreground"
+							/>
 							<Text className="text-muted-foreground text-sm">
 								{product.sku} · {product.location}
 							</Text>
