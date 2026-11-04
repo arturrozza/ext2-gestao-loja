@@ -8,6 +8,7 @@
 			"channel": "preview",
 			"environment": "preview",
 			"distribution": "internal",
+			"bun": "1.4.2",
 			"android": {
 				"buildType": "apk"
 			}
@@ -16,6 +17,7 @@
 			"channel": "production",
 			"environment": "production",
 			"distribution": "internal",
+			"bun": "1.4.2",
 			"android": {
 				"buildType": "apk"
 			}

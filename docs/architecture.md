@@ -209,10 +209,19 @@ O app não vai para as lojas: é de um cliente só. A instalação é feita com 
 - **CD:** o job `eas-update` do CI publica no channel `production` a cada push na `production` (merge da release),
   só se os outros jobs passarem. Autentica com o secret `EXPO_TOKEN`, token de um robot (papel Developer) da
   organização. Os apps instalados baixam o update em segundo plano e aplicam no próximo reinício.
+- **Versão do Bun:** a imagem de build do EAS vem com um Bun mais antigo, que não lê o `bun.lock`. Cada perfil do
+  `eas.json` fixa `"bun"` na mesma versão do `packageManager` do `package.json` raiz. Ao subir o Bun, atualize os dois.
 - **Credenciais:** keystore Android e certificados iOS ficam no EAS. Não gere binários com outra chave: o APK novo não
   instalaria por cima do antigo.
 
-Comandos (em `apps/mobile`):
+Atalhos (da raiz ou de `apps/mobile`), ambos com o perfil `production`:
+
+```bash
+bun run build:android   # APK do cliente
+bun run build:ios       # iOS ad hoc (precisa do Apple Developer Program e do aparelho cadastrado)
+```
+
+Comandos completos (em `apps/mobile`):
 
 ```bash
 bunx eas-cli build -p android --profile production   # APK do cliente (--profile preview para testar)

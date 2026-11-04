@@ -52,7 +52,9 @@
 		"web": "bun --env-file=../../.env expo start --web",
 		"typecheck": "tsc --noEmit",
 		"doctor": "bunx expo-doctor",
-		"export": "bun --env-file=../../.env expo export"
+		"export": "bun --env-file=../../.env expo export",
+		"build:android": "bunx eas-cli build --platform android --profile production",
+		"build:ios": "bunx eas-cli build --platform ios --profile production"
 	},
 	"private": true
 }
