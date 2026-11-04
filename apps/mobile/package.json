@@ -54,7 +54,8 @@
 		"doctor": "bunx expo-doctor",
 		"export": "bun --env-file=../../.env expo export",
 		"build:android": "bunx eas-cli build --platform android --profile production",
-		"build:ios": "bunx eas-cli build --platform ios --profile production"
+		"build:ios": "bunx eas-cli build --platform ios --profile production",
+		"build:ios:testflight": "bunx eas-cli build --platform ios --profile testflight --auto-submit"
 	},
 	"private": true
 }

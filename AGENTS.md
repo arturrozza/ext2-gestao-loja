@@ -53,6 +53,7 @@ bun run dev:server     # API with watch on :3000 (don't run together with the Do
 bun run dev:mobile     # Expo dev server
 bun run build:android  # EAS cloud build of the client APK (production profile)
 bun run build:ios      # EAS cloud build, iOS ad hoc (production profile)
+bun run build:ios:testflight  # EAS cloud build for TestFlight, auto-submitted to App Store Connect
 bun run check          # Biome lint + format + imports (read-only)
 bun run check:fix      # Biome with safe fixes
 bun run format         # Biome format on everything

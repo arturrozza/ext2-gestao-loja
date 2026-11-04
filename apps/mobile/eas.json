@@ -21,6 +21,17 @@
 			"android": {
 				"buildType": "apk"
 			}
+		},
+		"testflight": {
+			"channel": "production",
+			"environment": "production",
+			"distribution": "store",
+			"bun": "1.4.2"
+		}
+	},
+	"submit": {
+		"testflight": {
+			"ios": {}
 		}
 	}
 }

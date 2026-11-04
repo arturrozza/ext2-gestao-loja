@@ -9,7 +9,10 @@
 		"userInterfaceStyle": "automatic",
 		"ios": {
 			"bundleIdentifier": "com.mundomadam.loja",
-			"icon": "./assets/expo.icon"
+			"icon": "./assets/expo.icon",
+			"config": {
+				"usesNonExemptEncryption": false
+			}
 		},
 		"android": {
 			"package": "com.mundomadam.loja",

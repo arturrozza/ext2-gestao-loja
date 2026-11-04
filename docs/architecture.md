@@ -200,6 +200,12 @@ O app não vai para as lojas: é de um cliente só. A instalação é feita com 
 
 - **Channels:** `preview` (para testar) e `production` (cliente). Cada perfil do `apps/mobile/eas.json` grava o seu
   channel no binário e usa o environment do EAS de mesmo nome.
+- **TestFlight (iOS, equipe):** o perfil `testflight` gera build de loja (`"distribution": "store"`) no channel
+  `production` e envia para o App Store Connect (`--auto-submit`). Testadores internos (usuários do App Store Connect)
+  recebem sem revisão da Apple. Cada build do TestFlight expira em 90 dias: gere outra antes disso, mesmo sem
+  mudança nativa. O cliente segue no ad hoc (perfil `production`), que não expira assim.
+- **Criptografia (iOS):** `ios.config.usesNonExemptEncryption: false` no `app.json` (só HTTPS padrão), para a Apple
+  não pedir a declaração de exportação a cada build.
 - **`runtimeVersion` com policy `appVersion`:** um update só chega a binários com o mesmo `version` do `app.json`.
   Mudança nativa (lib nativa, permissão, config plugin, upgrade de SDK) exige subir o `version` e gerar um binário
   novo. Só JS/assets: basta publicar um update.
@@ -219,6 +225,7 @@ Atalhos (da raiz ou de `apps/mobile`), ambos com o perfil `production`:
 ```bash
 bun run build:android   # APK do cliente
 bun run build:ios       # iOS ad hoc (precisa do Apple Developer Program e do aparelho cadastrado)
+bun run build:ios:testflight  # iOS para o TestFlight (gera e envia para o App Store Connect)
 ```
 
 Comandos completos (em `apps/mobile`):
