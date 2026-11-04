@@ -18,6 +18,7 @@ juntas.
 | Expo SDK | 57 (RN 0.86, React 19.2) | mobile | https://docs.expo.dev/versions/v57.0.0/ |
 | Expo Router | ~57 | mobile | https://docs.expo.dev/router/introduction/ |
 | NativeWind | 4.2.7 (Tailwind 3.4) | mobile | https://www.nativewind.dev/docs |
+| EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~57 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |
 | TanStack Query | ^5 | mobile | https://tanstack.com/query/latest/docs/framework/react/react-native |
 | Biome | 2.5.15 (versão exata) | raiz | https://biomejs.dev |
 | Husky | ^9 | raiz (pre-commit, commit-msg) | https://typicode.github.io/husky |

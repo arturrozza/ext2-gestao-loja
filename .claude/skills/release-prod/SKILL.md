@@ -31,7 +31,7 @@ skill is the go-ahead to open and merge; ask only where a step says so.
    `main` (`/pr-main`), never a commit on `production`; ask before starting one.
 6. **Follow the deploy.** Watch the CI run on `production` (`gh run list --branch production --limit 3`, then
    `gh run watch <run-id> --exit-status`) and, when `.railway/` changed, the `Railway config` apply run. Then poll
-   `curl -fsS https://ext2-production.up.railway.app/health` for up to ~3 minutes until it answers. Do not rerun a
+   `curl -fsS https://mundomadam.up.railway.app/health` for up to ~3 minutes until it answers. Do not rerun a
    failed deploy on your own.
 7. **Close the tasks.** When the deploy is healthy, move each task noted in step 1 to `Done`
    (`mcp__linear-ext2__save_issue`, `state: "Done"`; load it with ToolSearch). Also list the team's tasks in

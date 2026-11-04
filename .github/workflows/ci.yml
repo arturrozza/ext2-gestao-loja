@@ -108,3 +108,31 @@ jobs:
           done
           docker logs server
           exit 1
+
+  eas-update:
+    name: EAS Update (production)
+    # Releases publish the app's JS/assets OTA to the production channel, only after every check above passes.
+    # Installed APKs pick it up on their next restarts (runtimeVersion policy "appVersion" in app.json).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/production'
+    needs: [quality, test, server-image]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: eas-update-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile
+      # Robot token from the mundo-madam Expo organization. EXPO_PUBLIC_* values come from the EAS
+      # "production" environment, not from a .env file.
+      - name: Publish update
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: bunx eas-cli@latest update --channel production --environment production --message "release ${GITHUB_SHA::7}" --non-interactive

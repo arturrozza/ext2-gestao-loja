@@ -8,9 +8,11 @@
 		"scheme": "mobile",
 		"userInterfaceStyle": "automatic",
 		"ios": {
+			"bundleIdentifier": "com.mundomadam.loja",
 			"icon": "./assets/expo.icon"
 		},
 		"android": {
+			"package": "com.mundomadam.loja",
 			"adaptiveIcon": {
 				"backgroundColor": "#E6F4FE",
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,6 +40,19 @@
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
+		},
+		"extra": {
+			"router": {},
+			"eas": {
+				"projectId": "27fd535e-5b5d-43b0-97cb-da8bd3ec2981"
+			}
+		},
+		"owner": "mundo-madam",
+		"runtimeVersion": {
+			"policy": "appVersion"
+		},
+		"updates": {
+			"url": "https://u.expo.dev/27fd535e-5b5d-43b0-97cb-da8bd3ec2981"
 		}
 	}
 }

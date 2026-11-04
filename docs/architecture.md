@@ -124,13 +124,14 @@ feat/x ──PR──▶ main (CI) ──PR de release──▶ production (CI) 
 
 ### CI: `.github/workflows/ci.yml`
 
-Roda em push e em PRs abertos contra a `main` ou a `production`, com três jobs:
+Roda em push e em PRs abertos contra a `main` ou a `production`, com quatro jobs:
 
 | Job | O que roda |
 | --- | --- |
 | `quality` | `biome ci .`, `bun run typecheck` (server + mobile), `expo-doctor` |
 | `test` | `bun run test:coverage` (migrations + unit + integração + e2e, com cobertura mínima) contra um Postgres 18 de serviço (`ext2_test`) |
 | `server-image` | builda o `apps/server/Dockerfile` (o mesmo que a Railway usa), roda as migrations com a imagem e espera o `/health` responder |
+| `eas-update` | só em push na `production`, depois dos três acima: publica o JS/assets do app no channel `production` do EAS Update (ver "Mobile" abaixo) |
 
 A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesma da imagem Docker.
 
@@ -190,8 +191,35 @@ Não rode `railway config apply` na mão, a não ser numa emergência: o normal 
    `networking.serviceDomains` no arquivo. Sem isso, o próximo apply apagaria o domínio.
 5. Conferir `https://<domínio>/health` → `{"status":"ok","database":"up"}`.
 
-### Mobile
+### Mobile: EAS Build + EAS Update
 
-Ainda sem CD. O app não vai para as lojas: o plano é gerar um `.apk` (EAS Build, perfil com `buildType: apk`) para
-mandar ao cliente, possivelmente automatizado no push da `production`. O `EXPO_PUBLIC_API_URL` de um build desses precisa
-apontar para o domínio do Railway, não para a máquina local.
+O app não vai para as lojas: é de um cliente só. A instalação é feita com um binário de **distribuição interna**
+(Android: `.apk` mandado direto; iOS: build ad hoc para aparelhos cadastrados), e o resto chega por **EAS Update**
+(atualização OTA de JS e assets). O projeto Expo fica na organização `mundo-madam` (`owner` e
+`extra.eas.projectId` no `apps/mobile/app.json`).
+
+- **Channels:** `preview` (para testar) e `production` (cliente). Cada perfil do `apps/mobile/eas.json` grava o seu
+  channel no binário e usa o environment do EAS de mesmo nome.
+- **`runtimeVersion` com policy `appVersion`:** um update só chega a binários com o mesmo `version` do `app.json`.
+  Mudança nativa (lib nativa, permissão, config plugin, upgrade de SDK) exige subir o `version` e gerar um binário
+  novo. Só JS/assets: basta publicar um update.
+- **Variáveis:** builds e updates na nuvem não leem o `.env` da raiz. O `EXPO_PUBLIC_API_URL`
+  (`https://mundomadam.up.railway.app`) está nos environments `preview` e `production` do EAS
+  (`bunx eas-cli env:list --environment production`).
+- **CD:** o job `eas-update` do CI publica no channel `production` a cada push na `production` (merge da release),
+  só se os outros jobs passarem. Autentica com o secret `EXPO_TOKEN`, token de um robot (papel Developer) da
+  organização. Os apps instalados baixam o update em segundo plano e aplicam no próximo reinício.
+- **Credenciais:** keystore Android e certificados iOS ficam no EAS. Não gere binários com outra chave: o APK novo não
+  instalaria por cima do antigo.
+
+Comandos (em `apps/mobile`):
+
+```bash
+bunx eas-cli build -p android --profile production   # APK do cliente (--profile preview para testar)
+bunx eas-cli device:create                           # iOS: cadastrar o aparelho (UDID) antes da build ad hoc
+bunx eas-cli build -p ios --profile production       # iOS ad hoc (precisa do Apple Developer Program)
+bunx eas-cli update --channel preview --environment preview --message "..."   # update de teste, manual
+```
+
+Cota do plano Free: 15 builds Android + 15 iOS por mês e 1.000 usuários ativos/mês de update. Se faltar build,
+`--local` gera na máquina (precisa de JDK + Android SDK) com a mesma config e as mesmas credenciais.
