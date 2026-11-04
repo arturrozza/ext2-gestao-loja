@@ -204,6 +204,11 @@ O app não vai para as lojas: é de um cliente só. A instalação é feita com 
   `production` e envia para o App Store Connect (`--auto-submit`). Testadores internos (usuários do App Store Connect)
   recebem sem revisão da Apple. Cada build do TestFlight expira em 90 dias: gere outra antes disso, mesmo sem
   mudança nativa. O cliente segue no ad hoc (perfil `production`), que não expira assim.
+- **Pendente, número de build (iOS):** o App Store Connect rejeita duas builds com o mesmo `buildNumber` na mesma
+  `version`, e o `eas.json` usa `"appVersionSource": "local"` sem `autoIncrement`. A segunda build do perfil
+  `testflight` na mesma versão (renovação dos 90 dias, por exemplo) falharia no envio. Antes dela, passar para
+  `"appVersionSource": "remote"` com `"autoIncrement": true` no perfil, para o EAS controlar o número de build. O
+  `version` (que define o `runtimeVersion` do OTA) continua manual.
 - **Criptografia (iOS):** `ios.config.usesNonExemptEncryption: false` no `app.json` (só HTTPS padrão), para a Apple
   não pedir a declaração de exportação a cada build.
 - **`runtimeVersion` com policy `appVersion`:** um update só chega a binários com o mesmo `version` do `app.json`.
