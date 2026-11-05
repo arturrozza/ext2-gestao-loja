@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fromCents, parseMoneyInput } from "@/lib/money";
+import { parseMoneyInput } from "@/lib/money";
 
 /** Cost correction (estoque.md): the right cost and why. */
 export const correctCostSchema = z.object({
@@ -9,7 +9,7 @@ export const correctCostSchema = z.object({
 			ctx.addIssue({ code: "custom", message: "Informe o custo certo." });
 			return z.NEVER;
 		}
-		return fromCents(cents);
+		return cents;
 	}),
 	note: z.string().trim().min(1, "Informe o motivo da correção."),
 });

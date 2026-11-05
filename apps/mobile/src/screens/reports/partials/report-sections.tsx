@@ -6,14 +6,14 @@ import { InfoRow } from "@/components/info-row";
 import { ListCard } from "@/components/list-card";
 import { Text } from "@/components/ui/text";
 import { plural, SALE_CHANNELS } from "@/lib/labels";
-import { formatMoney, formatRatio, toCents } from "@/lib/money";
+import { formatMoney, formatRatio, type Money } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { Report } from "@/queries/reports/reports.types";
 import { BarChart } from "./bar-chart";
 
 /** Like the sales totals: sold and real profit side by side, then the numbers behind them. */
 export function ReportSummary({ summary }: { summary: Report["summary"] }) {
-	const profit = toCents(summary.profit);
+	const profit = summary.profit;
 	return (
 		<View className="overflow-hidden rounded-2xl bg-background">
 			<View className="p-5">
@@ -60,11 +60,11 @@ const EVOLUTION_METRICS = [
 export function ReportEvolution({ report }: { report: Report }) {
 	const [selectedKey, setSelectedKey] = useState<string | null>(null);
 	const [metric, setMetric] = useState<"revenue" | "profit">("revenue");
-	const points = (read: (b: Report["evolution"][number]) => string) =>
+	const points = (read: (b: Report["evolution"][number]) => Money) =>
 		report.evolution.map((bucket) => ({
 			key: bucket.date,
 			label: bucket.label,
-			cents: toCents(read(bucket)),
+			cents: read(bucket),
 		}));
 
 	return (
@@ -108,8 +108,8 @@ function RevenueProfitRow({
 	profit,
 }: {
 	label: string;
-	revenue: string;
-	profit: string;
+	revenue: Money;
+	profit: Money;
 }) {
 	return (
 		<View className="flex-row items-center justify-between gap-4 px-4 py-3">
@@ -123,7 +123,7 @@ function RevenueProfitRow({
 				<Text
 					className={cn(
 						"text-[11px]",
-						toCents(profit) < 0 ? "text-destructive" : "text-success",
+						profit < 0 ? "text-destructive" : "text-success",
 					)}
 				>
 					lucro {formatMoney(profit)}

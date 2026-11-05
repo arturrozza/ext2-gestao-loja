@@ -20,7 +20,7 @@ import {
 	SALE_COST_KINDS,
 	times,
 } from "@/lib/labels";
-import { formatMoney, formatPercent, formatRatio, toCents } from "@/lib/money";
+import { formatMoney, formatPercent, formatRatio } from "@/lib/money";
 import type {
 	SaleCost,
 	SaleDetail,
@@ -39,21 +39,21 @@ function costLabel(cost: SaleCost) {
 
 /** The stored numbers of the sale: nothing is recomputed. */
 function breakdownOf(sale: SaleDetail): SaleBreakdownData {
-	const discountCents = toCents(sale.discount);
-	const surchargeCents = toCents(sale.surcharge);
-	const revenueCents = toCents(sale.revenue);
+	const discountCents = sale.discount;
+	const surchargeCents = sale.surcharge;
+	const revenueCents = sale.revenue;
 	return {
 		grossCents: revenueCents + discountCents - surchargeCents,
 		discountCents,
 		surchargeCents,
 		revenueCents,
-		productsCostCents: toCents(sale.productsCost),
+		productsCostCents: sale.productsCost,
 		costs: sale.costs.map((cost) => ({
 			key: cost.id,
 			label: costLabel(cost),
-			amountCents: toCents(cost.amount),
+			amountCents: cost.amount,
 		})),
-		profitCents: toCents(sale.profit),
+		profitCents: sale.profit,
 		margin: sale.margin,
 	};
 }
@@ -83,7 +83,7 @@ function CanceledNote({ sale }: { sale: SaleDetail }) {
 /** The top card: what was sold and when, then the two numbers that matter. */
 function Summary({ sale }: { sale: SaleDetail }) {
 	const canceled = sale.status === "canceled";
-	const loss = toCents(sale.profit) < 0;
+	const loss = sale.profit < 0;
 	return (
 		<View className="gap-5 rounded-2xl bg-background p-5">
 			<View className="flex-row items-center gap-3.5">
@@ -115,7 +115,7 @@ function Summary({ sale }: { sale: SaleDetail }) {
 							: `margem ${formatRatio(sale.margin)}`
 					}
 					danger={loss && !canceled}
-					good={!loss && !canceled && toCents(sale.profit) > 0}
+					good={!loss && !canceled && sale.profit > 0}
 					struck={canceled}
 				/>
 			</FigurePair>

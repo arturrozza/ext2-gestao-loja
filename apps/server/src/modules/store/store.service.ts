@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { audited } from "../../db/audit";
 import { stores } from "../../db/schema";
-import { percentOut } from "../../lib/percent";
 import type { AuthSession } from "../auth/auth.model";
 import type { StoreModel } from "./store.model";
 import { normalizeProfile } from "./store.rules";
@@ -21,16 +20,6 @@ const settingsColumns = {
 	staleProductDays: stores.staleProductDays,
 	lowMarginPercent: stores.lowMarginPercent,
 };
-
-/** Percentages as the app sends them ("12.5", not "12.50"). */
-function toSettings(row: StoreModel["settings"]): StoreModel["settings"] {
-	return {
-		...row,
-		defaultTaxPercent: percentOut(row.defaultTaxPercent),
-		mercadoLivreFeePercent: percentOut(row.mercadoLivreFeePercent),
-		lowMarginPercent: percentOut(row.lowMarginPercent),
-	};
-}
 
 /** The one row a query on the session's store must find; its absence is a broken session, not a user error. */
 function single<T>(rows: T[]): T {
@@ -67,13 +56,11 @@ export const StoreService = {
 	},
 
 	async settings(storeId: string): Promise<StoreModel["settings"]> {
-		return toSettings(
-			single(
-				await db
-					.select(settingsColumns)
-					.from(stores)
-					.where(eq(stores.id, storeId)),
-			),
+		return single(
+			await db
+				.select(settingsColumns)
+				.from(stores)
+				.where(eq(stores.id, storeId)),
 		);
 	},
 
@@ -89,21 +76,19 @@ export const StoreService = {
 			staleProductDays,
 			lowMarginPercent,
 		} = input;
-		return toSettings(
-			single(
-				await audited(session.user.id, (tx) =>
-					tx
-						.update(stores)
-						.set({
-							defaultTaxPercent,
-							mercadoLivreFeePercent,
-							expiryWarningDays,
-							staleProductDays,
-							lowMarginPercent,
-						})
-						.where(eq(stores.id, session.store.id))
-						.returning(settingsColumns),
-				),
+		return single(
+			await audited(session.user.id, (tx) =>
+				tx
+					.update(stores)
+					.set({
+						defaultTaxPercent,
+						mercadoLivreFeePercent,
+						expiryWarningDays,
+						staleProductDays,
+						lowMarginPercent,
+					})
+					.where(eq(stores.id, session.store.id))
+					.returning(settingsColumns),
 			),
 		);
 	},

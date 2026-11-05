@@ -12,6 +12,35 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Dinheiro em centavos inteiros e percentuais em pontos-base (MUN-24)
+
+**Decisão:** dinheiro passa a ser guardado, trafegado e calculado em centavos inteiros (R$ 92,50 = `9250`) e
+percentuais em pontos-base inteiros (12,5% = `1250`, 100% = `10000`), no banco, na API e no app. Toda divisão que pode
+deixar fração de centavo passa por uma função só no server (`divideRounded`/`percentOf`), que arredonda para o mais
+próximo com metade para longe do zero, uma vez, no fim da conta; o app tem a mesma função, para a prévia bater com o
+que a API grava, e um teste confere as duas lado a lado. A API recusa (422) texto, fração ou negativo em vez de
+converter. O banco também barra preço zero ou negativo e percentual fora de 0 a 10000 (CHECK). A migration converte os
+dados que já existiam (preço base, impostos e taxas da loja, comissão das revendedoras) multiplicando por 100. A
+conversão é exata e atômica: se algum valor não coubesse, nada mudaria e o deploy pararia. O `audit_log` não ganha
+registro pela conversão, e os registros anteriores a ela guardam os valores na escala antiga, também como número
+(`92.50` em vez de `9250`): só a data separa um do outro. Quem ler o histórico compara o `created_at` do registro com
+o `applied_at` da migration `20261105194540_money_in_cents` em `drizzle.__drizzle_migrations`.
+**Custo médio (para Compras, MUN-12):** o estoque guarda o valor total em centavos e a quantidade, e o custo médio é
+`valor ÷ quantidade`, calculado quando precisa. A compra só soma (não arredonda). A saída tira
+`custo médio × unidades` arredondado ao centavo, e zerar o estoque zera o valor. Assim o erro não acumula.
+**Por quê:** é o padrão para dinheiro (Stripe, Adyen, o padrão Money): contas inteiras são exatas e não dependem de
+converter texto em cada conta, que é onde um arredondamento errado escapa. Pontos-base são a unidade comum para taxas,
+e manter percentual igual a dinheiro (inteiro em todas as camadas) evita duas regras. Guardar o custo médio já
+arredondado acumularia erro a cada compra (R$ 10 em 3 unidades = R$ 3,33 × 3 = R$ 9,99); guardar com mais casas só
+atrasaria o erro.
+**Release:** server e app (OTA) sobem juntos na release, e a mudança é só para frente: o código antigo não funciona
+com as colunas novas, então voltar o deploy não é opção. Na troca, o server antigo continua no ar até o novo passar
+no healthcheck, já com as colunas convertidas: uma gravação dele nesse intervalo seria salva na escala errada ("10" de
+10% viraria 0,1%). Um app antigo, falando com o server novo, mostra valores 100 vezes maiores até reiniciar com o
+update, mas não grava nada (a API recusa o texto que ele manda). Aceito porque ninguém usa o app em produção ainda. Uma
+mudança assim com o app em uso precisa de release sem ninguém usando, ou de colunas novas no lugar das antigas
+(o server antigo falha em vez de gravar errado).
+
 ## 2026-11-05: Revendedora com nome repetido, sem edição quando arquivada e vendas depois
 
 **Decisão:** o nome da revendedora pode se repetir na loja; a lista e a escolha na venda mostram comissão e telefone

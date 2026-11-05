@@ -125,7 +125,7 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
 - **Espaço generoso, mas sem exagero:** card principal `p-5`, cards de atalho `p-3.5`, `gap-7` entre blocos da tela.
   Fontes discretas: título de seção `text-base`, nome de card `text-sm`, valor de destaque `text-[32px]`.
 - Tipografia: Manrope; títulos em `font-sans-semibold`, nunca bold pesado. Peso se escolhe pela família:
-  `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`. Dinheiro com `formatMoney`/`formatCents`, centavos no mesmo peso e cor.
+  `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`. Dinheiro com `formatMoney`, centavos no mesmo peso e cor.
 - Só tema claro por enquanto (`userInterfaceStyle: "light"` no `app.json`).
 - **Sem header padrão do navigator** (`headerShown: false`). Telas internas usam `ScreenHeader` (voltar em
   círculo branco, título centralizado, ação à direita). Raízes de aba não têm header fixo: o título fica no conteúdo
@@ -238,7 +238,23 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   `storeId` (FK para `stores`, obrigatório, com índice). O `storeId` vem da sessão, nunca do body/query/params, e todo
   service recebe e filtra por ele. Unicidades de negócio são por loja (ex.: código de barras único por `storeId`).
   Teste e2e de cada módulo cobre que uma loja não lê nem altera dados de outra.
-- Dinheiro: `numeric(12, 2)` no banco e string decimal no app. Nunca float.
+- **Dinheiro em centavos inteiros** (R$ 92,50 = `9250`) no banco (`integer`, via `moneyColumn()`), na API e no app.
+  Nunca float, `numeric` ou string decimal. Um `integer` guarda até R$ 21.474.836,47 por valor; soma que pode passar
+  disso (totais de relatório) é calculada como `bigint`. O `sum()` do Postgres sobre `integer` já devolve `bigint`, e o
+  driver entrega `bigint` como string: converta para número na query (`.mapWith(Number)`), senão o schema da
+  resposta recusa e a rota responde 500.
+- **Percentuais em pontos-base inteiros** (12,5% = `1250`, 100% = `10000`), via `percentColumn()` + `percentRange()`
+  (CHECK de 0 a 10000 no banco).
+- **Contrato da API:** dinheiro e percentual entram por `moneyField`/`percentField` (`apps/server/src/lib/fields.ts`),
+  que só aceitam número JSON inteiro. Texto (`"92.50"`, `"10"`), fração ou negativo é 422: nada é convertido nem
+  arredondado na entrada.
+- **Arredondamento:** toda divisão que pode deixar fração de centavo passa por `divideRounded()`/`percentOf()`
+  (`apps/server/src/lib/money.ts`): para o inteiro mais próximo, metade para longe do zero (como o `round` do
+  Postgres). O `percentOf()` do app (`apps/mobile/src/lib/money.ts`) segue a mesma regra, para a prévia bater com o que
+  a API grava. Arredonde só no fim da conta, nunca em passos intermediários.
+- **No app**, `Money` e `Percent` são esses inteiros. O texto digitado vira inteiro dígito a dígito
+  (`parseMoneyInput`, `parsePercentInput`), sem passar por float, e só se formata na tela (`formatMoney`,
+  `formatPercent`, `moneyToInput`, `percentToInput`).
 - Datas: `timestamptz` (`timestamp({ withTimezone: true })`), gravadas em UTC. A conversão para o horário local
   (America/Sao_Paulo) acontece no app.
 - IDs: definir na primeira feature que criar uma tabela e registrar aqui.

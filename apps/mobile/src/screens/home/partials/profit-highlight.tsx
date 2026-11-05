@@ -9,7 +9,12 @@ import { Pressable, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { hapticSelect, hapticTap, withHaptic } from "@/lib/haptics";
-import { formatMoney, formatRatio, HIDDEN_MONEY, toCents } from "@/lib/money";
+import {
+	formatMoney,
+	formatRatio,
+	HIDDEN_MONEY,
+	type Money,
+} from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { HomeSummary } from "@/queries/home/home.types";
 import { WeekBars } from "./week-bars";
@@ -73,8 +78,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 export function ProfitHighlight({ summary }: { summary: HomeSummary }) {
 	const [hidden, setHidden] = useState(false);
 	const { month, week } = summary;
-	const money = (value: string) => (hidden ? HIDDEN_MONEY : formatMoney(value));
-	const profitLoss = toCents(month.profit) < 0;
+	const money = (value: Money) => (hidden ? HIDDEN_MONEY : formatMoney(value));
+	const profitLoss = month.profit < 0;
 
 	return (
 		<View className="gap-5 rounded-2xl bg-background p-5">

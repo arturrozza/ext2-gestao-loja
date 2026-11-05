@@ -51,12 +51,12 @@ describe("audit log", () => {
 
 		const product = await ProductsService.create(
 			session,
-			productBody({ name: "Antigo", basePrice: "10" }),
+			productBody({ name: "Antigo", basePrice: 1000 }),
 		);
 		await ProductsService.update(
 			session,
 			product.id,
-			productBody({ name: "Novo", basePrice: "10" }),
+			productBody({ name: "Novo", basePrice: 1000 }),
 		);
 
 		const [created, updated] = await logOf(product.id);

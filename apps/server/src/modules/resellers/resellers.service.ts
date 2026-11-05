@@ -13,7 +13,6 @@ import { audited, type Executor, type Transaction } from "../../db/audit";
 import { archivedAtValue, insertedRow } from "../../db/rows";
 import { resellers } from "../../db/schema";
 import { httpError } from "../../lib/http-error";
-import { percentOut } from "../../lib/percent";
 import { likePattern } from "../../lib/search";
 import type { AuthSession } from "../auth/auth.model";
 import type { ResellersModel } from "./resellers.model";
@@ -37,13 +36,12 @@ type ResellerRow = Pick<
  * Sales totals are zero until sales exist (MUN-16), which will sum the reseller's active sales here (canceled ones
  * never count, revendedoras.md).
  */
-const NO_SALES = { salesCount: 0, salesTotal: "0.00", commissionTotal: "0.00" };
+const NO_SALES = { salesCount: 0, salesTotal: 0, commissionTotal: 0 };
 
 function toReseller(row: ResellerRow): ResellersModel["reseller"] {
-	const { archivedAt, defaultCommission, ...rest } = row;
+	const { archivedAt, ...rest } = row;
 	return {
 		...rest,
-		defaultCommission: percentOut(defaultCommission),
 		archived: archivedAt !== null,
 		...NO_SALES,
 	};

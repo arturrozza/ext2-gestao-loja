@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { fromISODate } from "@/lib/dates";
-import { formatMoney, toCents } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { HomeSummary } from "@/queries/home/home.types";
 
@@ -64,7 +64,7 @@ export function WeekBars({
 	week: HomeSummary["week"];
 	hidden: boolean;
 }) {
-	const values = week.map((day) => toCents(day.revenue));
+	const values = week.map((day) => day.revenue);
 	const max = Math.max(...values, 0);
 	const empty = max === 0;
 	const heightOf = (cents: number) =>

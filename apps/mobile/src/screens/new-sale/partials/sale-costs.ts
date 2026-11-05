@@ -1,11 +1,11 @@
 import { nextDraftKey } from "@/lib/draft-key";
-import { percentToInput } from "@/lib/money";
+import { type Percent, percentToInput } from "@/lib/money";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 import type { SaleChannel, SaleCostKind } from "@/queries/sales/sales.types";
 import type { StoreSettings } from "@/queries/store/store.types";
 import type { SaleCostDraft } from "../new-sale.schema";
 
-function percentCost(kind: SaleCostKind, percent: string): SaleCostDraft {
+function percentCost(kind: SaleCostKind, percent: Percent): SaleCostDraft {
 	return {
 		key: nextDraftKey(),
 		kind,
@@ -30,7 +30,7 @@ export function manualCost(kind: SaleCostKind): SaleCostDraft {
 
 /** Costs a new sale starts with: the default tax (vendas.md), when the store has one. */
 export function initialCosts(settings: StoreSettings): SaleCostDraft[] {
-	return Number(settings.defaultTaxPercent) > 0
+	return settings.defaultTaxPercent > 0
 		? [percentCost("tax", settings.defaultTaxPercent)]
 		: [];
 }
@@ -50,10 +50,7 @@ export function withChannelCosts(
 			!cost.auto ||
 			(cost.kind !== "platform_fee" && cost.kind !== "commission"),
 	);
-	if (
-		channel === "mercado_livre" &&
-		Number(settings.mercadoLivreFeePercent) > 0
-	) {
+	if (channel === "mercado_livre" && settings.mercadoLivreFeePercent > 0) {
 		return [
 			...kept,
 			percentCost("platform_fee", settings.mercadoLivreFeePercent),

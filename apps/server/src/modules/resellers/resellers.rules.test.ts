@@ -5,7 +5,7 @@ import { normalizeReseller, resellerSearchTerms } from "./resellers.rules";
 const input = {
 	name: "Ana",
 	phone: null,
-	defaultCommission: "10",
+	defaultCommission: 1000,
 	note: null,
 };
 
@@ -21,7 +21,7 @@ describe("normalizeReseller", () => {
 		).toEqual({
 			name: "Ána Souza",
 			phone: "11999998888",
-			defaultCommission: "10",
+			defaultCommission: 1000,
 			note: "atende o Jardins",
 			searchText: "ana souza 11999998888",
 		});

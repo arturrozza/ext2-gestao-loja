@@ -4,7 +4,7 @@ import { normalizeProduct } from "./products.rules";
 
 const input = {
 	name: "Perfume Floral",
-	basePrice: "92.5",
+	basePrice: 9250,
 	categoryId: null,
 	barcode: null,
 	internalCode: null,
@@ -34,19 +34,18 @@ describe("normalizeProduct", () => {
 	});
 
 	it("refuses a zero base price, on its field", () => {
-		for (const basePrice of ["0", "0.00"]) {
-			expect(
-				thrown(() => normalizeProduct({ ...input, basePrice })),
-			).toMatchObject({
-				code: 422,
-				response: { code: "validation", field: "basePrice" },
-			});
-		}
+		expect(
+			thrown(() => normalizeProduct({ ...input, basePrice: 0 })),
+		).toMatchObject({
+			code: 422,
+			response: { code: "validation", field: "basePrice" },
+		});
 	});
 
-	it("accepts the smallest price", () => {
-		expect(normalizeProduct({ ...input, basePrice: "0.01" }).basePrice).toBe(
-			"0.01",
+	it("keeps the price in cents as it came, the smallest one included", () => {
+		expect(normalizeProduct({ ...input, basePrice: 1 }).basePrice).toBe(1);
+		expect(normalizeProduct({ ...input, basePrice: 9255 }).basePrice).toBe(
+			9255,
 		);
 	});
 });

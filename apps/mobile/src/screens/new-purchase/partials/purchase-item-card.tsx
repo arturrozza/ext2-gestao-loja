@@ -8,7 +8,7 @@ import { QuantityStepper } from "@/components/quantity-stepper";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
-import { formatCents, parseMoneyInput } from "@/lib/money";
+import { formatMoney, parseMoneyInput } from "@/lib/money";
 import type { PurchaseItemDraft } from "../new-purchase.schema";
 
 function ItemAction({
@@ -114,7 +114,7 @@ export function PurchaseItemCard({
 			<View className="flex-row justify-between px-1">
 				<Text className="text-muted-foreground text-sm">Total do item</Text>
 				<Text className="font-sans-semibold text-sm">
-					{cost === null ? "—" : formatCents(cost * item.quantity)}
+					{cost === null ? "—" : formatMoney(cost * item.quantity)}
 				</Text>
 			</View>
 		</View>

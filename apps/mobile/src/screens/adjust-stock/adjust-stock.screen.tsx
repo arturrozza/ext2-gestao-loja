@@ -11,7 +11,6 @@ import { showToast } from "@/components/toast";
 import { Text } from "@/components/ui/text";
 import { formatExpiry } from "@/lib/dates";
 import { ADJUSTMENT_REASONS, units } from "@/lib/labels";
-import { toCents } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
 import type {
 	AdjustmentReason,
@@ -100,7 +99,7 @@ function ZeroCostHint({
 	quantity: number | null;
 }) {
 	const increasing = quantity !== null && quantity > product.stock;
-	if (!increasing || toCents(product.averageCost) !== 0) return null;
+	if (!increasing || product.averageCost !== 0) return null;
 	return (
 		<Text className="px-1 text-muted-foreground text-xs">
 			Este produto ainda não tem custo: as unidades entram valendo R$ 0,00. Se

@@ -9,7 +9,7 @@ import { ScreenLayout } from "@/components/screen-layout";
 import { ScreenQuery } from "@/components/screen-query";
 import { SheetHeader } from "@/components/sheet-header";
 import { FormSkeleton } from "@/components/skeleton";
-import { formatCents } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import type { StoreSettings } from "@/queries/store/store.types";
 import { useStoreSettings } from "@/queries/store/use-store";
 import { CustomerField } from "./partials/customer-field";
@@ -39,7 +39,7 @@ function NewSaleForm({ settings }: { settings: StoreSettings }) {
 				<AdjustmentSection sale={sale} />
 				<CollapsibleSection
 					title="Custos"
-					summary={formatCents(
+					summary={formatMoney(
 						sale.breakdown.costAmountsCents.reduce((a, b) => a + b, 0),
 					)}
 					forceOpen={Object.keys(errors).some((key) =>

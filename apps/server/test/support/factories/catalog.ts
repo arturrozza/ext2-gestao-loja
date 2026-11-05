@@ -38,7 +38,7 @@ export function productBody(
 	sequence += 1;
 	return {
 		name: `Produto ${sequence}`,
-		basePrice: "10.00",
+		basePrice: 1000,
 		categoryId: null,
 		barcode: null,
 		internalCode: null,

@@ -7,7 +7,7 @@
  *   lucro real       = receita − custo dos produtos − custos da venda
  *   margem           = lucro real ÷ receita
  *
- * The discount counts once, in the revenue.
+ * The discount counts once, in the revenue. Money in cents, percentages in basis points (lib/money.ts).
  */
 import { percentOf } from "@/lib/money";
 
@@ -15,6 +15,7 @@ export type SaleMathInput = {
 	items: { quantity: number; unitPriceCents: number; unitCostCents: number }[];
 	discountCents: number;
 	surchargeCents: number;
+	/** `value` in cents when `amount`, in basis points when `percent`. */
 	costs: { mode: "amount" | "percent"; value: number }[];
 };
 

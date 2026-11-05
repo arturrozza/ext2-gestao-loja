@@ -5,12 +5,13 @@ import { createStore, signedIn } from "../support/factories/accounts";
 
 useTestDatabase();
 
+/** Percentages in basis points: 6%, 16,5% and 12,25%. */
 const settings = {
-	defaultTaxPercent: "6",
-	mercadoLivreFeePercent: "16.5",
+	defaultTaxPercent: 600,
+	mercadoLivreFeePercent: 1650,
 	expiryWarningDays: 15,
 	staleProductDays: 90,
-	lowMarginPercent: "12.25",
+	lowMarginPercent: 1225,
 };
 
 describe("StoreService", () => {
@@ -18,11 +19,11 @@ describe("StoreService", () => {
 		const store = await createStore();
 
 		expect(await StoreService.settings(store.id)).toEqual({
-			defaultTaxPercent: "0",
-			mercadoLivreFeePercent: "0",
+			defaultTaxPercent: 0,
+			mercadoLivreFeePercent: 0,
 			expiryWarningDays: 30,
 			staleProductDays: 60,
-			lowMarginPercent: "10",
+			lowMarginPercent: 1000,
 		});
 		expect(await StoreService.profile(store.id)).toEqual({
 			name: "Loja Teste",
@@ -49,7 +50,31 @@ describe("StoreService", () => {
 		expect(saved).toEqual(settings);
 		expect(await StoreService.settings(store.id)).toEqual(settings);
 		expect((await StoreService.profile(other.id)).name).toBe("Outra");
-		expect((await StoreService.settings(other.id)).defaultTaxPercent).toBe("0");
+		expect((await StoreService.settings(other.id)).defaultTaxPercent).toBe(0);
+	});
+
+	it("has the database refuse a percentage out of 0–10000 even past the API, and keep what was saved", async () => {
+		const { session } = await signedIn();
+		await StoreService.updateSettings(session, settings);
+
+		const constraints = {
+			defaultTaxPercent: "stores_default_tax_percent_range",
+			mercadoLivreFeePercent: "stores_mercado_livre_fee_percent_range",
+			lowMarginPercent: "stores_low_margin_percent_range",
+		} as const;
+		for (const [field, constraint] of Object.entries(constraints)) {
+			for (const value of [-1, 10_001]) {
+				await expect(
+					StoreService.updateSettings(session, { ...settings, [field]: value }),
+				).rejects.toMatchObject({
+					// Postgres names the broken constraint in its message.
+					cause: expect.objectContaining({
+						message: expect.stringContaining(constraint),
+					}),
+				});
+			}
+		}
+		expect(await StoreService.settings(session.store.id)).toEqual(settings);
 	});
 
 	it("fails loudly for a store that doesn't exist (a broken session, not user input)", async () => {

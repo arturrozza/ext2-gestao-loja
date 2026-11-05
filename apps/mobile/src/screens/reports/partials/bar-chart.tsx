@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { hapticSelect } from "@/lib/haptics";
-import { formatCents } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 const HEIGHT = 72;
@@ -88,13 +88,13 @@ export function BarChart({
 				</Text>
 				{selected ? (
 					<Text className="font-sans-semibold text-sm">
-						{selected.label} · {formatCents(selected.cents)}
+						{selected.label} · {formatMoney(selected.cents)}
 					</Text>
 				) : null}
 			</View>
 			<Pressable
 				accessibilityLabel={`${title}: ${points
-					.map((point) => `${point.label}, ${formatCents(point.cents)}`)
+					.map((point) => `${point.label}, ${formatMoney(point.cents)}`)
 					.join("; ")}`}
 				onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
 				onPress={(event) => {

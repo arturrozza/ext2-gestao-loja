@@ -14,14 +14,14 @@ export const optionalPhone = optionalText.refine(
 	"Informe o telefone com DDD.",
 );
 
-/** Percentage typed in pt-BR ("12,5"), from 0 to 100. Outputs a decimal string ("12.5"). */
+/** Percentage typed in pt-BR ("12,5"), from 0 to 100. Outputs basis points (1250), as the API takes it. */
 export function percentField(message: string) {
 	return z.string().transform((text, ctx) => {
 		const value = parsePercentInput(text);
-		if (value === null || value > 100) {
+		if (value === null) {
 			ctx.addIssue({ code: "custom", message });
 			return z.NEVER;
 		}
-		return String(value);
+		return value;
 	});
 }

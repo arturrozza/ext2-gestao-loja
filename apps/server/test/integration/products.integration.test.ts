@@ -1,4 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { audited } from "../../src/db/audit";
+import { products } from "../../src/db/schema";
+import { MAX_CENTS } from "../../src/lib/money";
 import { PAGE_SIZE } from "../../src/lib/pagination";
 import { CategoriesService } from "../../src/modules/categories/categories.service";
 import { ProductsService } from "../../src/modules/products/products.service";
@@ -26,7 +29,7 @@ describe("ProductsService.create", () => {
 			session,
 			productBody({
 				name: " Perfume Floral ",
-				basePrice: "92.5",
+				basePrice: 9250,
 				categoryId: category.id,
 				barcode: " 7891234 ",
 				internalCode: "",
@@ -38,7 +41,7 @@ describe("ProductsService.create", () => {
 
 		expect(product).toMatchObject({
 			name: "Perfume Floral",
-			basePrice: "92.50",
+			basePrice: 9250,
 			categoryId: category.id,
 			categoryName: "Perfumes",
 			barcode: "7891234",
@@ -106,6 +109,46 @@ describe("ProductsService.create", () => {
 	});
 });
 
+describe("product base price in the database", () => {
+	it("keeps the cents exactly as sent, up to the integer limit", async () => {
+		const { session } = await signedIn();
+
+		for (const basePrice of [1, 9255, MAX_CENTS]) {
+			const created = await ProductsService.create(
+				session,
+				productBody({ basePrice }),
+			);
+			const read = await ProductsService.get(session.store.id, created.id);
+			expect([created.basePrice, read.basePrice]).toEqual([
+				basePrice,
+				basePrice,
+			]);
+		}
+	});
+
+	it("refuses a price that isn't above zero even past the API", async () => {
+		const { session } = await signedIn();
+
+		for (const basePrice of [0, -1]) {
+			await expect(
+				audited("system", (tx) =>
+					tx.insert(products).values({
+						storeId: session.store.id,
+						name: "Perfume",
+						basePrice,
+						searchText: "perfume",
+					}),
+				),
+			).rejects.toMatchObject({
+				// Postgres names the broken constraint in its message.
+				cause: expect.objectContaining({
+					message: expect.stringContaining("products_base_price_positive"),
+				}),
+			});
+		}
+	});
+});
+
 describe("ProductsService concurrency", () => {
 	it("lets only one of two simultaneous creates take a barcode", async () => {
 		const { session } = await signedIn();
@@ -154,10 +197,10 @@ describe("ProductsService.update", () => {
 		const updated = await ProductsService.update(
 			session,
 			product.id,
-			productBody({ name: "Novo", basePrice: "15" }),
+			productBody({ name: "Novo", basePrice: 1500 }),
 		);
 
-		expect(updated).toMatchObject({ name: "Novo", basePrice: "15.00" });
+		expect(updated).toMatchObject({ name: "Novo", basePrice: 1500 });
 	});
 
 	it("keeps its own codes, but refuses another product's", async () => {

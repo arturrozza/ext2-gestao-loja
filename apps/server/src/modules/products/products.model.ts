@@ -1,15 +1,12 @@
 import { t, type UnwrapSchema } from "elysia";
-import { optionalText } from "../../lib/fields";
+import { moneyField, optionalText } from "../../lib/fields";
 import { cursorQuery, pageOf } from "../../lib/pagination";
-
-/** Money as a decimal string with up to two places ("92.5"), like the app's `Money`; never a float. */
-const money = t.String({ pattern: "^\\d{1,10}(\\.\\d{1,2})?$" });
 
 const product = t.Object({
 	id: t.String(),
 	name: t.String(),
-	/** Two places ("92.50"). */
-	basePrice: t.String(),
+	/** In cents (R$ 92,50 = 9250). */
+	basePrice: moneyField,
 	categoryId: t.Union([t.Null(), t.String()]),
 	categoryName: t.Union([t.Null(), t.String()]),
 	barcode: t.Union([t.Null(), t.String()]),
@@ -23,7 +20,8 @@ const product = t.Object({
 /** What the product form edits (produtos.md): stock and cost never, they come from purchases. */
 const body = t.Object({
 	name: t.String({ minLength: 1, maxLength: 120, pattern: "\\S" }),
-	basePrice: money,
+	/** In cents, above zero (the rules give the message). */
+	basePrice: moneyField,
 	categoryId: t.Union([t.Null(), t.String({ format: "uuid" })]),
 	barcode: optionalText(64),
 	internalCode: optionalText(64),

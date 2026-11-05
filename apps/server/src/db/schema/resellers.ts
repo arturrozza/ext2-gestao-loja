@@ -1,13 +1,5 @@
-import { sql } from "drizzle-orm";
-import {
-	check,
-	index,
-	snakeCase,
-	text,
-	timestamp,
-	uuid,
-} from "drizzle-orm/pg-core";
-import { percentColumn, timestamps } from "./helpers";
+import { index, snakeCase, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { percentColumn, percentRange, timestamps } from "./helpers";
 import { stores } from "./stores";
 
 /**
@@ -34,9 +26,6 @@ export const resellers = snakeCase.table(
 	},
 	(table) => [
 		index().on(table.storeId, table.name),
-		check(
-			"resellers_default_commission_range",
-			sql`${table.defaultCommission} between 0 and 100`,
-		),
+		percentRange("resellers_default_commission_range", table.defaultCommission),
 	],
 );

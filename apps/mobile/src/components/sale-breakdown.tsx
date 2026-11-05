@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { InfoRow } from "@/components/info-row";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { formatCents, formatRatio } from "@/lib/money";
+import { formatMoney, formatRatio } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export type SaleBreakdownData = {
@@ -25,28 +25,28 @@ export function BreakdownRows({ data }: { data: SaleBreakdownData }) {
 	const loss = data.profitCents < 0;
 	return (
 		<>
-			<InfoRow label="Produtos" value={formatCents(data.grossCents)} />
+			<InfoRow label="Produtos" value={formatMoney(data.grossCents)} />
 			{data.discountCents > 0 ? (
-				<InfoRow label="Desconto" value={formatCents(-data.discountCents)} />
+				<InfoRow label="Desconto" value={formatMoney(-data.discountCents)} />
 			) : null}
 			{data.surchargeCents > 0 ? (
-				<InfoRow label="Acréscimo" value={formatCents(data.surchargeCents)} />
+				<InfoRow label="Acréscimo" value={formatMoney(data.surchargeCents)} />
 			) : null}
-			<InfoRow label="Receita" value={formatCents(data.revenueCents)} strong />
+			<InfoRow label="Receita" value={formatMoney(data.revenueCents)} strong />
 			<InfoRow
 				label="Custo dos produtos"
-				value={formatCents(-data.productsCostCents)}
+				value={formatMoney(-data.productsCostCents)}
 			/>
 			{data.costs.map((cost) => (
 				<InfoRow
 					key={cost.key}
 					label={cost.label}
-					value={formatCents(-cost.amountCents)}
+					value={formatMoney(-cost.amountCents)}
 				/>
 			))}
 			<InfoRow
 				label="Lucro real"
-				value={formatCents(data.profitCents)}
+				value={formatMoney(data.profitCents)}
 				strong
 				valueClassName={cn(
 					loss && "text-destructive",
@@ -86,7 +86,7 @@ export function SaleBreakdown({
 					<View className="flex-row items-center gap-2 bg-destructive/10 px-4 py-3">
 						<Icon as={WarningIcon} size={18} className="text-destructive" />
 						<Text className="flex-1 text-destructive text-sm">
-							Esta venda dá prejuízo de {formatCents(-data.profitCents)}. Dá
+							Esta venda dá prejuízo de {formatMoney(-data.profitCents)}. Dá
 							para concluir mesmo assim.
 						</Text>
 					</View>

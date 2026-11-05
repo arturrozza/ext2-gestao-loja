@@ -8,7 +8,7 @@ import type { ProductsModel } from "./products.model";
  * matches (name and codes).
  */
 export function normalizeProduct(input: ProductsModel["body"]) {
-	if (Number(input.basePrice) <= 0) {
+	if (input.basePrice <= 0) {
 		throw httpError(422, {
 			code: "validation",
 			message: "O preço precisa ser maior que zero.",

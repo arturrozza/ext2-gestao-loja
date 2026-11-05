@@ -15,12 +15,7 @@ import { Text } from "@/components/ui/text";
 import { formatDate, todayISODate } from "@/lib/dates";
 import { nextDraftKey } from "@/lib/draft-key";
 import { units } from "@/lib/labels";
-import {
-	formatCents,
-	moneyToInput,
-	parseMoneyInput,
-	toCents,
-} from "@/lib/money";
+import { formatMoney, moneyToInput, parseMoneyInput } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
 import type { ProductListItem } from "@/queries/products/products.types";
 import { useStockProduct } from "@/queries/products/use-products";
@@ -49,8 +44,7 @@ function draftFor(
 			photoUri: product.photoUri,
 		},
 		quantity,
-		unitCost:
-			toCents(product.averageCost) > 0 ? moneyToInput(product.averageCost) : "",
+		unitCost: product.averageCost > 0 ? moneyToInput(product.averageCost) : "",
 		expiry: "",
 	};
 }
@@ -130,7 +124,7 @@ export function NewPurchaseScreen() {
 							{units(summary.unitCount)}
 						</Text>
 						<Text className="font-sans-semibold">
-							{formatCents(summary.cents)}
+							{formatMoney(summary.cents)}
 						</Text>
 					</View>
 					<Button size="lg" onPress={submit} loading={create.isPending}>

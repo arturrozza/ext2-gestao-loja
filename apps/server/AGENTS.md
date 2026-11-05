@@ -37,8 +37,8 @@ src/
   lib/http-error.ts   `ErrorModel` ({ code, message, field? }), `httpError()` and `guardUnique()` (unique violation → 409)
   lib/pagination.ts   `PAGE_SIZE`, `pageOf()` and `cursorQuery` for the long lists (offset cursor, the app's `Page<T>`)
   lib/search.ts       `normalizeSearch()` (lowercase, no accents), `searchPatterns()` and `likePattern()` for `LIKE` searches
-  lib/fields.ts       shared `t` fields (`optionalText`, `percentField`)
-  lib/percent.ts      `percentOut()`: a stored percentage as the API answers it ("12.50" → "12.5")
+  lib/fields.ts       shared fields (`optionalText`, `moneyField`, `nonNegativeMoneyTotalField`, `percentField`)
+  lib/money.ts        `MAX_CENTS`, `FULL_PERCENT`, `divideRounded()` and `percentOf()`: the one rounding rule
   lib/text.ts         `blankToNull()` (blank optional text → null) and `onlyDigits()`
   lib/phone.ts        `phoneDigits()`: a phone with area code (10/11 digits) or a 422 on `phone`
   db/
@@ -57,7 +57,7 @@ test/
   support/            test helpers (database reset, factories, `thrown()` for rules that throw `status()`)
   integration/        services against the real test DB (<module>.integration.test.ts)
   e2e/                HTTP through Eden, one file per module (<module>.e2e.test.ts)
-drizzle/              generated migrations (don't hand-edit, except custom migrations)
+drizzle/              generated migrations (don't hand-edit, except custom migrations and a data conversion, see below)
 Dockerfile
 ```
 
@@ -94,7 +94,18 @@ Dockerfile
 - Every schema file must be re-exported from `src/db/schema/index.ts`.
 - Changed the schema? Run `bun run db:generate` and **commit the migration** with it. Never `drizzle-kit push` to a
   shared/production DB.
-- Money: `numeric` (never `real`/`double`). Dates: `timestamp({ withTimezone: true })`.
+- **Money is integer cents** (`moneyColumn()`, R$ 92,50 = 9250) and **percentages are integer basis points**
+  (`percentColumn()` + a `percentRange()` check, 12,5% = 1250), from `src/db/schema/helpers.ts`. Never `numeric`,
+  `real`/`double` or decimal strings. In routes use `moneyField`/`percentField` (`src/lib/fields.ts`), **never Elysia's
+  `t.Integer`/`t.Numeric` for money or percentages**: they accept numeric strings and convert them, so an old client
+  sending `"10"` (10%) would save 10 basis points (0.1%). Any division that can leave a fraction of a cent goes
+  through `divideRounded()`/`percentOf()` (`src/lib/money.ts`), rounding once at the end. See `docs/conventions.md`
+  (Dados).
+- A migration that changes a money or percentage column's type converts the data in its `USING` clause (and drops
+  and recreates checks/defaults in the new scale): review the generated SQL, since `"col"::integer` rounds instead of
+  converting. Cover it with a test that migrates a scratch database with old rows (see
+  `test/integration/money-migration.integration.test.ts`).
+- Dates: `timestamp({ withTimezone: true })`.
 - **Audit:** every write goes through `audited(session.user.id, (tx) => ...)` (`src/db/audit.ts`; `"system"` in seeds
   and test factories). The `audit` trigger logs the change to `audit_log` and refuses writes without an actor. A new
   business table gets the trigger in a custom migration (`bunx drizzle-kit generate --custom`); secret columns go as

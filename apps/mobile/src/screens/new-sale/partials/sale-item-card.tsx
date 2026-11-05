@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
-import { formatCents, parseMoneyInput } from "@/lib/money";
+import { formatMoney, parseMoneyInput } from "@/lib/money";
 import type { ProductDetail } from "@/queries/products/products.types";
 import { type SaleItemDraft, shortage } from "../new-sale.schema";
 
@@ -134,7 +134,7 @@ export function SaleItemCard({
 				<View className="flex-row justify-between px-1">
 					<Text className="text-muted-foreground text-sm">Total do item</Text>
 					<Text className="font-sans-semibold text-sm">
-						{price === null ? "—" : formatCents(price * item.quantity)}
+						{price === null ? "—" : formatMoney(price * item.quantity)}
 					</Text>
 				</View>
 			) : null}

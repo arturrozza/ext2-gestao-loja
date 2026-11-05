@@ -86,6 +86,11 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   Volte para uma tag quando sair uma release com ele.
 - **Railway CLI via Bun:** `bun add -g @railway/cli` precisa de `bun pm -g trust @railway/cli`, porque o postinstall
   (que baixa o binário) é bloqueado por padrão.
+- **`t.Integer` do Elysia aceita texto.** O `t.Integer` (e o `t.Numeric`) do Elysia 1.4 é um `anyOf` que também
+  aceita string numérica e a converte (`"10"` → `10`). Para dinheiro e percentual isso é perigoso (um app antigo
+  mandando `"10"` para 10% gravaria 0,1%), então `moneyField`/`percentField` (`apps/server/src/lib/fields.ts`) usam o
+  `Type.Integer` do próprio TypeBox, que só aceita número inteiro. Os testes de `fields.test.ts` e os e2e falham se
+  isso mudar.
 - **Barra "OK" do teclado (iOS) dentro de uma caixa 0x0.** O `InputAccessoryView` deixa na tela um nó próprio,
   absoluto, no topo do campo e com a largura toda. Num build iOS ele apareceu cobrindo o label e o topo do input depois
   de abrir um segundo formulário. O `DoneTextInput` envolve a barra numa caixa 0x0 com `overflow-hidden`, e o conteúdo

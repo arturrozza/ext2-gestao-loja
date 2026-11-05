@@ -8,13 +8,7 @@ import { FormSkeleton } from "@/components/skeleton";
 import { showToast } from "@/components/toast";
 import { Text } from "@/components/ui/text";
 import { units } from "@/lib/labels";
-import {
-	formatCents,
-	formatMoney,
-	formatSignedCents,
-	parseMoneyInput,
-	toCents,
-} from "@/lib/money";
+import { formatMoney, formatSignedMoney, parseMoneyInput } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
 import type { ProductDetail } from "@/queries/products/products.types";
 import {
@@ -30,17 +24,17 @@ function CostPreview({
 	product: ProductDetail;
 	newCostCents: number | null;
 }) {
-	const current = toCents(product.averageCost);
+	const current = product.averageCost;
 	if (newCostCents === null || newCostCents === current) return null;
 	return (
 		<View className="gap-1 rounded-2xl bg-background p-4">
 			<Text className="text-muted-foreground text-xs">Como fica</Text>
 			<Text className="font-sans-semibold text-base">
-				{formatCents(current)} → {formatCents(newCostCents)} ·{" "}
-				{formatSignedCents((newCostCents - current) * product.stock)} em estoque
+				{formatMoney(current)} → {formatMoney(newCostCents)} ·{" "}
+				{formatSignedMoney((newCostCents - current) * product.stock)} em estoque
 			</Text>
 			<Text className="text-muted-foreground text-sm">
-				{units(product.stock)} passam a valer {formatCents(newCostCents)} cada.
+				{units(product.stock)} passam a valer {formatMoney(newCostCents)} cada.
 			</Text>
 		</View>
 	);

@@ -15,12 +15,13 @@ const profile = {
 	address: "Rua A, 1",
 };
 
+/** Percentages in basis points: 6%, 16,5% and 10%. */
 const settings = {
-	defaultTaxPercent: "6",
-	mercadoLivreFeePercent: "16",
+	defaultTaxPercent: 600,
+	mercadoLivreFeePercent: 1650,
 	expiryWarningDays: 30,
 	staleProductDays: 60,
-	lowMarginPercent: "10",
+	lowMarginPercent: 1000,
 };
 
 describe("GET /store and PUT /store", () => {
@@ -71,17 +72,17 @@ describe("GET /store/settings and PUT /store/settings", () => {
 		expect(read.data).toEqual(settings);
 	});
 
-	it("accepts 0 and 100 as percentages", async () => {
+	it("accepts 0% and 100% (10000 basis points)", async () => {
 		const { headers } = await signedIn();
 
 		const { data } = await api.store.settings.put(
-			{ ...settings, defaultTaxPercent: "0", lowMarginPercent: "100.00" },
+			{ ...settings, defaultTaxPercent: 0, lowMarginPercent: 10_000 },
 			{ headers },
 		);
 
 		expect(data).toMatchObject({
-			defaultTaxPercent: "0",
-			lowMarginPercent: "100",
+			defaultTaxPercent: 0,
+			lowMarginPercent: 10_000,
 		});
 	});
 
@@ -93,7 +94,7 @@ describe("GET /store/settings and PUT /store/settings", () => {
 			{ headers },
 		);
 		const percent = await api.store.settings.put(
-			{ ...settings, lowMarginPercent: "150" },
+			{ ...settings, lowMarginPercent: 10_001 },
 			{ headers },
 		);
 
@@ -105,6 +106,30 @@ describe("GET /store/settings and PUT /store/settings", () => {
 			code: "validation",
 			field: "lowMarginPercent",
 		});
+	});
+
+	it("answers 422 for a percentage that isn't whole basis points, and keeps the saved ones", async () => {
+		const { headers } = await signedIn();
+		await api.store.settings.put(settings, { headers });
+		// What an old app sends ("6" meant 6%, now it would be 0,06%), a float or a negative: none is converted.
+		const percents: unknown[] = ["6", "16.5", 12.5, -1, null];
+
+		for (const field of [
+			"defaultTaxPercent",
+			"mercadoLivreFeePercent",
+			"lowMarginPercent",
+		] as const) {
+			for (const value of percents) {
+				const { error } = await api.store.settings.put(
+					// What a client outside the contract sends.
+					{ ...settings, [field]: value } as unknown as typeof settings,
+					{ headers },
+				);
+				expect(error?.status).toBe(422);
+				expect(error?.value).toMatchObject({ code: "validation", field });
+			}
+		}
+		expect((await api.store.settings.get({ headers })).data).toEqual(settings);
 	});
 
 	it("answers 401 without a session", async () => {
@@ -121,13 +146,13 @@ describe("store scoping", () => {
 
 		await api.store.put({ ...profile, name: "Loja A" }, { headers: a.headers });
 		await api.store.settings.put(
-			{ ...settings, defaultTaxPercent: "9" },
+			{ ...settings, defaultTaxPercent: 900 },
 			{ headers: a.headers },
 		);
 
 		const profileB = await api.store.get({ headers: b.headers });
 		const settingsB = await api.store.settings.get({ headers: b.headers });
 		expect(profileB.data?.name).toBe("Loja Teste");
-		expect(settingsB.data?.defaultTaxPercent).toBe("0");
+		expect(settingsB.data?.defaultTaxPercent).toBe(0);
 	});
 });

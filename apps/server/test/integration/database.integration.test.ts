@@ -8,6 +8,7 @@ import {
 	products,
 	resellers,
 	sessions,
+	stores,
 	users,
 } from "../../src/db/schema";
 import { assertTestDatabase, resetDatabase } from "../support/database";
@@ -111,5 +112,35 @@ describe("schema foreign keys", () => {
 		expect(targets(categories)).toEqual(["stores"]);
 		expect(targets(products)).toEqual(["stores", "categories"]);
 		expect(targets(resellers)).toEqual(["stores"]);
+	});
+});
+
+describe("schema checks", () => {
+	it("keep prices above zero and percentages within 0–10000 basis points, in the schema and in the database", async () => {
+		const tables = [products, resellers, stores];
+		const names = tables.flatMap((table) =>
+			getTableConfig(table).checks.map((check) => check.name),
+		);
+		const rows = await db.execute<{ name: string; definition: string }>(
+			sql`select conname as name, pg_get_constraintdef(oid) as definition
+				from pg_constraint where contype = 'c' and connamespace = 'public'::regnamespace
+				order by conname`,
+		);
+
+		// Every check the schema declares is in the migrated database, with the range in the new scale.
+		expect(
+			Object.fromEntries(rows.map((row) => [row.name, row.definition])),
+		).toEqual({
+			products_base_price_positive: "CHECK ((base_price > 0))",
+			resellers_default_commission_range:
+				"CHECK (((default_commission >= 0) AND (default_commission <= 10000)))",
+			stores_default_tax_percent_range:
+				"CHECK (((default_tax_percent >= 0) AND (default_tax_percent <= 10000)))",
+			stores_low_margin_percent_range:
+				"CHECK (((low_margin_percent >= 0) AND (low_margin_percent <= 10000)))",
+			stores_mercado_livre_fee_percent_range:
+				"CHECK (((mercado_livre_fee_percent >= 0) AND (mercado_livre_fee_percent <= 10000)))",
+		});
+		expect(names.sort()).toEqual(rows.map((row) => row.name));
 	});
 });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { optionalText } from "@/lib/form-fields";
-import { fromCents, moneyToInput, parseMoneyInput } from "@/lib/money";
+import { moneyToInput, parseMoneyInput } from "@/lib/money";
 import type { Product } from "@/queries/products/products.types";
 
 /** Product form (produtos.md): name and base price required; stock and cost never typed here. */
@@ -16,7 +16,7 @@ export const productFormSchema = z.object({
 			ctx.addIssue({ code: "custom", message: "Informe o preço de venda." });
 			return z.NEVER;
 		}
-		return fromCents(cents);
+		return cents;
 	}),
 	categoryId: z.string().nullable(),
 	barcode: optionalText.refine(

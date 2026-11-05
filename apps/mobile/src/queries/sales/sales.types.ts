@@ -19,7 +19,7 @@ export type SaleStatus = "active" | "canceled";
 export type SaleCostInput = {
 	kind: SaleCostKind;
 	mode: "amount" | "percent";
-	/** Money when `amount`, percentage when `percent`. */
+	/** Cents when `amount`, basis points when `percent` (lib/money.ts). */
 	value: Money | Percent;
 	/** Free description for "outros". */
 	label: string | null;

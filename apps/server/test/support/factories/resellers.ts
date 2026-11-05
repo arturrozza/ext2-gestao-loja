@@ -14,7 +14,7 @@ export function resellerBody(
 	return {
 		name: `Revendedora ${sequence}`,
 		phone: null,
-		defaultCommission: "10",
+		defaultCommission: 1000,
 		note: null,
 		...overrides,
 	};

@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
 import { SALE_COST_KINDS } from "@/lib/labels";
-import { formatCents } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { SaleCostKind } from "@/queries/sales/sales.types";
 import type { SaleCostDraft } from "../new-sale.schema";
@@ -58,7 +58,7 @@ function CostRow({
 			/>
 			{cost.mode === "percent" ? (
 				<Text className="px-1 text-muted-foreground text-xs">
-					{formatCents(amountCents)} sobre a receita
+					{formatMoney(amountCents)} sobre a receita
 				</Text>
 			) : null}
 		</View>

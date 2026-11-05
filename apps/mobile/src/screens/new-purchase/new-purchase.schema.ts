@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { parseDateInput, parseExpiryInput } from "@/lib/dates";
-import { fromCents, parseMoneyInput } from "@/lib/money";
+import { parseMoneyInput } from "@/lib/money";
 
 /** One line being typed: the product, how many, unit cost and expiry (compras.md). */
 export type PurchaseItemDraft = {
@@ -41,7 +41,7 @@ function parseItem(item: PurchaseItemDraft, index: number, ctx: Ctx) {
 	return {
 		productId: item.product.id,
 		quantity: item.quantity,
-		unitCost: fromCents(cents ?? 0),
+		unitCost: cents ?? 0,
 		expiry: item.product.hasExpiry ? expiry : null,
 	};
 }

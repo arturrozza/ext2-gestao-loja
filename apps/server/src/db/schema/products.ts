@@ -3,7 +3,6 @@ import {
 	boolean,
 	index,
 	integer,
-	numeric,
 	snakeCase,
 	text,
 	timestamp,
@@ -11,7 +10,7 @@ import {
 	uuid,
 } from "drizzle-orm/pg-core";
 import { categories } from "./categories";
-import { timestamps } from "./helpers";
+import { moneyColumn, positiveMoney, timestamps } from "./helpers";
 import { stores } from "./stores";
 
 /**
@@ -28,8 +27,8 @@ export const products = snakeCase.table(
 		/** A category of the same store (checked by the service). */
 		categoryId: uuid().references(() => categories.id),
 		name: text().notNull(),
-		/** Normal sale price, suggested on the sale. Always above zero. */
-		basePrice: numeric({ precision: 12, scale: 2 }).notNull(),
+		/** Normal sale price in cents, suggested on the sale. Always above zero. */
+		basePrice: moneyColumn().notNull(),
 		barcode: text(),
 		internalCode: text(),
 		minStock: integer(),
@@ -49,5 +48,6 @@ export const products = snakeCase.table(
 		),
 		index().on(table.storeId, table.name),
 		index().on(table.categoryId),
+		positiveMoney("products_base_price_positive", table.basePrice),
 	],
 );

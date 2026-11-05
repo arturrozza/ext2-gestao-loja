@@ -68,6 +68,9 @@ preferência escritos antes do código (TDD). Código sem teste não entra.
 ## Mobile
 
 Ainda sem testes automatizados. Por enquanto, o mínimo é `bun run typecheck` + `bun run doctor` + subir o app.
+A exceção é o `apps/mobile/src/lib/money.ts` (TypeScript puro, sem React Native): ele é testado pela suíte do server
+em `apps/server/src/lib/money.parity.test.ts`, que confere a leitura do que se digita e o arredondamento lado a lado
+com o `money.ts` do server. Mudou a regra de dinheiro de um lado, o teste falha até o outro acompanhar.
 Quando forem adotados, seguir a doc oficial: https://docs.expo.dev/develop/unit-testing/
 
 ## Definição de pronto

@@ -23,7 +23,7 @@ import {
 	todayISODate,
 } from "@/lib/dates";
 import { plural, SALE_CHANNELS, SALE_PERIODS, toOptions } from "@/lib/labels";
-import { formatCents, formatMoney, formatRatio, toCents } from "@/lib/money";
+import { divideRounded, formatMoney, formatRatio } from "@/lib/money";
 import type {
 	SaleChannel,
 	SalePage,
@@ -63,11 +63,11 @@ function periodDescription(
 
 /** What the period sold and what was left: the two numbers side by side, with the count and the margin under them. */
 function Totals({ totals }: { totals: SalePage["totals"] }) {
-	const revenue = toCents(totals.revenue);
-	const profit = toCents(totals.profit);
+	const revenue = totals.revenue;
+	const profit = totals.profit;
 	const margin = revenue > 0 ? formatRatio(profit / revenue) : "—";
 	const average =
-		totals.count > 0 ? formatCents(Math.round(revenue / totals.count)) : "—";
+		totals.count > 0 ? formatMoney(divideRounded(revenue, totals.count)) : "—";
 
 	return (
 		<View className="rounded-2xl bg-background p-5">

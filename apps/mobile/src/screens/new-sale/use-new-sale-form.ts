@@ -3,12 +3,7 @@ import { showToast } from "@/components/toast";
 import { formatDate, todayISODate } from "@/lib/dates";
 import { nextDraftKey } from "@/lib/draft-key";
 import { SALE_COST_KINDS } from "@/lib/labels";
-import {
-	moneyToInput,
-	parseMoneyInput,
-	parsePercentInput,
-	toCents,
-} from "@/lib/money";
+import { moneyToInput, parseMoneyInput, parsePercentInput } from "@/lib/money";
 import { computeSale } from "@/lib/sale-math";
 import { useZodForm } from "@/lib/use-zod-form";
 import type {
@@ -64,7 +59,7 @@ function liveBreakdown(
 			return {
 				quantity: item.quantity,
 				unitPriceCents: parseMoneyInput(item.unitPrice) ?? 0,
-				unitCostCents: product ? toCents(product.averageCost) : 0,
+				unitCostCents: product ? product.averageCost : 0,
 			};
 		}),
 		discountCents,

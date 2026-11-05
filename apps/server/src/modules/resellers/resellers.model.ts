@@ -1,20 +1,24 @@
 import { t, type UnwrapSchema } from "elysia";
-import { optionalText, percentField } from "../../lib/fields";
+import {
+	nonNegativeMoneyTotalField,
+	optionalText,
+	percentField,
+} from "../../lib/fields";
 
 const reseller = t.Object({
 	id: t.String(),
 	name: t.String(),
 	/** Digits only ("11999998888"). */
 	phone: t.Union([t.Null(), t.String()]),
-	/** Decimal string without trailing zeros ("10", "7.5"). */
-	defaultCommission: t.String(),
+	/** In basis points (7,5% = 750). */
+	defaultCommission: percentField,
 	note: t.Union([t.Null(), t.String()]),
 	archived: t.Boolean(),
 	/** Active (not canceled) sales on the reseller channel. */
 	salesCount: t.Integer(),
-	/** Two places ("200.00"). */
-	salesTotal: t.String(),
-	commissionTotal: t.String(),
+	/** In cents. */
+	salesTotal: nonNegativeMoneyTotalField,
+	commissionTotal: nonNegativeMoneyTotalField,
 });
 
 /** What the reseller form edits (revendedoras.md). */

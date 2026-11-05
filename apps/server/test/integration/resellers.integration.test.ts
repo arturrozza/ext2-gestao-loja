@@ -18,7 +18,7 @@ async function archivedAtOf(id: string) {
 	return row?.archivedAt;
 }
 
-const NO_SALES = { salesCount: 0, salesTotal: "0.00", commissionTotal: "0.00" };
+const NO_SALES = { salesCount: 0, salesTotal: 0, commissionTotal: 0 };
 
 describe("ResellersService", () => {
 	it("lists only the store's active resellers by name, or only the archived ones", async () => {
@@ -72,7 +72,7 @@ describe("ResellersService", () => {
 			resellerBody({
 				name: " Ana ",
 				phone: "(11) 3333-4444",
-				defaultCommission: "7.5",
+				defaultCommission: 750,
 				note: "Jardins",
 			}),
 		);
@@ -81,7 +81,7 @@ describe("ResellersService", () => {
 			id: expect.any(String),
 			name: "Ana",
 			phone: "1133334444",
-			defaultCommission: "7.5",
+			defaultCommission: 750,
 			note: "Jardins",
 			archived: false,
 			...NO_SALES,
@@ -105,37 +105,40 @@ describe("ResellersService", () => {
 
 		const none = await ResellersService.create(
 			session,
-			resellerBody({ defaultCommission: "0" }),
+			resellerBody({ defaultCommission: 0 }),
 		);
 		const all = await ResellersService.create(
 			session,
-			resellerBody({ defaultCommission: "100.00" }),
+			resellerBody({ defaultCommission: 10_000 }),
 		);
 
 		expect([none.defaultCommission, all.defaultCommission]).toEqual([
-			"0",
-			"100",
+			0, 10_000,
 		]);
 	});
 
-	it("keeps the commission between 0 and 100% in the database too", async () => {
+	it("keeps the commission between 0 and 10000 basis points in the database too", async () => {
 		const { session } = await signedIn();
 
-		await expect(
-			audited("system", (tx) =>
-				tx.insert(resellers).values({
-					storeId: session.store.id,
-					name: "Ana",
-					defaultCommission: "100.01",
-					searchText: "ana",
+		for (const defaultCommission of [-1, 10_001]) {
+			await expect(
+				audited("system", (tx) =>
+					tx.insert(resellers).values({
+						storeId: session.store.id,
+						name: "Ana",
+						defaultCommission,
+						searchText: "ana",
+					}),
+				),
+			).rejects.toMatchObject({
+				// Postgres names the broken constraint in its message.
+				cause: expect.objectContaining({
+					message: expect.stringContaining(
+						"resellers_default_commission_range",
+					),
 				}),
-			),
-		).rejects.toMatchObject({
-			// Postgres names the broken constraint in its message.
-			cause: expect.objectContaining({
-				message: expect.stringContaining("resellers_default_commission_range"),
-			}),
-		});
+			});
+		}
 	});
 
 	it("edits an active reseller", async () => {
@@ -148,13 +151,13 @@ describe("ResellersService", () => {
 		const edited = await ResellersService.update(
 			session,
 			reseller.id,
-			resellerBody({ name: "Ana Souza", phone: null, defaultCommission: "12" }),
+			resellerBody({ name: "Ana Souza", phone: null, defaultCommission: 1200 }),
 		);
 
 		expect(edited).toMatchObject({
 			name: "Ana Souza",
 			phone: null,
-			defaultCommission: "12",
+			defaultCommission: 1200,
 		});
 	});
 

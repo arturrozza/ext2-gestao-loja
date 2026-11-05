@@ -21,7 +21,7 @@ describe("resellers routes", () => {
 		const got = await api.resellers({ id }).get({ headers });
 		const edited = await api
 			.resellers({ id })
-			.put(resellerBody({ name: "Ana Souza", defaultCommission: "12.5" }), {
+			.put(resellerBody({ name: "Ana Souza", defaultCommission: 1250 }), {
 				headers,
 			});
 		const archived = await api
@@ -38,17 +38,62 @@ describe("resellers routes", () => {
 		expect(created.data).toMatchObject({
 			name: "Ana",
 			phone: "11999998888",
+			defaultCommission: 1000,
 			archived: false,
 			salesCount: 0,
+			salesTotal: 0,
+			commissionTotal: 0,
 		});
 		expect(got.data).toEqual(created.data);
 		expect(edited.data).toMatchObject({
 			name: "Ana Souza",
-			defaultCommission: "12.5",
+			defaultCommission: 1250,
 		});
 		expect(archived.data?.archived).toBe(true);
 		expect(listed.data?.map((reseller) => reseller.id)).toEqual([id]);
 		expect(back.data?.archived).toBe(false);
+	});
+
+	it("answers 422 for a commission that isn't whole basis points, and saves nothing", async () => {
+		const { headers } = await signedIn();
+		// What an old app sends ("10" meant 10%, now it would be 0,1%), a float or a negative: none is converted.
+		const commissions: unknown[] = ["10", "7.5", 7.5, -1, null];
+
+		for (const defaultCommission of commissions) {
+			const { error } = await api.resellers.post(
+				// @ts-expect-error: what a client outside the contract sends
+				resellerBody({ defaultCommission }),
+				{ headers },
+			);
+			expect(error?.status).toBe(422);
+			expect(error?.value).toMatchObject({
+				code: "validation",
+				field: "defaultCommission",
+			});
+		}
+		expect((await api.resellers.get({ headers, query: {} })).data).toEqual([]);
+	});
+
+	it("answers 422 for an edit with a commission that isn't whole basis points, and keeps the saved one", async () => {
+		const { headers, session } = await signedIn();
+		const reseller = await createReseller(session.store.id, {
+			defaultCommission: 1250,
+		});
+
+		for (const defaultCommission of ["10", "12.5", 12.5] as unknown[]) {
+			const { error } = await api.resellers({ id: reseller.id }).put(
+				// @ts-expect-error: what a client outside the contract sends
+				resellerBody({ defaultCommission }),
+				{ headers },
+			);
+			expect(error?.status).toBe(422);
+			expect(error?.value).toMatchObject({
+				code: "validation",
+				field: "defaultCommission",
+			});
+		}
+		const read = await api.resellers({ id: reseller.id }).get({ headers });
+		expect(read.data?.defaultCommission).toBe(1250);
 	});
 
 	it("answers 422 for a blank name, a commission over 100%, a bad phone and an id that isn't a uuid", async () => {
@@ -58,7 +103,7 @@ describe("resellers routes", () => {
 			headers,
 		});
 		const over = await api.resellers.post(
-			resellerBody({ defaultCommission: "100.5" }),
+			resellerBody({ defaultCommission: 10_001 }),
 			{ headers },
 		);
 		const phone = await api.resellers.post(

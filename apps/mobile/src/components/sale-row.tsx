@@ -2,7 +2,7 @@ import { ItemRow } from "@/components/item-row";
 import { ThumbStack } from "@/components/thumb-stack";
 import { formatRelativeDate } from "@/lib/dates";
 import { SALE_CHANNELS } from "@/lib/labels";
-import { formatMoney, toCents } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import type { SaleSummary } from "@/queries/sales/sales.types";
 
 /** On a person's own page their name would repeat in every row, so it's left out. */
@@ -31,7 +31,7 @@ export function SaleRow({
 	/** Off when the list already groups the sales by day. */
 	showDate?: boolean;
 }) {
-	const loss = toCents(sale.profit) < 0;
+	const loss = sale.profit < 0;
 	return (
 		<ItemRow
 			href={`/sales/${sale.id}`}

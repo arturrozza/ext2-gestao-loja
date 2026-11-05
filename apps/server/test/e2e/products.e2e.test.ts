@@ -18,14 +18,14 @@ describe("products routes", () => {
 		const { headers } = await signedIn();
 
 		const created = await api.products.post(
-			productBody({ name: "Perfume", basePrice: "92.5" }),
+			productBody({ name: "Perfume", basePrice: 9250 }),
 			{ headers },
 		);
 		const id = created.data?.id ?? "";
 		const read = await api.products({ id }).get({ headers });
 		const edited = await api
 			.products({ id })
-			.put(productBody({ name: "Perfume Floral", basePrice: "95" }), {
+			.put(productBody({ name: "Perfume Floral", basePrice: 9500 }), {
 				headers,
 			});
 		const archived = await api
@@ -35,11 +35,11 @@ describe("products routes", () => {
 			.products({ id })
 			.reactivate.post(undefined, { headers });
 
-		expect(created.data).toMatchObject({ name: "Perfume", basePrice: "92.50" });
+		expect(created.data).toMatchObject({ name: "Perfume", basePrice: 9250 });
 		expect(read.data?.id).toBe(id);
 		expect(edited.data).toMatchObject({
 			name: "Perfume Floral",
-			basePrice: "95.00",
+			basePrice: 9500,
 		});
 		expect(archived.data?.archived).toBe(true);
 		expect(back.data?.archived).toBe(false);
@@ -82,7 +82,7 @@ describe("products routes", () => {
 		const name = await api.products.post(productBody({ name: "" }), {
 			headers,
 		});
-		const price = await api.products.post(productBody({ basePrice: "0" }), {
+		const price = await api.products.post(productBody({ basePrice: 0 }), {
 			headers,
 		});
 		const category = await api.products.post(
@@ -99,6 +99,54 @@ describe("products routes", () => {
 			code: "category_not_found",
 			field: "categoryId",
 		});
+	});
+
+	it("answers 422 for a price that isn't whole cents, and saves nothing", async () => {
+		const { headers } = await signedIn();
+		// An old app sends a decimal string; a float or a negative is a broken client. None is ever rounded.
+		const prices: unknown[] = [
+			"92.50",
+			"9250",
+			92.5,
+			-100,
+			2_147_483_648,
+			null,
+		];
+
+		for (const basePrice of prices) {
+			const { error } = await api.products.post(
+				// @ts-expect-error: what a client outside the contract sends
+				productBody({ basePrice }),
+				{ headers },
+			);
+			expect(error?.status).toBe(422);
+			expect(error?.value).toMatchObject({
+				code: "validation",
+				field: "basePrice",
+			});
+		}
+		const list = await api.products.get({ query: {}, headers });
+		expect(list.data?.total).toBe(0);
+	});
+
+	it("answers 422 for an edit with a price that isn't whole cents, and keeps the saved one", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id, { basePrice: 9250 });
+
+		for (const basePrice of ["95", "95.00", 95.5] as unknown[]) {
+			const { error } = await api.products({ id: product.id }).put(
+				// @ts-expect-error: what a client outside the contract sends
+				productBody({ basePrice }),
+				{ headers },
+			);
+			expect(error?.status).toBe(422);
+			expect(error?.value).toMatchObject({
+				code: "validation",
+				field: "basePrice",
+			});
+		}
+		const read = await api.products({ id: product.id }).get({ headers });
+		expect(read.data?.basePrice).toBe(9250);
 	});
 
 	it("answers 409 for a repeated code and for editing an archived product", async () => {

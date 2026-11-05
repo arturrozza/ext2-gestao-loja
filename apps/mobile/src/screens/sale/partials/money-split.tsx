@@ -4,7 +4,7 @@ import {
 	type SaleBreakdownData,
 } from "@/components/sale-breakdown";
 import { Text } from "@/components/ui/text";
-import { formatCents } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 /** The three parts of the revenue, in the order they're paid: products, sale costs, what's left. */
@@ -61,7 +61,7 @@ function Legend({ data }: { data: SaleBreakdownData }) {
 								part.key === "profit" && cents > 0 && "text-success",
 							)}
 						>
-							{formatCents(cents)}
+							{formatMoney(cents)}
 						</Text>
 					</View>
 				);

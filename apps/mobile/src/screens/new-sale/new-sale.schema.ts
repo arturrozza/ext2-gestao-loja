@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { parseDateInput, todayISODate } from "@/lib/dates";
-import { fromCents, parseMoneyInput, parsePercentInput } from "@/lib/money";
+import { parseMoneyInput, parsePercentInput } from "@/lib/money";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 import type {
 	PaymentCondition,
@@ -69,14 +69,14 @@ function parseCost(
 	const path = ["costs", index, "value"];
 	if (cost.mode === "percent") {
 		const percent = parsePercentInput(cost.value);
-		if (percent === null || percent > 100) {
+		if (percent === null) {
 			fail(ctx, path, "Percentual entre 0 e 100.");
 			return null;
 		}
 		return {
 			kind: cost.kind,
 			mode: "percent",
-			value: String(percent),
+			value: percent,
 			label: cost.label.trim() || null,
 		};
 	}
@@ -88,7 +88,7 @@ function parseCost(
 	return {
 		kind: cost.kind,
 		mode: "amount",
-		value: fromCents(cents),
+		value: cents,
 		label: cost.label.trim() || null,
 	};
 }
@@ -103,7 +103,7 @@ function parseItem(item: SaleItemDraft, index: number, ctx: Ctx) {
 	return {
 		productId: item.product.id,
 		quantity: item.quantity,
-		unitPrice: fromCents(cents),
+		unitPrice: cents,
 	};
 }
 
@@ -175,8 +175,8 @@ export const newSaleSchema = z
 			date,
 			channel: values.channel,
 			items: items.filter((item) => item !== null),
-			discount: fromCents(values.adjustment === "discount" ? adjustment : 0),
-			surcharge: fromCents(values.adjustment === "surcharge" ? adjustment : 0),
+			discount: values.adjustment === "discount" ? adjustment : 0,
+			surcharge: values.adjustment === "surcharge" ? adjustment : 0,
 			costs: costs.filter((cost) => cost !== null),
 			paymentCondition: values.paymentCondition,
 			paymentMethod: values.paymentMethod,

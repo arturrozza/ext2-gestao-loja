@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { ADJUSTMENT_REASONS, signed } from "@/lib/labels";
-import { formatSignedCents, toCents } from "@/lib/money";
+import { formatSignedMoney } from "@/lib/money";
 import type {
 	AdjustmentReason,
 	ProductDetail,
@@ -22,14 +22,14 @@ export function AdjustPreview({
 }) {
 	if (newQuantity === null || newQuantity === product.stock) return null;
 	const delta = newQuantity - product.stock;
-	const value = delta * toCents(product.averageCost);
+	const value = delta * product.averageCost;
 
 	return (
 		<View className="gap-1 rounded-2xl bg-background p-4">
 			<Text className="text-muted-foreground text-xs">Como fica</Text>
 			<Text className="font-sans-semibold text-base">
 				{product.stock} → {newQuantity} ({signed(delta)}) ·{" "}
-				{formatSignedCents(value)} em estoque
+				{formatSignedMoney(value)} em estoque
 			</Text>
 			{reason ? (
 				<Text className="text-muted-foreground text-sm">

@@ -8,7 +8,7 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { formatCents, parseMoneyInput } from "@/lib/money";
+import { formatMoney, parseMoneyInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { useNewSaleForm } from "../use-new-sale-form";
 import { ResellerField } from "./reseller-field";
@@ -92,7 +92,7 @@ function adjustmentSummary(values: Sale["form"]["values"]) {
 		(a) => a.value === values.adjustment,
 	)?.label;
 	const cents = parseMoneyInput(values.adjustmentValue);
-	return cents === null ? (label ?? "") : `${label} ${formatCents(cents)}`;
+	return cents === null ? (label ?? "") : `${label} ${formatMoney(cents)}`;
 }
 
 export function AdjustmentSection({ sale }: { sale: Sale }) {
@@ -169,7 +169,7 @@ export function SaleFooter({ sale }: { sale: Sale }) {
 			{sale.form.values.items.length > 0 ? (
 				<View className="flex-row justify-between">
 					<Text className="text-muted-foreground text-sm">
-						Receita {formatCents(revenueCents)}
+						Receita {formatMoney(revenueCents)}
 					</Text>
 					<Text
 						className={cn(
@@ -177,7 +177,7 @@ export function SaleFooter({ sale }: { sale: Sale }) {
 							loss && "text-destructive",
 						)}
 					>
-						{loss ? "Prejuízo" : "Lucro"} {formatCents(Math.abs(profitCents))}
+						{loss ? "Prejuízo" : "Lucro"} {formatMoney(Math.abs(profitCents))}
 					</Text>
 				</View>
 			) : null}
