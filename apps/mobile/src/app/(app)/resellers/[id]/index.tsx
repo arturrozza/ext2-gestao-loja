@@ -1,4 +1,3 @@
-import { underConstructionRoute } from "@/screens/under-construction/under-construction.screen";
+import { ResellerScreen } from "@/screens/reseller/reseller.screen";
 
-// Under construction (docs/decisions.md). The real screen: "@/screens/reseller/reseller.screen"
-export default underConstructionRoute("Revendedora");
+export default ResellerScreen;

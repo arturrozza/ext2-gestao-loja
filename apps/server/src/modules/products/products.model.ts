@@ -1,8 +1,6 @@
 import { t, type UnwrapSchema } from "elysia";
+import { optionalText } from "../../lib/fields";
 import { cursorQuery, pageOf } from "../../lib/pagination";
-
-const optionalText = (maxLength: number) =>
-	t.Union([t.Null(), t.String({ maxLength })]);
 
 /** Money as a decimal string with up to two places ("92.5"), like the app's `Money`; never a float. */
 const money = t.String({ pattern: "^\\d{1,10}(\\.\\d{1,2})?$" });

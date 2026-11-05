@@ -54,6 +54,8 @@ preferência escritos antes do código (TDD). Código sem teste não entra.
   auditoria recusa escrita sem autor, então um `db.insert` solto num teste falha.
 - Rotas com login: `signedIn()` (`factories/accounts.ts`) cria loja, usuário e sessão e devolve os `headers` com o
   Bearer para passar ao Eden (`api.users.get({ headers })`) e a `session` que os services de escrita recebem.
+- Regra que lança erro de domínio (`httpError`, que não é um `Error`): `thrown(() => ...)` (`test/support/thrown.ts`)
+  devolve o que foi lançado, para comparar com `toMatchObject({ code: 422, response: { field } })`.
 - O `bun test` roda os arquivos em sequência, num processo só. Não ligue execução concorrente nos testes que usam
   banco: eles compartilham o `ext2_test`.
 

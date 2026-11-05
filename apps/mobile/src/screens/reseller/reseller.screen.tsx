@@ -5,8 +5,12 @@ import { ArchiveControl } from "@/components/archive-control";
 import { Figure, FigurePair } from "@/components/figure-pair";
 import { IconButton } from "@/components/icon-button";
 import { InfoRow } from "@/components/info-row";
-import { PersonSales } from "@/components/person-sales";
+import { ScreenHeader } from "@/components/screen-header";
+import { ScreenLayout } from "@/components/screen-layout";
 import { ScreenQuery } from "@/components/screen-query";
+import { UnderConstructionCard } from "@/components/under-construction";
+import { plural } from "@/lib/labels";
+import { formatPhone } from "@/lib/masks";
 import { formatMoney, formatPercent } from "@/lib/money";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 import {
@@ -27,16 +31,12 @@ function Numbers({ reseller }: { reseller: Reseller }) {
 					<Figure
 						label="Vendido"
 						value={formatMoney(reseller.salesTotal)}
-						note={
-							reseller.salesCount === 1
-								? "1 venda"
-								: `${reseller.salesCount} vendas`
-						}
+						note={plural(reseller.salesCount, "venda", "vendas")}
 					/>
 				</FigurePair>
 			</View>
 			<View className="border-border border-t">
-				<InfoRow label="Telefone" value={reseller.phone} />
+				<InfoRow label="Telefone" value={formatPhone(reseller.phone)} />
 				{reseller.note ? (
 					<InfoRow label="Observação" value={reseller.note} />
 				) : null}
@@ -48,33 +48,45 @@ function Numbers({ reseller }: { reseller: Reseller }) {
 function ResellerPage({ reseller }: { reseller: Reseller }) {
 	const archive = useSetResellerArchived(reseller.id);
 	return (
-		<PersonSales
-			title={reseller.name}
-			filter={{ resellerId: reseller.id }}
-			emptyDescription="As vendas no canal Revendedora com ela aparecem aqui."
-			bottom={
-				<ArchiveControl
-					noun="revendedora"
-					archived={reseller.archived}
-					archivedText="Revendedora arquivada: não entra em novas vendas, mas continua no histórico e nos relatórios."
-					confirmText={`${reseller.name} sai das novas vendas. O histórico e os relatórios continuam com ela, e dá para reativar depois.`}
-					mutation={archive}
+		<ScreenLayout
+			header={
+				<ScreenHeader
+					title={reseller.name}
+					right={
+						reseller.archived ? undefined : (
+							<IconButton
+								icon={PencilSimpleIcon}
+								label="Editar revendedora"
+								onPress={() => router.push(`/resellers/${reseller.id}/edit`)}
+							/>
+						)
+					}
 				/>
 			}
-			headerRight={
-				<IconButton
-					icon={PencilSimpleIcon}
-					label="Editar revendedora"
-					onPress={() => router.push(`/resellers/${reseller.id}/edit`)}
-				/>
-			}
+			contentClassName="gap-7"
 		>
 			<Numbers reseller={reseller} />
-		</PersonSales>
+			{/* Becomes the list of her sales (`PersonSales`) with the sales module (MUN-16). */}
+			<UnderConstructionCard
+				title="Vendas"
+				description="As vendas dela no canal Revendedora e a comissão por período chegam com as vendas."
+			/>
+			<ArchiveControl
+				noun="revendedora"
+				archived={reseller.archived}
+				archivedText="Revendedora arquivada: não entra em novas vendas, mas continua no histórico e nos relatórios. Para editar, reative."
+				confirmText={`${reseller.name} sai das novas vendas. O histórico e os relatórios continuam com ela, e dá para reativar depois.`}
+				mutation={archive}
+			/>
+		</ScreenLayout>
 	);
 }
 
-/** A reseller's numbers and sales (revendedoras.md). */
+/**
+ * A reseller (revendedoras.md): her numbers, data and the archive control. Her sales and the commission by period come
+ * with the sales module (MUN-16); until then that block is under construction. Archived ones aren't edited, only
+ * reactivated.
+ */
 export function ResellerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = useReseller(id);

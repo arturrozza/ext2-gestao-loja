@@ -10,6 +10,7 @@ import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import type { IconType } from "@/components/ui/icon";
 import { useProducts } from "@/queries/products/use-products";
+import { useResellers } from "@/queries/resellers/use-resellers";
 import { useUsers } from "@/queries/users/use-users";
 
 export type Shortcut = {
@@ -42,10 +43,11 @@ const building = (title: string, icon: IconType, href: Href): Shortcut => ({
  * the people around the store, and managing it (results, alerts, settings). Modules without an API yet are marked
  * "Em construção".
  */
-function homeSections(
-	products: number | undefined,
-	activeUsers: number | undefined,
-): ShortcutSection[] {
+function homeSections(counts: {
+	products: number | undefined;
+	activeResellers: number | undefined;
+	activeUsers: number | undefined;
+}): ShortcutSection[] {
 	return [
 		{
 			title: "Dia a dia",
@@ -54,7 +56,7 @@ function homeSections(
 				building("Compras", TruckIcon, "/purchases"),
 				{
 					title: "Produtos",
-					subtitle: count(products, "cadastrados", "Nenhum ainda"),
+					subtitle: count(counts.products, "cadastrados", "Nenhum ainda"),
 					icon: PackageIcon,
 					href: "/products",
 				},
@@ -64,10 +66,15 @@ function homeSections(
 			title: "Pessoas",
 			items: [
 				building("Clientes", UserIcon, "/customers"),
-				building("Revendedoras", HandshakeIcon, "/resellers"),
+				{
+					title: "Revendedoras",
+					subtitle: count(counts.activeResellers, "ativas", "Nenhuma ainda"),
+					icon: HandshakeIcon,
+					href: "/resellers",
+				},
 				{
 					title: "Usuários",
-					subtitle: count(activeUsers, "ativos", "Nenhum ainda"),
+					subtitle: count(counts.activeUsers, "ativos", "Nenhum ainda"),
 					icon: UsersIcon,
 					href: "/store/users",
 				},
@@ -90,8 +97,9 @@ function homeSections(
 }
 
 /**
- * The home's shortcut sections, with the counts that already come from the API (active products and users). `failed`:
- * a number behind the subtitles failed to load, so the cards show nothing instead of a loading line forever.
+ * The home's shortcut sections, with the counts that already come from the API (active products, resellers and
+ * users). `failed`: a number behind the subtitles failed to load, so the cards show nothing instead of a loading line
+ * forever.
  */
 export function useHomeShortcuts() {
 	const products = useProducts({
@@ -99,11 +107,16 @@ export function useHomeShortcuts() {
 		categoryIds: [],
 		archived: false,
 	});
+	const resellers = useResellers({ search: "", archived: false });
 	const users = useUsers();
-	const activeUsers = users.data?.filter((user) => user.active).length;
+	const queries = [products, resellers, users];
 	return {
-		sections: homeSections(products.data?.pages[0]?.total, activeUsers),
-		failed: products.isError || users.isError,
-		refetch: () => Promise.all([products.refetch(), users.refetch()]),
+		sections: homeSections({
+			products: products.data?.pages[0]?.total,
+			activeResellers: resellers.data?.length,
+			activeUsers: users.data?.filter((user) => user.active).length,
+		}),
+		failed: queries.some((query) => query.isError),
+		refetch: () => Promise.all(queries.map((query) => query.refetch())),
 	};
 }

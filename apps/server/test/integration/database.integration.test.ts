@@ -6,6 +6,7 @@ import {
 	auditLog,
 	categories,
 	products,
+	resellers,
 	sessions,
 	users,
 } from "../../src/db/schema";
@@ -58,6 +59,7 @@ type Table =
 	| typeof sessions
 	| typeof categories
 	| typeof products
+	| typeof resellers
 	| typeof auditLog;
 
 describe("schema indexes", () => {
@@ -72,6 +74,7 @@ describe("schema indexes", () => {
 		expect(indexed(users)).toEqual(["store_id"]);
 		expect(indexed(sessions)).toEqual(["user_id"]);
 		expect(indexed(categories)).toEqual(["store_id", "normalized_name"]);
+		expect(indexed(resellers)).toEqual(["store_id", "name"]);
 		expect(indexed(auditLog)).toEqual([
 			"table_name",
 			"record_id",
@@ -107,5 +110,6 @@ describe("schema foreign keys", () => {
 		expect(targets(sessions)).toEqual(["users"]);
 		expect(targets(categories)).toEqual(["stores"]);
 		expect(targets(products)).toEqual(["stores", "categories"]);
+		expect(targets(resellers)).toEqual(["stores"]);
 	});
 });

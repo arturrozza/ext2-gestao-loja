@@ -1,18 +1,14 @@
 import { httpError } from "../../lib/http-error";
+import { phoneDigits } from "../../lib/phone";
+import { blankToNull, onlyDigits } from "../../lib/text";
 import type { StoreModel } from "./store.model";
 
-const digits = (value: string) => value.replace(/\D/g, "").length;
+const digits = (value: string) => onlyDigits(value).length;
 
 const invalid = (field: string, message: string) =>
 	httpError(422, { code: "validation", message, field });
 
-/** Blank optional text is "not informed". */
-function blankToNull(value: string | null): string | null {
-	const trimmed = value?.trim();
-	return trimmed ? trimmed : null;
-}
-
-/** Store data as it's saved: trimmed, blanks as null, CPF/CNPJ and phone checked by their digit count. */
+/** Store data as it's saved: trimmed, blanks as null, CPF/CNPJ and phone checked by their digit count (both kept masked). */
 export function normalizeProfile(
 	input: StoreModel["profile"],
 ): StoreModel["profile"] {
@@ -28,8 +24,7 @@ export function normalizeProfile(
 			"Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).",
 		);
 	}
-	if (profile.phone && ![10, 11].includes(digits(profile.phone))) {
-		throw invalid("phone", "Informe o telefone com DDD.");
-	}
+	// Checked by its digits, kept as typed (with the mask).
+	if (profile.phone) phoneDigits(profile.phone);
 	return profile;
 }

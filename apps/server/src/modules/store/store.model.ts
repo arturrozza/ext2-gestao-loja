@@ -1,12 +1,5 @@
 import { t, type UnwrapSchema } from "elysia";
-
-const optionalText = (maxLength: number) =>
-	t.Union([t.Null(), t.String({ maxLength })]);
-
-/** 0 to 100 with at most two decimals, as a decimal string ("12.5"), like the app's `percentField` sends. */
-const percent = t.String({
-	pattern: "^(100(\\.0{1,2})?|\\d{1,2}(\\.\\d{1,2})?)$",
-});
+import { optionalText, percentField } from "../../lib/fields";
 
 /** Alert periods (docs/decisions.md: 1 to 365 days). */
 const days = t.Integer({ minimum: 1, maximum: 365 });
@@ -19,11 +12,11 @@ const profile = t.Object({
 });
 
 const settings = t.Object({
-	defaultTaxPercent: percent,
-	mercadoLivreFeePercent: percent,
+	defaultTaxPercent: percentField,
+	mercadoLivreFeePercent: percentField,
 	expiryWarningDays: days,
 	staleProductDays: days,
-	lowMarginPercent: percent,
+	lowMarginPercent: percentField,
 });
 
 export const StoreModel = { profile, settings };

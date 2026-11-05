@@ -12,6 +12,18 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Revendedora com nome repetido, sem edição quando arquivada e vendas depois
+
+**Decisão:** o nome da revendedora pode se repetir na loja; a lista e a escolha na venda mostram comissão e telefone
+embaixo do nome. O telefone é opcional, com DDD, e fica guardado só com os dígitos; a busca acha com ou sem a máscara.
+A comissão padrão vai de 0% a 100%. Revendedora arquivada não se edita, só reativa, como produto. A lista não é
+paginada. Enquanto Vendas (MUN-16) não existe, os totais dela vêm zerados e as vendas e a comissão por período
+aparecem como "Em construção"; o filtro por período entra com as vendas.
+**Por quê:** pessoas diferentes podem ter o mesmo nome, e barrar o cadastro obrigaria a inventar apelido; o telefone
+resolve a dúvida na hora de escolher. Guardar só os dígitos deixa a busca igual para qualquer jeito de digitar. Uma
+loja tem poucas revendedoras, então paginar não compensa. Sem vendas, um filtro por período não teria o que mostrar
+nem como ser testado.
+
 ## 2026-11-05: Registro de auditoria por trigger no banco
 
 **Decisão:** toda escrita nas tabelas de negócio gera uma linha em `audit_log` (quem, quando, antes, depois e campos

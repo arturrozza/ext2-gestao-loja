@@ -13,6 +13,7 @@ import { IconButton } from "@/components/icon-button";
 import { ItemRow } from "@/components/item-row";
 import { ListCard } from "@/components/list-card";
 import { PersonAvatar } from "@/components/person-avatar";
+import { resellerSubtitle } from "@/components/person-form/reseller-subtitle";
 import { EmptyState, QueryView } from "@/components/query-states";
 import { ScreenHeader } from "@/components/screen-header";
 import { ScreenLayout } from "@/components/screen-layout";
@@ -20,7 +21,8 @@ import { SearchField } from "@/components/search-field";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { plural } from "@/lib/labels";
-import { formatMoney, formatPercent } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
+import { searchParam } from "@/lib/search";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 import { useResellers } from "@/queries/resellers/use-resellers";
@@ -39,12 +41,7 @@ function ResellerRow({ reseller }: { reseller: Reseller }) {
 			label={reseller.name}
 			leading={<PersonAvatar name={reseller.name} />}
 			title={reseller.name}
-			subtitle={[
-				`Comissão ${formatPercent(reseller.defaultCommission)}`,
-				reseller.phone,
-			]
-				.filter(Boolean)
-				.join(" · ")}
+			subtitle={resellerSubtitle(reseller)}
 			value={formatMoney(reseller.commissionTotal)}
 			note={plural(reseller.salesCount, "venda", "vendas")}
 		/>
@@ -136,7 +133,9 @@ export function ResellersScreen() {
 				{(resellers) =>
 					resellers.length === 0 ? (
 						<NoResellers
-							filtered={Boolean(search) || view === "archived"}
+							filtered={
+								searchParam(search) !== undefined || view === "archived"
+							}
 							onCreate={create}
 						/>
 					) : (

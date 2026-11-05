@@ -1,15 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import { thrown } from "../../../test/support/thrown";
 import { normalizeProfile } from "./store.rules";
-
-/** What a call threw (Elysia's `status()` isn't an `Error`, so `toThrow` can't match it). */
-function thrown(call: () => void): unknown {
-	try {
-		call();
-	} catch (error) {
-		return error;
-	}
-	return undefined;
-}
 
 const profile = { name: "Loja", document: null, phone: null, address: null };
 

@@ -1,17 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { thrown } from "../../../test/support/thrown";
 import { createAttemptLimiter, createHashGate } from "./auth.rate-limit";
 
 const MINUTE = 60 * 1000;
-
-/** What a call threw (Elysia's `status()` isn't an `Error`, so `toThrow` can't match it). */
-function thrown(call: () => void): unknown {
-	try {
-		call();
-	} catch (error) {
-		return error;
-	}
-	return undefined;
-}
 
 const tooMany = { code: 429, response: { code: "too_many_attempts" } };
 

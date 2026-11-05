@@ -36,7 +36,11 @@ src/
   env.ts              env validated with Zod; never read process.env anywhere else
   lib/http-error.ts   `ErrorModel` ({ code, message, field? }), `httpError()` and `guardUnique()` (unique violation → 409)
   lib/pagination.ts   `PAGE_SIZE`, `pageOf()` and `cursorQuery` for the long lists (offset cursor, the app's `Page<T>`)
-  lib/search.ts       `normalizeSearch()` (lowercase, no accents) and `searchPatterns()` for `LIKE` searches
+  lib/search.ts       `normalizeSearch()` (lowercase, no accents), `searchPatterns()` and `likePattern()` for `LIKE` searches
+  lib/fields.ts       shared `t` fields (`optionalText`, `percentField`)
+  lib/percent.ts      `percentOut()`: a stored percentage as the API answers it ("12.50" → "12.5")
+  lib/text.ts         `blankToNull()` (blank optional text → null) and `onlyDigits()`
+  lib/phone.ts        `phoneDigits()`: a phone with area code (10/11 digits) or a 422 on `phone`
   db/
     index.ts          Drizzle client
     migrate.ts        applies migrations, then seeds the first store + user (`seed.ts`) while there's no user
@@ -50,7 +54,7 @@ src/
     <module>.model.ts             `t` schemas for request/response + derived types (`<Module>Model`)
     <module>.service.test.ts      unit tests next to the code
 test/
-  support/            test helpers (database reset, factories)
+  support/            test helpers (database reset, factories, `thrown()` for rules that throw `status()`)
   integration/        services against the real test DB (<module>.integration.test.ts)
   e2e/                HTTP through Eden, one file per module (<module>.e2e.test.ts)
 drizzle/              generated migrations (don't hand-edit, except custom migrations)

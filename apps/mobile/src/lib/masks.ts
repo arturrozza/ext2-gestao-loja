@@ -13,6 +13,11 @@ export function maskPhone(text: string): string {
 	return `(${area}) ${rest.slice(0, split)}-${rest.slice(split)}`;
 }
 
+/** A saved phone (digits) as people read it, or `null` when there's none. */
+export function formatPhone(phone: string | null): string | null {
+	return phone ? maskPhone(phone) : null;
+}
+
 /** CPF ("123.456.789-01") up to 11 digits, CNPJ ("12.345.678/0001-90") beyond that. */
 export function maskDocument(text: string): string {
 	const digits = onlyDigits(text).slice(0, 14);

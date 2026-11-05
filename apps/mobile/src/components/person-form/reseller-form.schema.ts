@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionalPhone, optionalText, percentField } from "@/lib/form-fields";
+import { formatPhone } from "@/lib/masks";
 import { percentToInput } from "@/lib/money";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 
@@ -23,7 +24,7 @@ export const EMPTY_RESELLER: ResellerFormValues = {
 export function resellerToForm(reseller: Reseller): ResellerFormValues {
 	return {
 		name: reseller.name,
-		phone: reseller.phone ?? "",
+		phone: formatPhone(reseller.phone) ?? "",
 		defaultCommission: percentToInput(reseller.defaultCommission),
 		note: reseller.note ?? "",
 	};

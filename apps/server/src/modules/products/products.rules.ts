@@ -1,12 +1,7 @@
 import { httpError } from "../../lib/http-error";
 import { normalizeSearch } from "../../lib/search";
+import { blankToNull } from "../../lib/text";
 import type { ProductsModel } from "./products.model";
-
-/** Blank optional text is "not informed". */
-function blankToNull(value: string | null): string | null {
-	const trimmed = value?.trim();
-	return trimmed ? trimmed : null;
-}
 
 /**
  * A product as it's saved: trimmed, blanks as null, base price above zero (produtos.md), and the text the search

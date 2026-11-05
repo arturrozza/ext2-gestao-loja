@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { audited } from "../../db/audit";
 import { stores } from "../../db/schema";
+import { percentOut } from "../../lib/percent";
 import type { AuthSession } from "../auth/auth.model";
 import type { StoreModel } from "./store.model";
 import { normalizeProfile } from "./store.rules";
@@ -21,13 +22,13 @@ const settingsColumns = {
 	lowMarginPercent: stores.lowMarginPercent,
 };
 
-/** Postgres keeps `numeric(5,2)` as "12.50"; the API answers "12.5", like the app sends it. */
+/** Percentages as the app sends them ("12.5", not "12.50"). */
 function toSettings(row: StoreModel["settings"]): StoreModel["settings"] {
 	return {
 		...row,
-		defaultTaxPercent: String(Number(row.defaultTaxPercent)),
-		mercadoLivreFeePercent: String(Number(row.mercadoLivreFeePercent)),
-		lowMarginPercent: String(Number(row.lowMarginPercent)),
+		defaultTaxPercent: percentOut(row.defaultTaxPercent),
+		mercadoLivreFeePercent: percentOut(row.mercadoLivreFeePercent),
+		lowMarginPercent: percentOut(row.lowMarginPercent),
 	};
 }
 

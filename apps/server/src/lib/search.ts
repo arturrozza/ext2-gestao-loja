@@ -11,8 +11,10 @@ export function normalizeSearch(text: string): string {
 /** The words of a search, each one a `LIKE` pattern that finds it anywhere ("floral perfume" → two patterns). */
 export function searchPatterns(query: string | undefined): string[] {
 	if (!query) return [];
-	return normalizeSearch(query)
-		.split(" ")
-		.filter(Boolean)
-		.map((word) => `%${word.replace(/[\\%_]/g, "\\$&")}%`);
+	return normalizeSearch(query).split(" ").filter(Boolean).map(likePattern);
+}
+
+/** A `LIKE` pattern that finds `word` anywhere, with its wildcards escaped. */
+export function likePattern(word: string): string {
+	return `%${word.replace(/[\\%_]/g, "\\$&")}%`;
 }

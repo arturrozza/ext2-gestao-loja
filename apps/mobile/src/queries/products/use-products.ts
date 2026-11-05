@@ -7,6 +7,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { api, request } from "@/lib/api";
+import { searchParam } from "@/lib/search";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { type Page, pagedQuery } from "@/queries/pagination";
 import { underConstruction } from "@/queries/under-construction";
@@ -35,8 +36,7 @@ export const productsKeys = {
 /** The API's list query: only the filters that narrow something. */
 function listQuery(filters: ProductListFilters, cursor: number) {
 	return {
-		// The API takes up to 100 characters; a longer paste still searches by its start.
-		search: filters.search.trim().slice(0, 100) || undefined,
+		search: searchParam(filters.search),
 		categoryIds: filters.categoryIds.length ? filters.categoryIds : undefined,
 		archived: filters.archived,
 		cursor,

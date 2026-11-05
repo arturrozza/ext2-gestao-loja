@@ -5,9 +5,9 @@ import {
 	EMPTY_RESELLER,
 	resellerFormSchema,
 } from "@/components/person-form/reseller-form.schema";
+import { resellerSubtitle } from "@/components/person-form/reseller-subtitle";
 import { PersonPicker } from "@/components/person-picker";
 import { PickerTrigger } from "@/components/picker-trigger";
-import { formatPercent } from "@/lib/money";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useZodForm } from "@/lib/use-zod-form";
 import {
@@ -56,8 +56,9 @@ export function ResellerField({
 		setSearch("");
 		setPicking(false);
 	};
-	const pick = (reseller: SaleReseller) => {
-		onChange(reseller);
+	// Only what the sale keeps, not the whole reseller (phone, totals...).
+	const pick = ({ id, name, defaultCommission }: SaleReseller) => {
+		onChange({ id, name, defaultCommission });
 		close();
 	};
 
@@ -81,7 +82,7 @@ export function ResellerField({
 				people={resellers.map((reseller) => ({
 					id: reseller.id,
 					name: reseller.name,
-					detail: `Comissão ${formatPercent(reseller.defaultCommission)}`,
+					detail: resellerSubtitle(reseller),
 				}))}
 				selectedId={value?.id ?? null}
 				onPick={(person) => {
