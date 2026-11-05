@@ -86,6 +86,10 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   Volte para uma tag quando sair uma release com ele.
 - **Railway CLI via Bun:** `bun add -g @railway/cli` precisa de `bun pm -g trust @railway/cli`, porque o postinstall
   (que baixa o binário) é bloqueado por padrão.
+- **Barra "OK" do teclado (iOS) dentro de uma caixa 0x0.** O `InputAccessoryView` deixa na tela um nó próprio,
+  absoluto, no topo do campo e com a largura toda. Num build iOS ele apareceu cobrindo o label e o topo do input depois
+  de abrir um segundo formulário. O `DoneTextInput` envolve a barra numa caixa 0x0 com `overflow-hidden`, e o conteúdo
+  da barra continua indo para a janela do teclado. Não tire a caixa sem testar num build de verdade (TestFlight).
 - **Biome:** `@tailwind` está liberado no CSS. O NativeWind 4 usa Tailwind 3, e o parser de Tailwind do Biome só
   conhece as diretivas da v4.
 - **`tailwind-merge` 3 com Tailwind 3.** A v3 do `tailwind-merge` foi feita para o Tailwind 4, mas é a versão que o
