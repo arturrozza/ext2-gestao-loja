@@ -12,6 +12,15 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Nome "MM Vendas" e ícone da sacola
+
+**Decisão:** o app aparece no celular como **MM Vendas**. O ícone e a splash são uma sacola de compras branca e
+inclinada, com "mm" vazado, sobre o laranja do app (`#EA580C`). O scheme passou a ser `mundomadam`. O slug do Expo
+continua `mobile` e o bundle id continua `com.mundomadam.loja`.
+**Por quê:** o nome foi escolhido com a loja, e a sacola liga a marca a vendas. O slug e o bundle id não aparecem
+para quem usa o app. Trocar o slug mexe no vínculo com o projeto do EAS, e trocar o bundle id cria outro app na Apple
+e no Android. Por isso eles ficam diferentes do nome de propósito.
+
 ## 2026-11-04: Fonte Manrope no lugar da Plus Jakarta Sans
 
 **Decisão:** o app usa a Manrope. Também foram testadas a Geist (centraliza melhor, mas tem cara de ferramenta técnica)

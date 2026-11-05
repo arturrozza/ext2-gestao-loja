@@ -73,7 +73,7 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
 - **Railway CLI via Bun:** `bun add -g @railway/cli` precisa de `bun pm -g trust @railway/cli`, porque o postinstall
   (que baixa o binário) é bloqueado por padrão.
 - **Biome:** `@tailwind` está liberado no CSS. O NativeWind 4 usa Tailwind 3, e o parser de Tailwind do Biome só
-  conhece as diretivas da v4. O ícone gerado pelo Expo (`apps/mobile/assets/expo.icon`) fica fora do lint.
+  conhece as diretivas da v4.
 - **`tailwind-merge` 3 com Tailwind 3.** A v3 do `tailwind-merge` foi feita para o Tailwind 4, mas é a versão que o
   template NativeWind do React Native Reusables usa, e funciona com as classes do app. Se o `cn()` resolver algum
   conflito errado, teste o `tailwind-merge` 2 (feito para o Tailwind 3).

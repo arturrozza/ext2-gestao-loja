@@ -8,7 +8,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!**/drizzle/meta", "!apps/mobile/assets/expo.icon"]
+		"includes": ["**", "!**/drizzle/meta"]
 	},
 	"formatter": {
 		"enabled": true,

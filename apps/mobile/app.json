@@ -1,15 +1,14 @@
 {
 	"expo": {
-		"name": "Loja",
+		"name": "MM Vendas",
 		"slug": "mobile",
-		"version": "1.0.0",
+		"version": "1.1.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
-		"scheme": "mobile",
+		"scheme": "mundomadam",
 		"userInterfaceStyle": "light",
 		"ios": {
 			"bundleIdentifier": "com.mundomadam.loja",
-			"icon": "./assets/expo.icon",
 			"config": {
 				"usesNonExemptEncryption": false
 			}
@@ -17,9 +16,8 @@
 		"android": {
 			"package": "com.mundomadam.loja",
 			"adaptiveIcon": {
-				"backgroundColor": "#E6F4FE",
+				"backgroundColor": "#EA580C",
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
-				"backgroundImage": "./assets/images/android-icon-background.png",
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
 			},
 			"predictiveBackGestureEnabled": false
@@ -34,9 +32,9 @@
 			[
 				"expo-splash-screen",
 				{
-					"backgroundColor": "#208AEF",
+					"backgroundColor": "#EA580C",
 					"image": "./assets/images/splash-icon.png",
-					"imageWidth": 76
+					"imageWidth": 200
 				}
 			],
 			"expo-font",
