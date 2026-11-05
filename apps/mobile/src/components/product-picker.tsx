@@ -22,10 +22,13 @@ import { formatMoney } from "@/lib/money";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { cn } from "@/lib/utils";
 import type {
-	ProductListFilters,
 	ProductListItem,
+	StockListFilters,
 } from "@/queries/products/products.types";
-import { useCategories, useProducts } from "@/queries/products/use-products";
+import {
+	useCategories,
+	useStockProducts,
+} from "@/queries/products/use-products";
 
 /** `sale`: shows price and sellable stock. `purchase`: shows stock and cost. */
 export type PickerMode = "sale" | "purchase";
@@ -40,7 +43,7 @@ const AVAILABILITY: { value: Availability; label: string }[] = [
 
 function availabilityFilter(
 	values: Availability[],
-): Pick<ProductListFilters, "stock" | "inStock"> {
+): Pick<StockListFilters, "stock" | "inStock"> {
 	return {
 		stock: values.filter((value) => value !== "in_stock"),
 		inStock: values.includes("in_stock"),
@@ -183,7 +186,7 @@ export function ProductPicker({
 	const categories = useCategories();
 	const debouncedSearch = useDebouncedValue(search);
 	// Only fetches while open: every form that hosts the picker keeps it mounted.
-	const query = useProducts(
+	const query = useStockProducts(
 		{
 			search: debouncedSearch,
 			categoryIds,

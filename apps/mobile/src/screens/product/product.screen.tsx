@@ -6,16 +6,16 @@ import { ListCard } from "@/components/list-card";
 import { ScreenHeader } from "@/components/screen-header";
 import { ScreenLayout } from "@/components/screen-layout";
 import { ScreenQuery } from "@/components/screen-query";
+import { UnderConstructionCard } from "@/components/under-construction";
 import { useProduct } from "@/queries/products/use-products";
 import { ArchiveSection } from "./partials/archive-section";
-import { ExpiryList } from "./partials/expiry-list";
-import { MovementHistory } from "./partials/movement-history";
 import { ProductSummary } from "./partials/product-summary";
 import { StockCard } from "./partials/stock-card";
 
 /**
- * Product screen (produtos.md, estoque.md): data, stock with quantity by expiry, ledger with links to the purchase or
- * sale behind each entry, and the stock actions (purchase, adjust, correct cost). Stock has no screen of its own.
+ * Product screen (produtos.md): its data and the archive control. Stock (quantity by expiry, ledger and the stock
+ * actions, estoque.md) comes with purchases and stock corrections (MUN-12/13); until then it's under construction. An
+ * archived product isn't edited, only reactivated.
  */
 export function ProductScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,19 +29,24 @@ export function ProductScreen() {
 						<ScreenHeader
 							title="Produto"
 							right={
-								<IconButton
-									icon={PencilSimpleIcon}
-									label="Editar produto"
-									onPress={() => router.push(`/products/${product.id}/edit`)}
-								/>
+								product.archived ? undefined : (
+									<IconButton
+										icon={PencilSimpleIcon}
+										label="Editar produto"
+										onPress={() => router.push(`/products/${product.id}/edit`)}
+									/>
+								)
 							}
 						/>
 					}
 					contentClassName="gap-7"
 				>
 					<ProductSummary product={product} />
+					<UnderConstructionCard
+						title="Estoque"
+						description="Quantidade, custo, validades e histórico de movimentações chegam com as compras."
+					/>
 					<StockCard product={product} />
-					<ExpiryList expiries={product.expiries} />
 					<ListCard title="Códigos">
 						<InfoRow label="Código interno" value={product.internalCode} />
 						<InfoRow label="Código de barras" value={product.barcode} />
@@ -50,7 +55,6 @@ export function ProductScreen() {
 							value={product.hasExpiry ? "Sim" : "Não"}
 						/>
 					</ListCard>
-					<MovementHistory productId={product.id} />
 					<ArchiveSection product={product} />
 				</ScreenLayout>
 			)}

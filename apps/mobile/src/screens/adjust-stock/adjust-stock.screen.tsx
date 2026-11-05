@@ -17,7 +17,10 @@ import type {
 	AdjustmentReason,
 	ProductDetail,
 } from "@/queries/products/products.types";
-import { useAdjustStock, useProduct } from "@/queries/products/use-products";
+import {
+	useAdjustStock,
+	useStockProduct,
+} from "@/queries/products/use-products";
 import {
 	type AdjustFormValues,
 	adjustSchema,
@@ -204,7 +207,7 @@ function AdjustForm({ product }: { product: ProductDetail }) {
 /** Fix the quantity when the app doesn't match the shelf (estoque.md, "Ajuste"), with the effect shown first. */
 export function AdjustStockScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const query = useProduct(id);
+	const query = useStockProduct(id);
 	return (
 		<ScreenQuery
 			title="Ajustar estoque"

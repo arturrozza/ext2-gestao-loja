@@ -1,5 +1,5 @@
 /**
- * Real profit of a sale (docs/product/vendas.md, "Lucro real"). Shared by the new-sale preview and the fake backend;
+ * Real profit of a sale (docs/product/vendas.md, "Lucro real"). Used by the new-sale preview;
  * the API computes and stores it for real. All values in cents.
  *
  *   receita          = soma de (quantidade × preço) − desconto + acréscimo

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import { db } from "../../src/db";
+import { audited } from "../../src/db/audit";
 import { sessions, users } from "../../src/db/schema";
 import {
 	hashSessionToken,
@@ -157,10 +158,12 @@ describe("AuthService.authenticate", () => {
 			password: user.password,
 		});
 
-		await db
-			.update(users)
-			.set({ deactivatedAt: new Date() })
-			.where(eq(users.id, user.id));
+		await audited("system", (tx) =>
+			tx
+				.update(users)
+				.set({ deactivatedAt: new Date() })
+				.where(eq(users.id, user.id)),
+		);
 
 		expect(await AuthService.authenticate(bearer(token))).toBeNull();
 	});

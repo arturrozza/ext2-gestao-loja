@@ -65,6 +65,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 /**
+ * Back on the home with the month summary (MUN-18).
+ *
  * White highlight card: the month's real profit (the app's core number; tapping it opens the report) and the numbers
  * behind it. The eye hides money values for when a customer can see the screen.
  */

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, request } from "@/lib/api";
 import { authKeys } from "@/queries/auth/use-auth";
-import { mirrorSettings } from "@/queries/fake/fake-settings";
 import type { StoreProfile, StoreSettings } from "./store.types";
 
 export const storeKeys = {
@@ -32,7 +31,7 @@ export function useUpdateStoreProfile() {
 export function useStoreSettings() {
 	return useQuery({
 		queryKey: storeKeys.settings(),
-		queryFn: () => request(api.store.settings.get()).then(mirrorSettings),
+		queryFn: () => request(api.store.settings.get()),
 	});
 }
 
@@ -41,7 +40,7 @@ export function useUpdateStoreSettings() {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (input: StoreSettings) =>
-			request(api.store.settings.put(input)).then(mirrorSettings),
+			request(api.store.settings.put(input)),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				predicate: (query) => query.queryKey[0] !== authKeys.all[0],

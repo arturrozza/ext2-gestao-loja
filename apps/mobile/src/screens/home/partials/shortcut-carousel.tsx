@@ -2,20 +2,31 @@ import { Link } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { UnderConstructionTag } from "@/components/under-construction";
 import { hapticTap } from "@/lib/haptics";
 import type { Shortcut, ShortcutSection } from "./home-shortcuts";
 
-function PendingBadge({ count }: { count: number }) {
+/** Under the title: the module's state, its number, or a placeholder of the same height while the number loads. */
+function ShortcutSubtitle({
+	item,
+	failed,
+}: {
+	item: Shortcut;
+	failed: boolean;
+}) {
+	if (item.underConstruction) return <UnderConstructionTag />;
+	if (!item.subtitle && !failed) {
+		// Same height as the text line it stands for, so the card doesn't move when the numbers arrive.
+		return (
+			<View className="h-[15px] justify-center">
+				<View className="h-2.5 w-16 rounded-[4px] bg-muted" />
+			</View>
+		);
+	}
 	return (
-		<View className="h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5">
-			<Text
-				className="font-sans-semibold text-[11px] text-destructive-foreground"
-				// A tight line height pushes the digits up; the plain one, without Android's extra font padding, centers them.
-				style={{ includeFontPadding: false, textAlignVertical: "center" }}
-			>
-				{count}
-			</Text>
-		</View>
+		<Text className="text-[11px] text-muted-foreground" numberOfLines={1}>
+			{item.subtitle}
+		</Text>
 	);
 }
 
@@ -27,39 +38,22 @@ function ShortcutCard({
 	/** The numbers behind the subtitle failed to load: show nothing instead of a placeholder forever. */
 	failed: boolean;
 }) {
-	const badge = item.badge ?? 0;
-
 	return (
 		<Link href={item.href} asChild>
 			<Pressable
 				onPress={hapticTap}
 				accessibilityRole="button"
 				accessibilityLabel={
-					badge > 0 ? `${item.title}, ${badge} pendentes` : item.title
+					item.underConstruction ? `${item.title}, em construção` : item.title
 				}
 				className="h-[120px] w-[136px] justify-between rounded-2xl bg-background p-3.5 active:bg-accent"
 			>
-				<View className="flex-row items-start justify-between">
-					<Icon as={item.icon} size={22} className="text-foreground/50" />
-					{badge > 0 ? <PendingBadge count={badge} /> : null}
-				</View>
-				<View className="gap-0.5">
+				<Icon as={item.icon} size={22} className="text-foreground/50" />
+				<View className="gap-1">
 					<Text className="font-sans-semibold text-sm" numberOfLines={1}>
 						{item.title}
 					</Text>
-					{!item.subtitle && !failed ? (
-						// Same height as the text line it stands for, so the card doesn't move when the numbers arrive.
-						<View className="h-[15px] justify-center">
-							<View className="h-2.5 w-16 rounded-[4px] bg-muted" />
-						</View>
-					) : (
-						<Text
-							className="text-[11px] text-muted-foreground"
-							numberOfLines={1}
-						>
-							{item.subtitle}
-						</Text>
-					)}
+					<ShortcutSubtitle item={item} failed={failed} />
 				</View>
 			</Pressable>
 		</Link>

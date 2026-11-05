@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { type Env, env } from "../env";
 import { hashPassword, normalizeEmail } from "../modules/auth/auth.crypto";
-import { db } from ".";
+import { audited } from "./audit";
+import { insertedRow } from "./rows";
 import { stores, users } from "./schema";
 
 export type SeedAccount = {
@@ -44,17 +45,18 @@ export async function seedFirstAccount(
 	account: SeedAccount,
 ): Promise<"created" | "skipped"> {
 	const passwordHash = await hashPassword(account.password);
-	return db.transaction(async (tx) => {
+	return audited("system", async (tx) => {
 		// Serializes concurrent deploys: only one of them sees an empty table.
 		await tx.execute(sql`LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE`);
 		const [existing] = await tx.select({ id: users.id }).from(users).limit(1);
 		if (existing) return "skipped";
 
-		const [store] = await tx
-			.insert(stores)
-			.values({ name: account.storeName })
-			.returning({ id: stores.id });
-		if (!store) throw new Error("insert returned no row");
+		const store = insertedRow(
+			await tx
+				.insert(stores)
+				.values({ name: account.storeName })
+				.returning({ id: stores.id }),
+		);
 		await tx.insert(users).values({
 			storeId: store.id,
 			name: account.userName,

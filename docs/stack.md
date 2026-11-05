@@ -61,9 +61,9 @@ ou mudança em plugin do `app.json`.
 
 Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de novo:
 
-- **Telas com dados falsos** (MUN-21). Os hooks de `src/queries/<módulo>/` chamam `<módulo>.fake.ts` em vez do cliente
-  `api`, até a task de cada módulo ligar a API (a MUN-20 remove o que sobrar). Os módulos falsos dependem uns dos outros
-  (`queries/fake/`), então o dado de demonstração só some por inteiro no fim.
+- **Módulos "Em construção"** (MUN-10). Os dados falsos saíram. A rota de um módulo que ainda não tem API mostra a
+  tela "Em construção", sem ações; a tela de verdade continua em `src/screens/` e os hooks dele mantêm o formato, mas
+  falham como uma requisição (`underConstruction()`). A task do módulo liga a API nos hooks e devolve as rotas às telas.
 - **Linker `hoisted` do Bun** (`bunfig.toml`). Com o `isolated` (o padrão), o `expo-doctor` acusa módulos nativos
   duplicados (`expo-font`, `expo-symbols`...), e isso quebra builds nativos. Testar o `isolated` de novo ao subir o
   Expo.

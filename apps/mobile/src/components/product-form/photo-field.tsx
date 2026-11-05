@@ -65,7 +65,10 @@ async function pickPhoto() {
 	return toPhoto(await ImagePicker.launchImageLibraryAsync(OPTIONS));
 }
 
-/** Take or pick a square photo of the product (produtos.md). Without one, an icon shows in its place. */
+/**
+ * Take or pick a square photo of the product (produtos.md). Without one, an icon shows in its place. Not in the form
+ * until photos are saved by the API (MUN-11).
+ */
 export function PhotoField({
 	uri,
 	onChange,

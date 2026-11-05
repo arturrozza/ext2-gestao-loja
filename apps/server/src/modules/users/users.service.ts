@@ -1,11 +1,9 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "../../db";
+import { audited, type Transaction } from "../../db/audit";
+import { insertedRow } from "../../db/rows";
 import { sessions, users } from "../../db/schema";
-import {
-	httpError,
-	isUniqueViolation,
-	unauthorized,
-} from "../../lib/http-error";
+import { guardUnique, httpError, unauthorized } from "../../lib/http-error";
 import { hashPassword, normalizeEmail } from "../auth/auth.crypto";
 import type { AuthSession } from "../auth/auth.model";
 import type { UsersModel } from "./users.model";
@@ -33,8 +31,6 @@ const notFound = () =>
 		code: "user_not_found",
 		message: "Usuário não encontrado.",
 	});
-
-type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Locks the signed-in user's row and the target's (in id order, so two of these never deadlock) and reads their latest
@@ -75,30 +71,33 @@ export const UsersService = {
 	},
 
 	async create(
-		storeId: string,
+		session: AuthSession,
 		input: UsersModel["createBody"],
 	): Promise<UsersModel["user"]> {
 		const passwordHash = await hashPassword(input.password);
-		try {
-			const [row] = await db
-				.insert(users)
-				.values({
-					storeId,
-					name: input.name.trim(),
-					email: normalizeEmail(input.email),
-					passwordHash,
-				})
-				.returning(columns);
-			if (!row) throw new Error("insert returned no row");
-			return toUser(row);
-		} catch (error) {
-			if (!isUniqueViolation(error)) throw error;
-			throw httpError(409, {
-				code: "email_taken",
-				message: "Já existe um usuário com esse e-mail.",
-				field: "email",
-			});
-		}
+		const row = await guardUnique(
+			() =>
+				audited(session.user.id, async (tx) =>
+					insertedRow(
+						await tx
+							.insert(users)
+							.values({
+								storeId: session.store.id,
+								name: input.name.trim(),
+								email: normalizeEmail(input.email),
+								passwordHash,
+							})
+							.returning(columns),
+					),
+				),
+			async () =>
+				httpError(409, {
+					code: "email_taken",
+					message: "Já existe um usuário com esse e-mail.",
+					field: "email",
+				}),
+		);
+		return toUser(row);
 	},
 
 	/**
@@ -115,7 +114,7 @@ export const UsersService = {
 				message: "Você não pode desativar o próprio usuário.",
 			});
 		}
-		return db.transaction(async (tx) => {
+		return audited(session.user.id, async (tx) => {
 			const target = await lockTarget(tx, session, userId);
 			if (target.deactivatedAt) return toUser(target);
 
@@ -134,7 +133,7 @@ export const UsersService = {
 		session: AuthSession,
 		userId: string,
 	): Promise<UsersModel["user"]> {
-		return db.transaction(async (tx) => {
+		return audited(session.user.id, async (tx) => {
 			const target = await lockTarget(tx, session, userId);
 			if (!target.deactivatedAt) return toUser(target);
 

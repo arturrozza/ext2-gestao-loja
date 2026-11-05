@@ -4,9 +4,9 @@ import { InfoRow } from "@/components/info-row";
 import { ListCard } from "@/components/list-card";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import type { ProductDetail } from "@/queries/products/products.types";
+import type { Product, ProductDetail } from "@/queries/products/products.types";
 
-/** What changes the stock: a purchase (the main way), an adjustment, a cost correction. */
+/** What changes the stock: a purchase (the main way), an adjustment, a cost correction. Shown again with MUN-12/13. */
 export function StockActions({ product }: { product: ProductDetail }) {
 	return (
 		<View className="gap-2">
@@ -45,9 +45,9 @@ export function StockActions({ product }: { product: ProductDetail }) {
 }
 
 /** Where the product is kept and when it counts as low. Quantity, value and cost are in the top card. */
-export function StockCard({ product }: { product: ProductDetail }) {
+export function StockCard({ product }: { product: Product }) {
 	return (
-		<ListCard title="Estoque">
+		<ListCard title="Local e mínimo">
 			<InfoRow
 				label="Estoque mínimo"
 				value={product.minStock === null ? null : String(product.minStock)}

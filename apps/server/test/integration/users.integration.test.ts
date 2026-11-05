@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
-import { db } from "../../src/db";
+import { audited } from "../../src/db/audit";
 import { users } from "../../src/db/schema";
 import { AuthService } from "../../src/modules/auth/auth.service";
 import { UsersService } from "../../src/modules/users/users.service";
@@ -17,9 +17,9 @@ async function sessionOf(token: string) {
 
 describe("UsersService.create", () => {
 	it("creates a user in the store who can sign in", async () => {
-		const { user: owner } = await signedIn();
+		const { session } = await signedIn();
 
-		const created = await UsersService.create(owner.storeId, {
+		const created = await UsersService.create(session, {
 			name: "  Bia ",
 			email: "Bia@Loja.com",
 			password: "senha-da-bia",
@@ -39,10 +39,10 @@ describe("UsersService.create", () => {
 
 	it("refuses an e-mail already in use, whatever the case or the store", async () => {
 		await createUser({ email: "bia@loja.com" });
-		const { user: owner } = await signedIn();
+		const { session } = await signedIn();
 
 		await expect(
-			UsersService.create(owner.storeId, {
+			UsersService.create(session, {
 				name: "Bia",
 				email: "BIA@loja.com",
 				password: "senha-da-bia",
@@ -156,10 +156,12 @@ describe("UsersService.deactivate / reactivate", () => {
 	it("doesn't bring back sessions from before the deactivation", async () => {
 		const owner = await signedIn();
 		const other = await signedIn({ storeId: owner.user.storeId });
-		await db
-			.update(users)
-			.set({ deactivatedAt: new Date() })
-			.where(eq(users.id, other.user.id));
+		await audited("system", (tx) =>
+			tx
+				.update(users)
+				.set({ deactivatedAt: new Date() })
+				.where(eq(users.id, other.user.id)),
+		);
 
 		await UsersService.reactivate(await sessionOf(owner.token), other.user.id);
 

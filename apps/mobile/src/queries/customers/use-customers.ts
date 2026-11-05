@@ -6,8 +6,13 @@ import {
 } from "@tanstack/react-query";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
-import { customersFake } from "./customers.fake";
-import type { CustomerInput, CustomerListFilters } from "./customers.types";
+import { underConstruction } from "@/queries/under-construction";
+import type {
+	Customer,
+	CustomerInput,
+	CustomerListFilters,
+	CustomerPage,
+} from "./customers.types";
 
 export const customersKeys = {
 	all: ["customers"] as const,
@@ -20,7 +25,7 @@ export const customersKeys = {
 export function useCustomers(filters: CustomerListFilters) {
 	return useInfiniteQuery({
 		queryKey: customersKeys.list(filters),
-		...pagedQuery((cursor) => customersFake.list(filters, cursor)),
+		...pagedQuery((cursor) => underConstruction<CustomerPage>(filters, cursor)),
 		placeholderData: keepPreviousData,
 	});
 }
@@ -28,14 +33,14 @@ export function useCustomers(filters: CustomerListFilters) {
 export function useCustomer(id: string) {
 	return useQuery({
 		queryKey: customersKeys.detail(id),
-		queryFn: () => customersFake.detail(id),
+		queryFn: () => underConstruction<Customer>(id),
 	});
 }
 
 export function useCreateCustomer() {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: CustomerInput) => customersFake.create(input),
+		mutationFn: (input: CustomerInput) => underConstruction<Customer>(input),
 		onSuccess: invalidate,
 	});
 }
@@ -43,7 +48,8 @@ export function useCreateCustomer() {
 export function useUpdateCustomer(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: CustomerInput) => customersFake.update(id, input),
+		mutationFn: (input: CustomerInput) =>
+			underConstruction<Customer>(id, input),
 		onSuccess: invalidate,
 	});
 }
@@ -51,7 +57,8 @@ export function useUpdateCustomer(id: string) {
 export function useSetCustomerArchived(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (archived: boolean) => customersFake.setArchived(id, archived),
+		mutationFn: (archived: boolean) =>
+			underConstruction<Customer>(id, archived),
 		onSuccess: invalidate,
 	});
 }

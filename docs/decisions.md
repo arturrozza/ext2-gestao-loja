@@ -12,6 +12,31 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Registro de auditoria por trigger no banco
+
+**Decisão:** toda escrita nas tabelas de negócio gera uma linha em `audit_log` (quem, quando, antes, depois e campos
+alterados), gravada por uma trigger do Postgres. O autor vai na transação por `audited()`, e a trigger recusa escrita
+sem autor. Senhas ficam de fora. A busca de produtos usa uma coluna com nome e códigos já normalizados (minúsculas,
+sem acento), calculada no server, em vez da extensão `unaccent`.
+**Por quê:** o mantenedor quer saber quem mudou o quê, como o auditing do Eloquent. O Drizzle não tem eventos de
+model, e um log feito no código depende de cada service lembrar de chamar; a trigger pega toda escrita, e recusar
+escrita sem autor transforma o esquecimento em erro. Na busca, a coluna normalizada evita depender de extensão no
+Postgres da Railway e segue a mesma normalização do app. Limite conhecido: a busca (`LIKE '%palavra%'`) lê todos os
+produtos da loja, sem índice; com catálogos grandes, trocar por `pg_trgm`.
+
+## 2026-11-05: Categoria se arquiva, produto arquivado não se edita e o app deixa os dados falsos
+
+**Decisão:** categorias passam a poder ser renomeadas, arquivadas e reativadas; não se excluem. Produto arquivado não
+se edita, só reativa. O app para de usar dados falsos de uma vez (a MUN-20 vai junto com a MUN-10): os módulos que
+ainda não existem mostram "Em construção" e escondem as ações, e estoque e custo aparecem como "—" até Compras e
+Estoque. A sugestão de "Cadastrar primeira entrada" passou para Compras (MUN-12), e o campo de foto some do cadastro
+até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva.
+**Por quê:** excluir uma categoria tiraria os produtos dela e mudaria os relatórios por categoria do passado; arquivar
+esconde sem perder nada. Editar arquivado não tem uso e abre espaço para mexer no que já é histórico. Ligar só
+produtos à API deixaria compras, vendas e estoque falsos apontando para produtos que não existem mais; mostrar "Em
+construção" é mais honesto que manter uma demonstração inconsistente. Sem compras, não há estoque nem custo de verdade
+para mostrar, e a primeira entrada não teria para onde levar.
+
 ## 2026-11-05: Libs nativas do MVP instaladas de uma vez, push incluído
 
 **Decisão:** todas as libs nativas que o MVP usa entram no binário 1.2.0, incluindo o `expo-notifications`, mesmo com
@@ -88,6 +113,9 @@ a 0,4px do centro, sem ajuste.
 **Por quê:** ao ver o app rodando, as telas estavam corretas, mas carregadas demais em comparação com a tela inicial.
 
 ## 2026-11-04: Telas definitivas com dados falsos e padrões a confirmar
+
+> Os dados falsos saíram em 2026-11-05 (ver "Categoria se arquiva, produto arquivado não se edita e o app deixa os
+> dados falsos"); os padrões abaixo continuam valendo.
 
 **Decisão:** as telas antigas do mock foram apagadas e refeitas nas rotas definitivas, seguindo a tela inicial como
 modelo, com dados falsos isolados por módulo (`src/queries/<módulo>/<módulo>.fake.ts`). As listas que crescem são

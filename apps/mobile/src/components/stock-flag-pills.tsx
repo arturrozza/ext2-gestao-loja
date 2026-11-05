@@ -2,7 +2,10 @@ import { View } from "react-native";
 import { StatusPill } from "@/components/status-pill";
 import type { StockFlags } from "@/queries/products/products.types";
 
-/** Pills for the stock problems of a product. "Sem estoque" replaces "Estoque baixo" (docs/product/alertas.md). */
+/**
+ * Pills for the stock problems of a product. "Sem estoque" replaces "Estoque baixo" (docs/product/alertas.md). Back
+ * on the product screen with MUN-12/13.
+ */
 export function StockFlagPills({
 	flags,
 	archived = false,

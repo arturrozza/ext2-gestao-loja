@@ -44,7 +44,6 @@ src/
     partials/                  components used ONLY by this screen
   components/                  components shared by more than one screen (ui/: design system base components)
   queries/<module>/            TanStack Query hooks + query keys per API module (mirrors server modules)
-                               `*.fake.ts`: temporary fake backend of the module (queries/fake/: its tables and stock rules)
   lib/                         api (Eden), query-client, env, fonts, theme and utilities (cn)
   providers/                   global providers (QueryClient, SafeArea...)
   global.css                   Tailwind directives + design tokens (imported in the root _layout)
@@ -64,6 +63,8 @@ Alias: `@/*` → `src/*`.
 
   export default HomeScreen;
   ```
+
+  A module still under construction default-exports `underConstructionRoute("Title", presentation)` instead (see Data).
 
 - Each screen lives in `src/screens/<screen>/<screen>.screen.tsx`. Components that belong only to that screen go in
   its `partials/` folder. A partial needed by a second screen moves to `src/components/`.
@@ -96,9 +97,12 @@ Alias: `@/*` → `src/*`.
 
 ### Data (TanStack Query + Eden)
 - Every API call goes through the `api` client (`src/lib/api.ts`), typed with the server's `type App`. No raw `fetch`.
-- **Fake data (MUN-21):** until a module's feature task lands, its hooks call `queries/<module>/<module>.fake.ts` instead
-  of `api`. To connect a module: swap the fake calls inside its hooks for `api`, keep the hook shape and
-  `<module>.types.ts`; screens don't change. Anything marked "FAKE" goes away in MUN-20.
+- **Modules not built yet** (no API): their routes render `underConstructionRoute("Title", presentation)`
+  (`screens/under-construction/`), with a comment pointing at the real screen, which stays in `screens/`. Their hooks
+  keep the shape the screens need but call `underConstruction()` (`queries/under-construction.ts`), which fails like a
+  request. Shortcuts and actions that lead there show `UnderConstructionTag`; a block inside a working screen uses
+  `UnderConstructionCard` (`components/under-construction.tsx`). To connect a module: call `api` in its hooks, keep
+  the hook shape and `<module>.types.ts`, and point the routes back at the real screens. No fake data.
   Screens rely on errors being an `ApiError` (`code`, pt-BR `message`, `details.field`) and on `unauthorized` ending the
   session: wrap every Eden call with `request()` from `src/lib/api.ts`, which returns the data or throws that `ApiError`
   (`network` when the server can't be reached). The session token lives in `src/lib/session-token.ts` (SecureStore) and

@@ -7,8 +7,13 @@ import {
 import { isApiError } from "@/lib/api-error";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
-import { salesFake } from "./sales.fake";
-import type { SaleInput, SaleListFilters } from "./sales.types";
+import { underConstruction } from "@/queries/under-construction";
+import type {
+	SaleDetail,
+	SaleInput,
+	SaleListFilters,
+	SalePage,
+} from "./sales.types";
 
 export const salesKeys = {
 	all: ["sales"] as const,
@@ -21,7 +26,7 @@ export const salesKeys = {
 export function useSales(filters: SaleListFilters) {
 	return useInfiniteQuery({
 		queryKey: salesKeys.list(filters),
-		...pagedQuery((cursor) => salesFake.list(filters, cursor)),
+		...pagedQuery((cursor) => underConstruction<SalePage>(filters, cursor)),
 		placeholderData: keepPreviousData,
 	});
 }
@@ -29,7 +34,7 @@ export function useSales(filters: SaleListFilters) {
 export function useSale(id: string) {
 	return useQuery({
 		queryKey: salesKeys.detail(id),
-		queryFn: () => salesFake.detail(id),
+		queryFn: () => underConstruction<SaleDetail>(id),
 	});
 }
 
@@ -37,7 +42,7 @@ export function useSale(id: string) {
 export function useCreateSale() {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: SaleInput) => salesFake.create(input),
+		mutationFn: (input: SaleInput) => underConstruction<SaleDetail>(input),
 		onSuccess: invalidate,
 		// Someone else sold the last units: refresh, so the lines show the stock block with its shortcuts.
 		onError: (error) => {
@@ -49,7 +54,7 @@ export function useCreateSale() {
 export function useCancelSale(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (reason: string) => salesFake.cancel(id, reason),
+		mutationFn: (reason: string) => underConstruction<SaleDetail>(id, reason),
 		onSuccess: invalidate,
 	});
 }

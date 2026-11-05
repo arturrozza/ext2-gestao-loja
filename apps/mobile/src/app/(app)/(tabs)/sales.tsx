@@ -1,3 +1,4 @@
-import { SalesScreen } from "@/screens/sales/sales.screen";
+import { underConstructionRoute } from "@/screens/under-construction/under-construction.screen";
 
-export default SalesScreen;
+// Under construction (docs/decisions.md). The real screen: "@/screens/sales/sales.screen"
+export default underConstructionRoute("Vendas", "tab");

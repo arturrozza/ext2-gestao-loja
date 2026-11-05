@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
+import { audited } from "../../db/audit";
 import { stores } from "../../db/schema";
+import type { AuthSession } from "../auth/auth.model";
 import type { StoreModel } from "./store.model";
 import { normalizeProfile } from "./store.rules";
 
@@ -48,16 +50,18 @@ export const StoreService = {
 	},
 
 	async updateProfile(
-		storeId: string,
+		session: AuthSession,
 		input: StoreModel["profile"],
 	): Promise<StoreModel["profile"]> {
 		const profile = normalizeProfile(input);
 		return single(
-			await db
-				.update(stores)
-				.set(profile)
-				.where(eq(stores.id, storeId))
-				.returning(profileColumns),
+			await audited(session.user.id, (tx) =>
+				tx
+					.update(stores)
+					.set(profile)
+					.where(eq(stores.id, session.store.id))
+					.returning(profileColumns),
+			),
 		);
 	},
 
@@ -73,7 +77,7 @@ export const StoreService = {
 	},
 
 	async updateSettings(
-		storeId: string,
+		session: AuthSession,
 		input: StoreModel["settings"],
 	): Promise<StoreModel["settings"]> {
 		// Field by field, so the update can never reach another column whatever the body carries.
@@ -86,17 +90,19 @@ export const StoreService = {
 		} = input;
 		return toSettings(
 			single(
-				await db
-					.update(stores)
-					.set({
-						defaultTaxPercent,
-						mercadoLivreFeePercent,
-						expiryWarningDays,
-						staleProductDays,
-						lowMarginPercent,
-					})
-					.where(eq(stores.id, storeId))
-					.returning(settingsColumns),
+				await audited(session.user.id, (tx) =>
+					tx
+						.update(stores)
+						.set({
+							defaultTaxPercent,
+							mercadoLivreFeePercent,
+							expiryWarningDays,
+							staleProductDays,
+							lowMarginPercent,
+						})
+						.where(eq(stores.id, session.store.id))
+						.returning(settingsColumns),
+				),
 			),
 		);
 	},

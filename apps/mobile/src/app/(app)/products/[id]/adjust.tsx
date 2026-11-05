@@ -1,3 +1,4 @@
-import { AdjustStockScreen } from "@/screens/adjust-stock/adjust-stock.screen";
+import { underConstructionRoute } from "@/screens/under-construction/under-construction.screen";
 
-export default AdjustStockScreen;
+// Under construction (docs/decisions.md). The real screen: "@/screens/adjust-stock/adjust-stock.screen"
+export default underConstructionRoute("Ajustar estoque", "sheet");

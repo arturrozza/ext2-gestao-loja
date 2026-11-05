@@ -1,3 +1,4 @@
-import { EditCustomerScreen } from "@/screens/edit-customer/edit-customer.screen";
+import { underConstructionRoute } from "@/screens/under-construction/under-construction.screen";
 
-export default EditCustomerScreen;
+// Under construction (docs/decisions.md). The real screen: "@/screens/edit-customer/edit-customer.screen"
+export default underConstructionRoute("Editar cliente", "sheet");

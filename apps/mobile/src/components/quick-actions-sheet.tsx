@@ -8,6 +8,7 @@ import { Pressable, View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { Icon, type IconType } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { UnderConstructionTag } from "@/components/under-construction";
 import { hapticTap, withHaptic } from "@/lib/haptics";
 
 type QuickAction = {
@@ -15,6 +16,8 @@ type QuickAction = {
 	subtitle: string;
 	icon: IconType;
 	href: Href;
+	/** The module isn't built yet: the row says so and its screen too. */
+	underConstruction?: boolean;
 };
 
 const ACTIONS: QuickAction[] = [
@@ -23,12 +26,14 @@ const ACTIONS: QuickAction[] = [
 		subtitle: "Registrar uma venda",
 		icon: ShoppingBagIcon,
 		href: "/sales/new",
+		underConstruction: true,
 	},
 	{
 		title: "Nova compra",
 		subtitle: "Dar entrada em mercadoria",
 		icon: TruckIcon,
 		href: "/purchases/new",
+		underConstruction: true,
 	},
 	{
 		title: "Novo produto",
@@ -41,6 +46,7 @@ const ACTIONS: QuickAction[] = [
 		subtitle: "Cadastrar um cliente fixo",
 		icon: UserPlusIcon,
 		href: "/customers/new",
+		underConstruction: true,
 	},
 ];
 
@@ -60,7 +66,13 @@ function ActionRow({
 			<Icon as={action.icon} size={22} className="text-foreground/50" />
 			<View className="flex-1 gap-0.5">
 				<Text className="font-sans-semibold text-sm">{action.title}</Text>
-				<Text className="text-muted-foreground text-xs">{action.subtitle}</Text>
+				{action.underConstruction ? (
+					<UnderConstructionTag />
+				) : (
+					<Text className="text-muted-foreground text-xs">
+						{action.subtitle}
+					</Text>
+				)}
 			</View>
 			<Icon as={CaretRightIcon} size={18} className="text-foreground/45" />
 		</Pressable>

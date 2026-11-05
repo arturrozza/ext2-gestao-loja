@@ -103,6 +103,25 @@ src/modules/products/
 chama o `listen`, para os testes usarem o `app` sem abrir porta. O `src/db/migrate.ts` aplica as migrations em
 runtime (usado pela imagem Docker ao subir).
 
+### Auditoria
+
+Toda criação, alteração e exclusão nas tabelas de negócio fica registrada em `audit_log`: a tabela, o id do registro, a
+ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem grava é uma trigger do Postgres
+(`audit_row_change`, migration `audit_trigger`), não o código do app, então nenhum caminho de escrita escapa, nem um
+`UPDATE` feito à mão.
+
+- **Quem fez:** toda escrita roda dentro de `audited(autor, tx => ...)` (`src/db/audit.ts`), que guarda o autor na
+  transação (`set_config('app.actor', ..., true)`). O autor é o id do usuário da sessão ou `"system"` (seed, testes). A
+  trigger **recusa** escrita sem autor, então esquecer o `audited()` quebra na hora em vez de gravar sem dono.
+- **Segredos:** colunas passadas como argumento da trigger (como `password_hash` em `users`) não são copiadas; a
+  alteração aparece só pelo nome em `changed_fields`.
+- **Update sem mudança** (só `updated_at`) não gera registro.
+- **Só cresce:** o `audit_log` recusa `UPDATE` e `DELETE`.
+- **Tabela nova:** a migration dela cria a trigger (`CREATE TRIGGER audit AFTER INSERT OR UPDATE OR DELETE ON <tabela>
+  FOR EACH ROW EXECUTE FUNCTION audit_row_change();`, numa migration custom). Um teste falha se alguma tabela de
+  `public` ficar sem ela (exceções: `sessions`, o próprio `audit_log` e tabelas de rascunho dos testes).
+- Ainda não há tela para consultar o registro.
+
 ## Mobile
 
 ```

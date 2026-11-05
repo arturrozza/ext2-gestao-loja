@@ -1,3 +1,4 @@
-import { EditResellerScreen } from "@/screens/edit-reseller/edit-reseller.screen";
+import { underConstructionRoute } from "@/screens/under-construction/under-construction.screen";
 
-export default EditResellerScreen;
+// Under construction (docs/decisions.md). The real screen: "@/screens/edit-reseller/edit-reseller.screen"
+export default underConstructionRoute("Editar revendedora", "sheet");

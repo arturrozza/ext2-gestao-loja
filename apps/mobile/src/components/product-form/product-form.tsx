@@ -11,12 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
 import { useZodForm } from "@/lib/use-zod-form";
-import type {
-	ProductInput,
-	ProductListItem,
-} from "@/queries/products/products.types";
+import type { Product, ProductInput } from "@/queries/products/products.types";
 import { CategoryField } from "./category-field";
-import { PhotoField } from "./photo-field";
 import {
 	type ProductFormValues,
 	productFormSchema,
@@ -65,7 +61,8 @@ function BarcodeField({
 }
 
 /**
- * Product create/edit form (produtos.md). Stock and cost aren't here: they only come in through purchases.
+ * Product create/edit form (produtos.md). Stock and cost aren't here: they only come in through purchases. The photo
+ * field comes back with photos (MUN-11).
  * `onSaved` runs after the mutation succeeds (the screen decides where to go).
  */
 export function ProductForm({
@@ -78,8 +75,8 @@ export function ProductForm({
 	title: string;
 	submitLabel: string;
 	initial: ProductFormValues;
-	mutation: UseMutationResult<ProductListItem, Error, ProductInput>;
-	onSaved: (product: ProductListItem) => void;
+	mutation: UseMutationResult<Product, Error, ProductInput>;
+	onSaved: (product: Product) => void;
 }) {
 	const form = useZodForm(productFormSchema, initial);
 	const { values, errors, set } = form;
@@ -100,10 +97,6 @@ export function ProductForm({
 			onSubmit={submit}
 		>
 			<FormSection>
-				<PhotoField
-					uri={values.photoUri}
-					onChange={(uri) => set("photoUri", uri)}
-				/>
 				<FormField
 					label="Nome"
 					value={values.name}

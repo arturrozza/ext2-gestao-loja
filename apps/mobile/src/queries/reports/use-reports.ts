@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { reportsFake } from "./reports.fake";
-import type { ReportPeriod } from "./reports.types";
+import { underConstruction } from "@/queries/under-construction";
+import type { Report, ReportPeriod } from "./reports.types";
 
 export const reportsKeys = {
 	all: ["reports"] as const,
@@ -11,7 +11,7 @@ export const reportsKeys = {
 export function useReport(period: ReportPeriod) {
 	return useQuery({
 		queryKey: reportsKeys.report(period),
-		queryFn: () => reportsFake.report(period),
+		queryFn: () => underConstruction<Report>(period),
 		placeholderData: keepPreviousData,
 	});
 }

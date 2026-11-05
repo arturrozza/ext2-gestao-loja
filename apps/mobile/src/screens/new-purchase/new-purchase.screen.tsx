@@ -23,7 +23,7 @@ import {
 } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
 import type { ProductListItem } from "@/queries/products/products.types";
-import { useProduct } from "@/queries/products/use-products";
+import { useStockProduct } from "@/queries/products/use-products";
 import { useCreatePurchase } from "@/queries/purchases/use-purchases";
 import {
 	type NewPurchaseValues,
@@ -75,7 +75,7 @@ function usePrefill(add: (item: PurchaseItemDraft) => void) {
 		productId?: string;
 		quantity?: string;
 	}>();
-	const product = useProduct(params.productId);
+	const product = useStockProduct(params.productId);
 	const done = useRef(false);
 	useEffect(() => {
 		if (done.current || !product.data) return;

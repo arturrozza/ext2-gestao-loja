@@ -10,7 +10,7 @@ import { useCategories } from "@/queries/products/use-products";
 
 const NONE = "none";
 
-/** Category of the product (at most one, produtos.md), with a shortcut to create one right here. */
+/** Category of the product (at most one, produtos.md), with a shortcut to create one right here. Active ones only. */
 export function CategoryField({
 	value,
 	onChange,
@@ -20,9 +20,16 @@ export function CategoryField({
 }) {
 	const categories = useCategories();
 	const [creating, setCreating] = useState(false);
+	// An archived category can't be picked, but a product already in one may keep it (produtos.md).
+	const [initial] = useState(value);
 	const options = [
 		{ value: NONE, label: "Sem categoria" },
-		...(categories.data ?? []).map((c) => ({ value: c.id, label: c.name })),
+		...(categories.data ?? [])
+			.filter((c) => !c.archived || c.id === initial)
+			.map((c) => ({
+				value: c.id,
+				label: c.archived ? `${c.name} (arquivada)` : c.name,
+			})),
 	];
 
 	return (
@@ -37,6 +44,7 @@ export function CategoryField({
 						onPress={withHaptic(hapticTap, () => setCreating(true))}
 						hitSlop={8}
 						accessibilityRole="button"
+						accessibilityLabel="Nova categoria"
 						className="flex-row items-center gap-1"
 					>
 						<Icon as={PlusIcon} size={14} className="text-primary" />

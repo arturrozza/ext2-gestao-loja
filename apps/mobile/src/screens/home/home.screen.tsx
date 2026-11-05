@@ -1,14 +1,12 @@
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
-import { QueryView } from "@/components/query-states";
 import { ScreenLayout } from "@/components/screen-layout";
-import { SummarySkeleton } from "@/components/skeleton";
 import { Text } from "@/components/ui/text";
+import { UnderConstructionCard } from "@/components/under-construction";
 import { hapticTap } from "@/lib/haptics";
 import { initials } from "@/lib/masks";
 import { useSession } from "@/queries/auth/use-auth";
 import { useHomeShortcuts } from "./partials/home-shortcuts";
-import { ProfitHighlight } from "./partials/profit-highlight";
 import { ShortcutCarousel } from "./partials/shortcut-carousel";
 
 function greeting() {
@@ -49,7 +47,8 @@ function HomeGreeting() {
 
 /**
  * Home (light-gray page, white cards): month summary on top, then one carousel of shortcuts per group of modules.
- * A store that just started sees a zeroed summary and "nothing yet" subtitles.
+ * The summary comes with sales (MUN-18; `partials/profit-highlight.tsx` is its card); until then it's under
+ * construction.
  */
 export function HomeScreen() {
 	const home = useHomeShortcuts();
@@ -63,9 +62,10 @@ export function HomeScreen() {
 			contentClassName="gap-7 pt-3"
 		>
 			<HomeGreeting />
-			<QueryView query={home.summary} skeleton={<SummarySkeleton />}>
-				{(summary) => <ProfitHighlight summary={summary} />}
-			</QueryView>
+			<UnderConstructionCard
+				title="Resumo do mês"
+				description="Lucro, vendas e custos do mês chegam com as vendas."
+			/>
 			{home.sections.map((section) => (
 				<ShortcutCarousel
 					key={section.title}

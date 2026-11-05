@@ -15,7 +15,6 @@ import { hapticTap } from "@/lib/haptics";
 import { formatPercent } from "@/lib/money";
 import { useSession } from "@/queries/auth/use-auth";
 import { useStoreProfile, useStoreSettings } from "@/queries/store/use-store";
-import { DemoControls } from "./partials/demo-controls";
 import { SignOutSheet } from "./partials/sign-out-sheet";
 
 function EditLink({ href }: { href: "/store/edit" | "/store/settings" }) {
@@ -102,7 +101,6 @@ export function StoreScreen() {
 					onPress={() => setSigningOut(true)}
 				/>
 			</ListCard>
-			<DemoControls />
 			<SignOutSheet open={signingOut} onClose={() => setSigningOut(false)} />
 		</ScreenLayout>
 	);

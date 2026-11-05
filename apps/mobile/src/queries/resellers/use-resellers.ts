@@ -1,7 +1,11 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
-import { resellersFake } from "./resellers.fake";
-import type { ResellerInput, ResellerListFilters } from "./resellers.types";
+import { underConstruction } from "@/queries/under-construction";
+import type {
+	Reseller,
+	ResellerInput,
+	ResellerListFilters,
+} from "./resellers.types";
 
 export const resellersKeys = {
 	all: ["resellers"] as const,
@@ -14,7 +18,7 @@ export const resellersKeys = {
 export function useResellers(filters: ResellerListFilters) {
 	return useQuery({
 		queryKey: resellersKeys.list(filters),
-		queryFn: () => resellersFake.list(filters),
+		queryFn: () => underConstruction<Reseller[]>(filters),
 		placeholderData: keepPreviousData,
 	});
 }
@@ -22,14 +26,14 @@ export function useResellers(filters: ResellerListFilters) {
 export function useReseller(id: string) {
 	return useQuery({
 		queryKey: resellersKeys.detail(id),
-		queryFn: () => resellersFake.detail(id),
+		queryFn: () => underConstruction<Reseller>(id),
 	});
 }
 
 export function useCreateReseller() {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: ResellerInput) => resellersFake.create(input),
+		mutationFn: (input: ResellerInput) => underConstruction<Reseller>(input),
 		onSuccess: invalidate,
 	});
 }
@@ -37,7 +41,8 @@ export function useCreateReseller() {
 export function useUpdateReseller(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: ResellerInput) => resellersFake.update(id, input),
+		mutationFn: (input: ResellerInput) =>
+			underConstruction<Reseller>(id, input),
 		onSuccess: invalidate,
 	});
 }
@@ -45,7 +50,8 @@ export function useUpdateReseller(id: string) {
 export function useSetResellerArchived(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (archived: boolean) => resellersFake.setArchived(id, archived),
+		mutationFn: (archived: boolean) =>
+			underConstruction<Reseller>(id, archived),
 		onSuccess: invalidate,
 	});
 }

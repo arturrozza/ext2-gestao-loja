@@ -9,8 +9,7 @@ import { TruckIcon } from "phosphor-react-native/src/icons/Truck";
 import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import type { IconType } from "@/components/ui/icon";
-import type { HomeSummary } from "@/queries/home/home.types";
-import { useHomeSummary } from "@/queries/home/use-home";
+import { useProducts } from "@/queries/products/use-products";
 import { useUsers } from "@/queries/users/use-users";
 
 export type Shortcut = {
@@ -18,66 +17,44 @@ export type Shortcut = {
 	subtitle: string;
 	icon: IconType;
 	href: Href;
-	/** Pending items: shows a red badge with the number. Only Alerts has one. */
-	badge?: number;
+	/** The module isn't built yet: the card says so instead of a subtitle, and its screen too. */
+	underConstruction?: boolean;
 };
 
 export type ShortcutSection = { title: string; items: Shortcut[] };
 
-const NO_COUNTS: HomeSummary["counts"] = {
-	products: 0,
-	purchases: 0,
-	activeResellers: 0,
-	activeCustomers: 0,
-	alerts: 0,
-};
-
-/** "12 cadastrados", or "Nenhum ainda" for a store that just started. */
-function count(value: number, some: string, none: string) {
+/** "12 cadastrados", or "Nenhum ainda" for a store that just started; empty while it loads. */
+function count(value: number | undefined, some: string, none: string) {
+	if (value === undefined) return "";
 	return value > 0 ? `${value} ${some}` : none;
 }
 
-function alertsSubtitle(summary: HomeSummary | undefined, alerts: number) {
-	if (!summary) return "";
-	return alerts > 0 ? "Para resolver" : "Tudo certo";
-}
+const building = (title: string, icon: IconType, href: Href): Shortcut => ({
+	title,
+	subtitle: "",
+	icon,
+	href,
+	underConstruction: true,
+});
 
 /**
  * Every module is reachable from the home screen, in three groups of three: what's done every day (sell, buy, products),
- * the people around the store, and managing it (results, alerts, settings).
+ * the people around the store, and managing it (results, alerts, settings). Modules without an API yet are marked
+ * "Em construção".
  */
 function homeSections(
-	summary: HomeSummary | undefined,
+	products: number | undefined,
 	activeUsers: number | undefined,
 ): ShortcutSection[] {
-	// Until the summary arrives (or if it fails) the shortcuts still lead everywhere, just without numbers.
-	const counts = summary?.counts ?? NO_COUNTS;
-	const salesCount = summary?.month.salesCount ?? 0;
 	return [
 		{
 			title: "Dia a dia",
 			items: [
-				{
-					title: "Vendas",
-					subtitle: summary
-						? count(salesCount, "no mês", "Nenhuma no mês")
-						: "",
-					icon: ReceiptIcon,
-					href: "/sales",
-				},
-				{
-					title: "Compras",
-					subtitle: summary
-						? count(counts.purchases, "entradas", "Nenhuma ainda")
-						: "",
-					icon: TruckIcon,
-					href: "/purchases",
-				},
+				building("Vendas", ReceiptIcon, "/sales"),
+				building("Compras", TruckIcon, "/purchases"),
 				{
 					title: "Produtos",
-					subtitle: summary
-						? count(counts.products, "cadastrados", "Nenhum ainda")
-						: "",
+					subtitle: count(products, "cadastrados", "Nenhum ainda"),
 					icon: PackageIcon,
 					href: "/products",
 				},
@@ -86,28 +63,11 @@ function homeSections(
 		{
 			title: "Pessoas",
 			items: [
-				{
-					title: "Clientes",
-					subtitle: summary
-						? count(counts.activeCustomers, "ativos", "Nenhum ainda")
-						: "",
-					icon: UserIcon,
-					href: "/customers",
-				},
-				{
-					title: "Revendedoras",
-					subtitle: summary
-						? count(counts.activeResellers, "ativas", "Nenhuma ainda")
-						: "",
-					icon: HandshakeIcon,
-					href: "/resellers",
-				},
+				building("Clientes", UserIcon, "/customers"),
+				building("Revendedoras", HandshakeIcon, "/resellers"),
 				{
 					title: "Usuários",
-					subtitle:
-						activeUsers === undefined
-							? ""
-							: count(activeUsers, "ativos", "Nenhum ainda"),
+					subtitle: count(activeUsers, "ativos", "Nenhum ainda"),
 					icon: UsersIcon,
 					href: "/store/users",
 				},
@@ -116,19 +76,8 @@ function homeSections(
 		{
 			title: "Gestão",
 			items: [
-				{
-					title: "Relatórios",
-					subtitle: "Lucro e canais",
-					icon: ChartBarIcon,
-					href: "/reports",
-				},
-				{
-					title: "Alertas",
-					subtitle: alertsSubtitle(summary, counts.alerts),
-					icon: BellIcon,
-					href: "/alerts",
-					badge: counts.alerts,
-				},
+				building("Relatórios", ChartBarIcon, "/reports"),
+				building("Alertas", BellIcon, "/alerts"),
 				{
 					title: "Loja",
 					subtitle: "Dados e ajustes",
@@ -141,18 +90,20 @@ function homeSections(
 }
 
 /**
- * The home's month summary and its shortcut sections. Users aren't in the summary (they come from the real API, the
- * summary is still fake), so their count comes from the users list. `failed`: a number behind the subtitles failed to
- * load, so the cards show nothing instead of a loading line forever.
+ * The home's shortcut sections, with the counts that already come from the API (active products and users). `failed`:
+ * a number behind the subtitles failed to load, so the cards show nothing instead of a loading line forever.
  */
 export function useHomeShortcuts() {
-	const summary = useHomeSummary();
+	const products = useProducts({
+		search: "",
+		categoryIds: [],
+		archived: false,
+	});
 	const users = useUsers();
 	const activeUsers = users.data?.filter((user) => user.active).length;
 	return {
-		summary,
-		sections: homeSections(summary.data, activeUsers),
-		failed: summary.isError || users.isError,
-		refetch: () => Promise.all([summary.refetch(), users.refetch()]),
+		sections: homeSections(products.data?.pages[0]?.total, activeUsers),
+		failed: products.isError || users.isError,
+		refetch: () => Promise.all([products.refetch(), users.refetch()]),
 	};
 }

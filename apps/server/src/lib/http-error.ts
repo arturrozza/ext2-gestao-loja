@@ -38,6 +38,22 @@ export function isUniqueViolation(error: unknown): boolean {
 	return false;
 }
 
+/**
+ * Runs a write that may break a unique index. A violation becomes the error `onViolation` builds (the 409 naming the
+ * field), looked up after the write's transaction rolled back; if it finds no clash, the original error goes on.
+ */
+export async function guardUnique<T>(
+	write: () => Promise<T>,
+	onViolation: () => Promise<ReturnType<typeof httpError> | undefined>,
+): Promise<T> {
+	try {
+		return await write();
+	} catch (error) {
+		if (!isUniqueViolation(error)) throw error;
+		throw (await onViolation()) ?? error;
+	}
+}
+
 /** `/email` → `email`: the field the app puts the message under. */
 export function invalidField(path: string | undefined): string | undefined {
 	return path?.replace(/^\//, "").split("/")[0] || undefined;

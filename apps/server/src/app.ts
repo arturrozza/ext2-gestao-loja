@@ -7,7 +7,9 @@ import {
 	validationError,
 } from "./lib/http-error";
 import { authController } from "./modules/auth/auth.controller";
+import { categoriesController } from "./modules/categories/categories.controller";
 import { healthController } from "./modules/health/health.controller";
+import { productsController } from "./modules/products/products.controller";
 import { storeController } from "./modules/store/store.controller";
 import { usersController } from "./modules/users/users.controller";
 
@@ -44,6 +46,8 @@ export const app = new Elysia()
 	.use(healthController)
 	.use(authController)
 	.use(usersController)
-	.use(storeController);
+	.use(storeController)
+	.use(categoriesController)
+	.use(productsController);
 
 export type App = typeof app;

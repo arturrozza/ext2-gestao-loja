@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { StoreService } from "../../src/modules/store/store.service";
 import { useTestDatabase } from "../support/database";
-import { createStore } from "../support/factories/accounts";
+import { createStore, signedIn } from "../support/factories/accounts";
 
 useTestDatabase();
 
@@ -33,16 +33,17 @@ describe("StoreService", () => {
 	});
 
 	it("saves data and settings only on the given store", async () => {
-		const store = await createStore();
+		const { session } = await signedIn();
+		const store = session.store;
 		const other = await createStore({ name: "Outra" });
 
-		const profile = await StoreService.updateProfile(store.id, {
+		const profile = await StoreService.updateProfile(session, {
 			name: "Mundo Madam",
 			document: "12.345.678/0001-90",
 			phone: "(11) 99999-8888",
 			address: "Rua A, 1",
 		});
-		const saved = await StoreService.updateSettings(store.id, settings);
+		const saved = await StoreService.updateSettings(session, settings);
 
 		expect(profile.name).toBe("Mundo Madam");
 		expect(saved).toEqual(settings);

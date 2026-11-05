@@ -1,5 +1,6 @@
 import { and, eq, gt, isNull, lte, ne } from "drizzle-orm";
 import { db } from "../../db";
+import { audited } from "../../db/audit";
 import { sessions, stores, users } from "../../db/schema";
 import { env } from "../../env";
 import { httpError } from "../../lib/http-error";
@@ -208,7 +209,7 @@ export function createAuthService({
 			if (!match) throw invalidCurrentPassword();
 
 			const passwordHash = await hashPassword(input.newPassword);
-			await db.transaction(async (tx) => {
+			await audited(session.user.id, async (tx) => {
 				await tx
 					.update(users)
 					.set({ passwordHash })

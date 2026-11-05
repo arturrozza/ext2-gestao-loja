@@ -39,7 +39,8 @@ e um botão "+" que abre as ações de cadastro: nova venda, nova compra, novo p
   permite vários usuários por loja.
 - **Nada se apaga nem se reescreve:** correção é sempre um registro novo, como cancelamento, ajuste ou estorno. Cadastros
   são arquivados, não excluídos.
-- **Auditoria:** todo registro guarda quem fez e quando, além da data do fato.
+- **Auditoria:** todo registro guarda quem fez e quando, além da data do fato. Toda criação, alteração ou
+  arquivamento fica registrado com quem fez, quando, como era e como ficou. Senhas nunca entram nesse registro.
 - **Tudo ou nada:** se uma operação falhar no meio, nada dela é gravado.
 - **Estoque nunca fica negativo.**
 

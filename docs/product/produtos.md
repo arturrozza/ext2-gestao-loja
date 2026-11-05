@@ -11,22 +11,34 @@ a tela do produto também concentram o [Estoque](estoque.md).
 - Buscar por nome, código interno ou código de barras.
 - Ler o código de barras pela câmera no cadastro, na busca, na venda e na compra.
 - Arquivar e reativar produto.
-- Criar categorias e filtrar a lista por elas.
+- Criar, renomear, arquivar e reativar categorias, e filtrar a lista por elas.
 - Tirar ou escolher uma foto.
 
 ## Regras
 
 - Obrigatórios: nome e preço base.
 - Opcionais: foto, categoria, código de barras, código interno, estoque mínimo, localização e "tem validade".
-- Código interno e código de barras não se repetem na loja, contando os produtos arquivados.
+- Código interno e código de barras não se repetem na loja, contando os produtos arquivados. No código interno,
+  maiúsculas e minúsculas contam como iguais ("mm-01" e "MM-01" são o mesmo).
 - O produto nasce com estoque zero e custo zero. Estoque e custo não são digitados no cadastro nem na edição.
 - Ao salvar um produto novo, o app sugere "Cadastrar primeira entrada", com o produto já selecionado. Dá para pular.
+- O preço base é maior que zero.
+- O nome do produto pode se repetir; quem identifica são os códigos.
 - Produto não é excluído, só arquivado. Arquivado não entra em novas compras ou vendas, mas continua no histórico e nos
   relatórios.
+- Produto arquivado não se edita: para mudar algo, primeiro reativa.
 - Quantidades são sempre inteiras. Um kit é cadastrado como um produto próprio.
 - A categoria é um cadastro da loja, só com nome. Cada produto tem no máximo uma.
+- O nome da categoria não se repete na loja, contando as arquivadas (sem diferenciar maiúsculas e acentos).
+- Categoria não é excluída, só arquivada. Arquivada não aparece para escolher no cadastro nem no filtro, mas os
+  produtos que já estão nela continuam com ela, inclusive nos relatórios. Dá para reativar.
 - Sem foto, aparece um ícone no lugar.
 - O preço base é o preço normal de venda, sugerido na venda e editável nela.
+
+## Ainda não disponível no app
+
+A foto do produto, o estoque na lista e na tela do produto e a sugestão de "Cadastrar primeira entrada" chegam junto
+com a foto, Compras e Estoque. Até lá, o estoque aparece como "—".
 
 ## Fora do escopo
 

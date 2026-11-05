@@ -2,8 +2,57 @@ import type { ExpiryMonth } from "@/lib/dates";
 import type { Money } from "@/lib/money";
 import type { Page } from "@/queries/pagination";
 
-/** Store category: just a name (docs/product/produtos.md). */
-export type Category = { id: string; name: string; productCount: number };
+/** A product as the API sends it (docs/product/produtos.md). Stock and cost come with Compras and Estoque (MUN-12/13). */
+export type Product = {
+	id: string;
+	name: string;
+	basePrice: Money;
+	categoryId: string | null;
+	categoryName: string | null;
+	barcode: string | null;
+	internalCode: string | null;
+	minStock: number | null;
+	location: string | null;
+	hasExpiry: boolean;
+	archived: boolean;
+};
+
+export type ProductListFilters = {
+	/** Name, internal code or barcode. */
+	search: string;
+	/** Any of these; empty means every category. */
+	categoryIds: string[];
+	/** `true` lists only archived products; `false` only active ones. */
+	archived: boolean;
+};
+
+export type ProductPage = Page<Product>;
+
+/** What the product form edits. Stock and cost never: they only come from purchases (produtos.md). */
+export type ProductInput = {
+	name: string;
+	basePrice: Money;
+	categoryId: string | null;
+	barcode: string | null;
+	internalCode: string | null;
+	minStock: number | null;
+	location: string | null;
+	hasExpiry: boolean;
+};
+
+/** Store category: just a name (produtos.md). Archived ones keep their products but can't be picked. */
+export type Category = {
+	id: string;
+	name: string;
+	archived: boolean;
+	/** Active products in it. */
+	productCount: number;
+};
+
+/*
+ * Stock contract (estoque.md), used by the screens of sales, purchases and stock corrections. Those modules are under
+ * construction (MUN-12/13/16): nothing below comes from the API yet.
+ */
 
 /** Stock filters of the product list (docs/product/estoque.md). */
 export type StockFilter =
@@ -20,15 +69,10 @@ export type ItemPreview = {
 	photoUri: string | null;
 };
 
-export type ProductListFilters = {
-	/** Name, internal code or barcode. */
-	search: string;
-	/** Any of these; empty means every category. */
-	categoryIds: string[];
+/** The product list with stock filters (the picker of sales and purchases). */
+export type StockListFilters = ProductListFilters & {
 	/** Any of these states; empty means every product. */
 	stock: StockFilter[];
-	/** `true` lists only archived products; `false` only active ones. */
-	archived: boolean;
 	/** Also a state: products with sellable stock. */
 	inStock?: boolean;
 };
@@ -43,19 +87,9 @@ export type StockFlags = {
 	expired: boolean;
 };
 
-export type ProductListItem = {
-	id: string;
-	name: string;
+/** A product with its photo (MUN-11) and stock (MUN-12/13). */
+export type ProductListItem = Product & {
 	photoUri: string | null;
-	categoryId: string | null;
-	categoryName: string | null;
-	barcode: string | null;
-	internalCode: string | null;
-	location: string | null;
-	minStock: number | null;
-	hasExpiry: boolean;
-	basePrice: Money;
-	archived: boolean;
 	/** Units in stock, expired included until they're discarded. */
 	stock: number;
 	/** Units that can be sold (not expired). */
@@ -117,20 +151,6 @@ export type Movement = {
 
 export type ProductDetail = ProductListItem & {
 	expiries: ExpiryBalance[];
-	createdAt: string;
-};
-
-/** What the product form edits. Stock and cost never: they only come from purchases (produtos.md). */
-export type ProductInput = {
-	name: string;
-	basePrice: Money;
-	categoryId: string | null;
-	barcode: string | null;
-	internalCode: string | null;
-	minStock: number | null;
-	location: string | null;
-	hasExpiry: boolean;
-	photoUri: string | null;
 };
 
 export type StockAdjustmentInput = {

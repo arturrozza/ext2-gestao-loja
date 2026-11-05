@@ -15,7 +15,7 @@
     },
     "apps/mobile": {
       "name": "@ext2/mobile",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "dependencies": {
         "@elysia/eden": "catalog:",
         "@expo-google-fonts/manrope": "^0.4.3",

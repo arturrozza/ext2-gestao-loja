@@ -17,7 +17,10 @@ import {
 } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
 import type { ProductDetail } from "@/queries/products/products.types";
-import { useCorrectCost, useProduct } from "@/queries/products/use-products";
+import {
+	useCorrectCost,
+	useStockProduct,
+} from "@/queries/products/use-products";
 import { correctCostSchema } from "./correct-cost.schema";
 
 function CostPreview({
@@ -105,7 +108,7 @@ function CostForm({ product }: { product: ProductDetail }) {
 /** Fix a wrong average cost (estoque.md, "Corrigir custo"), with the reason recorded. */
 export function CorrectCostScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const query = useProduct(id);
+	const query = useStockProduct(id);
 	return (
 		<ScreenQuery
 			title="Corrigir custo"

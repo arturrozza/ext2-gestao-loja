@@ -43,6 +43,7 @@ export function NewCategorySheet({
 					value={name}
 					onChangeText={setName}
 					error={create.error ? errorMessage(create.error) : undefined}
+					maxLength={60}
 					autoFocus
 					returnKeyType="done"
 					onSubmitEditing={submit}

@@ -10,20 +10,16 @@ export const usersController = new Elysia({ prefix: "/users" })
 		auth: true,
 		response: { 200: UsersModel.list, 401: ErrorModel },
 	})
-	.post(
-		"/",
-		({ session, body }) => UsersService.create(session.store.id, body),
-		{
-			auth: true,
-			body: UsersModel.createBody,
-			response: {
-				200: UsersModel.user,
-				401: ErrorModel,
-				409: ErrorModel,
-				422: ErrorModel,
-			},
+	.post("/", ({ session, body }) => UsersService.create(session, body), {
+		auth: true,
+		body: UsersModel.createBody,
+		response: {
+			200: UsersModel.user,
+			401: ErrorModel,
+			409: ErrorModel,
+			422: ErrorModel,
 		},
-	)
+	})
 	.post(
 		"/:id/deactivate",
 		({ session, params }) => UsersService.deactivate(session, params.id),

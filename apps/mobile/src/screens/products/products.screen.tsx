@@ -18,13 +18,9 @@ import { SearchField } from "@/components/search-field";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useInfiniteList } from "@/components/use-infinite-list";
-import { plural, STOCK_FILTERS } from "@/lib/labels";
-import { formatMoney } from "@/lib/money";
+import { plural } from "@/lib/labels";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
-import type {
-	ProductListFilters,
-	StockFilter,
-} from "@/queries/products/products.types";
+import type { ProductListFilters } from "@/queries/products/products.types";
 import { useCategories, useProducts } from "@/queries/products/use-products";
 import { ProductRow } from "./partials/product-row";
 
@@ -34,10 +30,6 @@ const STATUSES: { value: Status; label: string }[] = [
 	{ value: "active", label: "Ativos" },
 	{ value: "archived", label: "Arquivados" },
 ];
-
-const STOCK_OPTIONS = (
-	Object.entries(STOCK_FILTERS) as [StockFilter, string][]
-).map(([value, label]) => ({ value, label }));
 
 function NoProducts({
 	search,
@@ -86,38 +78,41 @@ function NoProducts({
 	);
 }
 
+/** The count of the filter. The store's stock value joins it with purchases (MUN-12). */
 function subtitleOf(
-	page: { total: number; totalStockValue: string } | undefined,
+	page: { total: number } | undefined,
 	onlyCategory: string | undefined,
-	categoryCount: number,
 ) {
 	if (!page) return undefined;
 	const count = plural(page.total, "produto", "produtos");
-	if (onlyCategory) return `${onlyCategory} · ${count}`;
-	// The stock value is of the whole store, so it doesn't sit next to a category filter.
-	if (categoryCount > 0) return count;
-	return `${count} · ${formatMoney(page.totalStockValue)} em estoque`;
+	return onlyCategory ? `${onlyCategory} · ${count}` : count;
 }
 
 /**
- * Estoque tab: the product list with stock (docs/product/produtos.md, estoque.md). Total stock value on top, search
- * by name/code/barcode (camera too), stock and category filters in a sheet. New products start at the tab bar's
- * "+". Virtualized and paginated: the catalog can be huge.
+ * Products tab (docs/product/produtos.md): search by name/code/barcode (camera too), category and status filters in a
+ * sheet. Stock, its filters and the total stock value come with purchases and stock corrections (MUN-12/13). New
+ * products start at the tab bar's "+". Virtualized and paginated: the catalog can be huge.
  */
 export function ProductsScreen() {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<Status>("active");
-	const [stock, setStock] = useState<StockFilter[]>([]);
-	const [categoryIds, setCategoryIds] = useState<string[]>([]);
+	const [pickedCategoryIds, setPickedCategoryIds] = useState<string[]>([]);
 	const categories = useCategories();
+	// Archived categories can't be picked (produtos.md); their products still show without the filter.
+	const activeCategories = (categories.data ?? []).filter((c) => !c.archived);
+	// A category archived while picked here drops out of the filter, instead of filtering with no way to undo it.
+	const categoryIds = categories.data
+		? pickedCategoryIds.filter((id) =>
+				activeCategories.some((c) => c.id === id),
+			)
+		: pickedCategoryIds;
 	const onlyCategory =
 		categoryIds.length === 1
-			? categories.data?.find((c) => c.id === categoryIds[0])?.name
+			? activeCategories.find((c) => c.id === categoryIds[0])?.name
 			: undefined;
 	const filters: ProductListFilters = {
 		search: useDebouncedValue(search),
 		categoryIds,
-		stock,
 		archived: status === "archived",
 	};
 	const query = useProducts(filters);
@@ -127,10 +122,7 @@ export function ProductsScreen() {
 		<NoProducts
 			search={filters.search}
 			filtered={Boolean(
-				filters.search ||
-					categoryIds.length > 0 ||
-					stock.length > 0 ||
-					status !== "active",
+				filters.search || categoryIds.length > 0 || status !== "active",
 			)}
 		/>,
 		{ leading: "thumb" },
@@ -138,21 +130,14 @@ export function ProductsScreen() {
 
 	const filterGroups = [
 		multiFilterGroup({
-			key: "stock",
-			title: "Estoque",
-			options: STOCK_OPTIONS,
-			values: stock,
-			onChange: setStock,
-		}),
-		multiFilterGroup({
 			key: "category",
 			title: "Categoria",
-			options: (categories.data ?? []).map((c) => ({
+			options: activeCategories.map((c) => ({
 				value: c.id,
 				label: c.name,
 			})),
 			values: categoryIds,
-			onChange: setCategoryIds,
+			onChange: setPickedCategoryIds,
 		}),
 		filterGroup({
 			key: "status",
@@ -177,7 +162,7 @@ export function ProductsScreen() {
 		>
 			<PageTitle
 				title="Produtos"
-				subtitle={subtitleOf(firstPage, onlyCategory, categoryIds.length)}
+				subtitle={subtitleOf(firstPage, onlyCategory)}
 				subtitleLoading={query.isPending}
 				right={
 					<IconButton

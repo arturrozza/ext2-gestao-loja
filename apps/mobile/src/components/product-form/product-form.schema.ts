@@ -1,11 +1,15 @@
 import { z } from "zod";
 import { optionalText } from "@/lib/form-fields";
 import { fromCents, moneyToInput, parseMoneyInput } from "@/lib/money";
-import type { ProductDetail } from "@/queries/products/products.types";
+import type { Product } from "@/queries/products/products.types";
 
 /** Product form (produtos.md): name and base price required; stock and cost never typed here. */
 export const productFormSchema = z.object({
-	name: z.string().trim().min(1, "Informe o nome."),
+	name: z
+		.string()
+		.trim()
+		.min(1, "Informe o nome.")
+		.max(120, "Use até 120 caracteres."),
 	basePrice: z.string().transform((text, ctx) => {
 		const cents = parseMoneyInput(text);
 		if (cents === null || cents === 0) {
@@ -15,20 +19,31 @@ export const productFormSchema = z.object({
 		return fromCents(cents);
 	}),
 	categoryId: z.string().nullable(),
-	barcode: optionalText,
-	internalCode: optionalText,
+	barcode: optionalText.refine(
+		(value) => value === null || value.length <= 64,
+		"Use até 64 caracteres.",
+	),
+	internalCode: optionalText.refine(
+		(value) => value === null || value.length <= 64,
+		"Use até 64 caracteres.",
+	),
 	minStock: z.string().transform((text, ctx) => {
 		const clean = text.trim();
 		if (!clean) return null;
-		if (!/^\d+$/.test(clean)) {
-			ctx.addIssue({ code: "custom", message: "Use um número inteiro." });
+		if (!/^\d+$/.test(clean) || Number(clean) > 1_000_000) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Use um número inteiro até 1.000.000.",
+			});
 			return z.NEVER;
 		}
 		return Number(clean);
 	}),
-	location: optionalText,
+	location: optionalText.refine(
+		(value) => value === null || value.length <= 120,
+		"Use até 120 caracteres.",
+	),
 	hasExpiry: z.boolean(),
-	photoUri: z.string().nullable(),
 });
 
 export type ProductFormValues = z.input<typeof productFormSchema>;
@@ -42,10 +57,9 @@ export const EMPTY_PRODUCT: ProductFormValues = {
 	minStock: "",
 	location: "",
 	hasExpiry: false,
-	photoUri: null,
 };
 
-export function productToForm(product: ProductDetail): ProductFormValues {
+export function productToForm(product: Product): ProductFormValues {
 	return {
 		name: product.name,
 		basePrice: moneyToInput(product.basePrice),
@@ -55,6 +69,5 @@ export function productToForm(product: ProductDetail): ProductFormValues {
 		minStock: product.minStock === null ? "" : String(product.minStock),
 		location: product.location ?? "",
 		hasExpiry: product.hasExpiry,
-		photoUri: product.photoUri,
 	};
 }

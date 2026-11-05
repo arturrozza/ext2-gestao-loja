@@ -34,11 +34,15 @@ src/
   index.ts            starts the server (the only place that calls .listen)
   app.ts              builds the Elysia app and exports `type App` (used by Eden in mobile)
   env.ts              env validated with Zod; never read process.env anywhere else
-  lib/http-error.ts   `ErrorModel` ({ code, message, field? }) and `httpError()`: the body of every error response
+  lib/http-error.ts   `ErrorModel` ({ code, message, field? }), `httpError()` and `guardUnique()` (unique violation → 409)
+  lib/pagination.ts   `PAGE_SIZE`, `pageOf()` and `cursorQuery` for the long lists (offset cursor, the app's `Page<T>`)
+  lib/search.ts       `normalizeSearch()` (lowercase, no accents) and `searchPatterns()` for `LIKE` searches
   db/
     index.ts          Drizzle client
     migrate.ts        applies migrations, then seeds the first store + user (`seed.ts`) while there's no user
     seed.ts           first account from SEED_* (idempotent)
+    audit.ts          `audited()`: the transaction every write runs in, with its author for the audit log
+    rows.ts           small row helpers (`insertedRow`, `archivedAtValue`)
     schema/           tables (one file per domain) + index.ts re-exporting everything
   modules/<module>/               one folder per module, e.g. modules/products/
     <module>.controller.ts        Elysia instance with the module's routes (prefixed), exported as `<module>Controller`
@@ -87,6 +91,10 @@ Dockerfile
 - Changed the schema? Run `bun run db:generate` and **commit the migration** with it. Never `drizzle-kit push` to a
   shared/production DB.
 - Money: `numeric` (never `real`/`double`). Dates: `timestamp({ withTimezone: true })`.
+- **Audit:** every write goes through `audited(session.user.id, (tx) => ...)` (`src/db/audit.ts`; `"system"` in seeds
+  and test factories). The `audit` trigger logs the change to `audit_log` and refuses writes without an actor. A new
+  business table gets the trigger in a custom migration (`bunx drizzle-kit generate --custom`); secret columns go as
+  trigger arguments. See `docs/architecture.md` ("Auditoria").
 
 ### Tests
 This system handles money and stock: **every server change ships with tests in all three layers it touches**, written

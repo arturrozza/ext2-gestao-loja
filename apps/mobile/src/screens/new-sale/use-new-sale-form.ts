@@ -15,7 +15,7 @@ import type {
 	ProductDetail,
 	ProductListItem,
 } from "@/queries/products/products.types";
-import { useProductsById } from "@/queries/products/use-products";
+import { useStockProductsById } from "@/queries/products/use-products";
 import type { SaleChannel } from "@/queries/sales/sales.types";
 import { useCreateSale } from "@/queries/sales/use-sales";
 import type { StoreSettings } from "@/queries/store/store.types";
@@ -114,7 +114,9 @@ export function useNewSaleForm(settings: StoreSettings) {
 		customer: null,
 	} satisfies SaleFormValues);
 	const { values } = form;
-	const products = useProductsById(values.items.map((item) => item.product.id));
+	const products = useStockProductsById(
+		values.items.map((item) => item.product.id),
+	);
 	const stock = stockState(values.items, products);
 
 	const updateItems = (change: (items: SaleItemDraft[]) => SaleItemDraft[]) =>

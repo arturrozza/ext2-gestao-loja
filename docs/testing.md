@@ -49,9 +49,11 @@ preferência escritos antes do código (TDD). Código sem teste não entra.
   schema `drizzle` e não é apagado.
 - O reset só roda contra um banco cujo nome termina em `_test`; contra qualquer outro, ele lança erro.
 - Cada teste cria os próprios dados e não depende da ordem, pelas factories em `test/support/factories/` (ex.:
-  `createProduct({ storeId, ...overrides })`), com padrões válidos e sobrescrita só do que o teste precisa.
+  `createProduct(storeId, { ...overrides })`), com padrões válidos e sobrescrita só do que o teste precisa. As
+  factories gravam direto no banco, sem as regras do service, dentro de `audited("system", ...)`: a trigger de
+  auditoria recusa escrita sem autor, então um `db.insert` solto num teste falha.
 - Rotas com login: `signedIn()` (`factories/accounts.ts`) cria loja, usuário e sessão e devolve os `headers` com o
-  Bearer para passar ao Eden (`api.users.get({ headers })`).
+  Bearer para passar ao Eden (`api.users.get({ headers })`) e a `session` que os services de escrita recebem.
 - O `bun test` roda os arquivos em sequência, num processo só. Não ligue execução concorrente nos testes que usam
   banco: eles compartilham o `ext2_test`.
 

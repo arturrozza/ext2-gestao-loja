@@ -37,7 +37,8 @@ export function ProductThumb({
 	name,
 	size = "sm",
 }: {
-	uri: string | null;
+	/** Absent until products get photos (MUN-11). */
+	uri?: string | null;
 	name?: string;
 	size?: keyof typeof SIZES;
 }) {
