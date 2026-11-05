@@ -41,12 +41,13 @@ cssInterop(IconImpl, {
  * <Icon as={ArrowRightIcon} className="text-primary" size={16} />
  * ```
  *
- * `weight` (`regular` by default) switches the style: `thin`, `light`, `regular`, `bold`, `fill`, `duotone`.
+ * `weight` (`bold` by default: `regular` reads too thin at these sizes) switches the style: `thin`, `light`, `regular`, `bold`, `fill`, `duotone`.
  */
 function Icon({
 	as: IconComponent,
 	className,
 	size = 14,
+	weight = "bold",
 	...props
 }: IconProps) {
 	const textClass = React.useContext(TextClassContext);
@@ -55,6 +56,7 @@ function Icon({
 			as={IconComponent}
 			className={cn("text-foreground", textClass, className)}
 			size={size}
+			weight={weight}
 			{...props}
 		/>
 	);

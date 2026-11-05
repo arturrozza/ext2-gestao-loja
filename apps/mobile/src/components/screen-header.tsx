@@ -5,51 +5,42 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton } from "@/components/icon-button";
 import { Text } from "@/components/ui/text";
+import { leaveScreen } from "@/lib/navigation";
 
-type ScreenHeaderProps = {
-	title: string;
-	/** Tab roots: big left-aligned title, no back button. Inner screens: back + centered title. */
-	variant?: "large" | "inner";
-	right?: ReactNode;
-};
+const SLOT = "h-11 w-11";
 
-const SLOT = "h-12 w-12";
-
-/** Custom screen header (the navigator's default header is disabled). */
+/**
+ * Header of every inner screen (the navigator's default header is disabled): back button in a white circle, centered
+ * title, optional action on the right. No background of its own, so it sits on the page color. Tab roots don't use it:
+ * their title lives in the content (`PageTitle`) and `ScreenLayout compactTitle` shows it on scroll.
+ */
 export function ScreenHeader({
 	title,
-	variant = "inner",
 	right,
-}: ScreenHeaderProps) {
+	balanceTitle = false,
+}: {
+	title: string;
+	right?: ReactNode;
+	/** `right` holds two buttons: keeps the title centered on the screen. */
+	balanceTitle?: boolean;
+}) {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 
-	if (variant === "large") {
-		return (
-			<View
-				className="flex-row items-end gap-3 bg-background px-5 pb-4"
-				style={{ paddingTop: insets.top + 16 }}
-			>
-				<Text className="flex-1 font-sans-semibold text-3xl leading-tight tracking-tight">
-					{title}
-				</Text>
-				{right}
-			</View>
-		);
-	}
-
 	return (
 		<View
-			className="flex-row items-center gap-3 bg-background px-5 pb-3"
+			className="flex-row items-center gap-3 px-5 pb-3"
 			style={{ paddingTop: insets.top + 8 }}
 		>
-			{router.canGoBack() ? (
-				<IconButton icon={ArrowLeftIcon} label="Voltar" onPress={router.back} />
-			) : (
-				<View className={SLOT} />
-			)}
+			<IconButton
+				icon={ArrowLeftIcon}
+				label="Voltar"
+				// Opened from a link with nothing behind it: back goes to the home screen.
+				onPress={() => leaveScreen(router)}
+			/>
+			{balanceTitle ? <View className={SLOT} /> : null}
 			<Text
-				className="flex-1 text-center font-sans-semibold text-lg"
+				className="flex-1 text-center font-sans-semibold text-base"
 				numberOfLines={1}
 			>
 				{title}

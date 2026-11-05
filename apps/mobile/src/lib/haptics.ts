@@ -40,6 +40,19 @@ export function hapticSelect() {
 	Haptics.selectionAsync().catch(ignore);
 }
 
+/** Something worked: a sale registered, a form saved. */
+export function hapticSuccess() {
+	if (Platform.OS === "android") {
+		Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm).catch(
+			ignore,
+		);
+		return;
+	}
+	Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+		ignore,
+	);
+}
+
 /** Main action: the "+" button, primary buttons. */
 export function hapticPress() {
 	if (Platform.OS === "android") {

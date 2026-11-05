@@ -4,7 +4,7 @@ import { DefaultTheme, type Theme } from "expo-router";
 export const THEME = {
 	background: "hsl(0 0% 100%)",
 	foreground: "hsl(0 0% 10%)",
-	card: "hsl(0 0% 96%)",
+	card: "hsl(0 0% 97.5%)",
 	cardForeground: "hsl(0 0% 10%)",
 	popover: "hsl(0 0% 100%)",
 	popoverForeground: "hsl(0 0% 10%)",
@@ -18,6 +18,7 @@ export const THEME = {
 	accentForeground: "hsl(0 0% 10%)",
 	destructive: "hsl(0 72.2% 50.6%)",
 	destructiveForeground: "hsl(0 0% 100%)",
+	success: "hsl(142 64% 32%)",
 	border: "hsl(0 0% 91%)",
 	input: "hsl(0 0% 91%)",
 	ring: "hsl(20.5 90.2% 48.2%)",
@@ -31,11 +32,11 @@ export const FADE = {
 	clear: "rgba(255, 255, 255, 0)",
 } as const;
 
-/** Same fade over the light-gray page (`tone="muted"`, hsl 0 0% 96%). */
+/** Same fade over the light-gray page (`tone="muted"`, hsl 0 0% 97.5%). */
 export const FADE_MUTED = {
-	solid: "rgba(245, 245, 245, 1)",
-	half: "rgba(245, 245, 245, 0.6)",
-	clear: "rgba(245, 245, 245, 0)",
+	solid: "rgba(249, 249, 249, 1)",
+	half: "rgba(249, 249, 249, 0.6)",
+	clear: "rgba(249, 249, 249, 0)",
 } as const;
 
 /** Milky white over the blur of the compact header (frosted glass). */
@@ -44,19 +45,14 @@ export const GLASS = "rgba(255, 255, 255, 0.45)";
 /** Bottom border of the compact glass header: stronger than `DIVIDER` so it reads over the blur. */
 export const HEADER_BORDER = "rgba(0, 0, 0, 0.16)";
 
-/**
- * Warm wash over the whole home page (primary #EA580C): stronger at the top, a faint warmth down the page, fading out
- * at the very end so it meets the gray fade behind the tab bar.
- */
-export const HOME_GLOW = [
-	"rgba(234, 88, 12, 0.12)",
-	"rgba(234, 88, 12, 0.04)",
-	"rgba(234, 88, 12, 0.02)",
-	"rgba(234, 88, 12, 0)",
-] as const;
-
 /** Dim layer behind sheets and dialogs (the black token at 40%). */
 export const BACKDROP = "rgba(28, 28, 28, 0.4)";
+
+/**
+ * The one shadow in the app: sheets and drawers lift off the screen behind them, barely. Everything else gets depth
+ * from color.
+ */
+export const SHEET_SHADOW = "0px -2px 24px rgba(0, 0, 0, 0.07)";
 
 /** Very light hairline under the header when content scrolls beneath it. */
 export const DIVIDER = "rgba(0, 0, 0, 0.06)";

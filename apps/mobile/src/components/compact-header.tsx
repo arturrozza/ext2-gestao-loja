@@ -1,13 +1,15 @@
 import { BlurView } from "expo-blur";
-import type { ComponentRef, RefObject } from "react";
+import { type ComponentRef, type RefObject, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
 	interpolate,
 	type SharedValue,
 	useAnimatedProps,
+	useAnimatedReaction,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { scheduleOnRN } from "react-native-worklets";
 import { Text } from "@/components/ui/text";
 import { GLASS, HEADER_BORDER } from "@/lib/theme";
 
@@ -24,7 +26,8 @@ const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
  * centered title and a hairline at the bottom as the content scrolls under it. Covers the status bar too.
  *
  * The blur fades in through its `intensity`, never through `opacity` on the blur or its parents (Expo docs). On
- * Android the blur needs `blurTarget`: the `BlurTargetView` that wraps the scroll content.
+ * Android the blur needs `blurTarget`: the `BlurTargetView` that wraps the scroll content. It only exists once the
+ * page has scrolled: on Android its tint paints a white veil even at intensity 0, which hides white buttons under it.
  */
 export function CompactHeader({
 	title,
@@ -36,6 +39,13 @@ export function CompactHeader({
 	blurTarget: RefObject<ComponentRef<typeof View> | null>;
 }) {
 	const insets = useSafeAreaInsets();
+	const [scrolled, setScrolled] = useState(false);
+	useAnimatedReaction(
+		() => scrollY.value > RANGE[0],
+		(now, before) => {
+			if (now !== before) scheduleOnRN(setScrolled, now);
+		},
+	);
 
 	const blurProps = useAnimatedProps(() => ({
 		intensity: interpolate(scrollY.value, RANGE, [0, MAX_BLUR], "clamp"),
@@ -55,15 +65,17 @@ export function CompactHeader({
 			pointerEvents="none"
 			style={[styles.bar, { height: insets.top + COMPACT_HEIGHT }]}
 		>
-			<AnimatedBlurView
-				animatedProps={blurProps}
-				tint={
-					Platform.OS === "ios" ? "systemChromeMaterialLight" : "extraLight"
-				}
-				blurMethod="dimezisBlurViewSdk31Plus"
-				blurTarget={blurTarget}
-				style={StyleSheet.absoluteFill}
-			/>
+			{scrolled ? (
+				<AnimatedBlurView
+					animatedProps={blurProps}
+					tint={
+						Platform.OS === "ios" ? "systemChromeMaterialLight" : "extraLight"
+					}
+					blurMethod="dimezisBlurViewSdk31Plus"
+					blurTarget={blurTarget}
+					style={StyleSheet.absoluteFill}
+				/>
+			) : null}
 			{/* Light milky layer over the blur, so it reads as glass and not just blur. */}
 			<Animated.View style={[StyleSheet.absoluteFill, styles.tint, shown]} />
 			<View style={[styles.titleSlot, { top: insets.top }]}>

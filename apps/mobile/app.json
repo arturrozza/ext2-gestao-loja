@@ -42,7 +42,23 @@
 			"expo-font",
 			"expo-image",
 			"expo-status-bar",
-			"expo-web-browser"
+			"expo-web-browser",
+			[
+				"expo-image-picker",
+				{
+					"photosPermission": "O app usa suas fotos para colocar a foto do produto.",
+					"cameraPermission": "O app usa a câmera para tirar a foto do produto e ler o código de barras.",
+					"microphonePermission": false
+				}
+			],
+			[
+				"expo-camera",
+				{
+					"cameraPermission": "O app usa a câmera para tirar a foto do produto e ler o código de barras.",
+					"recordAudioAndroid": false
+				}
+			],
+			"@react-native-community/datetimepicker"
 		],
 		"experiments": {
 			"typedRoutes": true,

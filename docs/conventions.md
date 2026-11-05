@@ -73,8 +73,7 @@ apps/mobile/src/
 
 Referência visual: app de loja com fundo branco, superfícies cinza claro preenchidas e ações em laranja (Dribbble,
 enviada pelo mantenedor em 2026-11-04), revista na tela inicial (MUN-9) com o Inter Empresas como referência: **fundo
-cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A tela inicial é o modelo; as outras telas do
-mock ainda seguem a versão antiga e migram aos poucos para as regras abaixo.
+cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A tela inicial é o modelo, e todas as telas seguem as regras abaixo.
 
 - Os tokens ficam em `apps/mobile/src/global.css` (variáveis CSS em HSL) e são mapeados no `tailwind.config.js`.
   `src/lib/theme.ts` espelha as cores para APIs sem `className`; mudou um token no CSS, mude lá também.
@@ -85,33 +84,55 @@ mock ainda seguem a versão antiga e migram aos poucos para as regras abaixo.
   - `bg-secondary`: preto. **Não use em cards ou blocos** (o mantenedor vetou card preto); só em texto forte ou no
     véu de fundo (`BACKDROP`).
   - `text-muted-foreground`: texto secundário.
-  - `text-destructive`: erro e remoção.
-- **Sem sombras.** A profundidade vem da cor: card branco sobre fundo cinza claro (`ScreenLayout tone="muted"`), sem
-  borda. Em tela de fundo branco (as antigas), o card é branco com borda fina (`border border-border`).
+  - `text-destructive`: erro, remoção e prejuízo.
+  - `text-success`: lucro positivo, nas linhas pequenas das listas e nos números grandes de lucro.
+- **Sem sombras**, com uma exceção: folhas e gavetas têm uma sombra bem suave no topo (`SHEET_SHADOW`), para se
+  descolarem da tela de trás. A profundidade vem da cor: card branco sobre fundo cinza claro (`tone="muted"`, o padrão do
+  `ScreenLayout`), sem borda. Campos e chips dentro de card são cinza; chips e busca direto na página são brancos
+  (`surface="page"`).
 - **Nada de card preto nem card laranja cheio.** Laranja só em detalhes: variação, link, badge de ação, ícone de
   destaque, botão principal.
-- Raio: botões, inputs, chips, botões de ícone, pílulas, badges, navbar e avatares `rounded-full`; cards, blocos e
-  campos de várias linhas `rounded-2xl`; pequenos elementos dentro de card `rounded-xl`. Nada de `rounded-3xl` (só o topo
-  da gaveta, `rounded-t-3xl`).
+- Ícones Phosphor em `bold` por padrão (`regular` fica fino demais); `fill` na aba ativa.
+- Raio: botões, chips, controle de quantidade (− e +), botões de ícone, pílulas, badges, navbar e avatares `rounded-full`; cards e blocos `rounded-2xl`;
+  campos (texto, busca, seletores) `rounded-[8px]`, nunca pílula. Nada de `rounded-3xl` (só o topo da gaveta,
+  `rounded-t-3xl`). Em `tailwind.config.js`, `rounded-lg`, `-md` e `-sm` valem 16, 14 e 12px, não o padrão do Tailwind.
+- Raios aninhados: raio interno = raio externo − distância entre as bordas, para as curvas ficarem paralelas. Exemplos:
+  gaveta de 24px com 12px de margem dá linhas de 12px (`rounded-xl`); campo de 8px com 5px até o botão interno dá 3px.
+  Quando a conta dá menos de 8px em um bloco visível (card de 16px com `p-4` dá 0), usa-se 8px, o mínimo. Pílula dentro de
+  pílula já fica paralela.
+- Campo de texto (`TextInput`) usa `text-[16px]`, nunca `text-base`/`text-sm`: essas classes também fixam a altura da
+  linha, e no iPhone isso empurra o texto para baixo do centro.
+- Todo campo tem placeholder: um exemplo do que vai nele ("Ex.: Perfumes", "(11) 90000-0000").
+- Escolha única em formulário (canal, pagamento, tipo): `SelectField`, um campo que abre a lista numa gaveta. Chips
+  ficam para filtros e alternâncias curtas, como R$/%.
+- Sucesso de uma ação (venda registrada, dados salvos): `showToast`, um aviso que desce do topo e some sozinho.
+- Filtros de lista: botão de filtro ao lado da busca (ou no cabeçalho, se a tela não tem busca) abre uma gaveta com todas
+  as opções (`FilterControl`). Na tela só aparecem pílulas pequenas do que está em uso, com um x para remover
+  (`ActiveFilters`). Filtros que aceitam várias opções usam `multiFilterGroup`: dentro de um filtro vale qualquer uma, e
+  entre filtros valem todos. Período e situação são escolha única. Quando a descrição embaixo do título já diz o filtro
+  (Vendas: "Novembro de 2026 · Loja"), as pílulas não aparecem. Chips fixos na página só para trocar de visão, como as abas de Relatórios.
+- Carregamento: telas e listas usam esqueleto no formato do conteúdo (`RowsSkeleton`, `DetailSkeleton`, `FormSkeleton`,
+  `SummarySkeleton`), nunca spinner solto. Descrição que depende de dado (subtítulo do título, linha de baixo dos atalhos)
+  mostra uma linha de esqueleto enquanto carrega, nunca fica vazia. Botão em andamento usa `loading`: o spinner fica no lugar do texto, sem texto
+  de espera ("Salvando...") e sem mudar o tamanho do botão.
 - **Ícones soltos, sem tile** (quadradinho colorido ou cinza atrás). Cor padrão cinza: `text-foreground/50` nos cards,
   `text-foreground/45` em detalhes (olho, seta). Cor cheia só quando o ícone carrega significado (laranja da variação,
   vermelho de erro/alerta).
 - **Espaço generoso, mas sem exagero:** card principal `p-5`, cards de atalho `p-3.5`, `gap-7` entre blocos da tela.
   Fontes discretas: título de seção `text-base`, nome de card `text-sm`, valor de destaque `text-[32px]`.
-- Tipografia: Plus Jakarta Sans; títulos em `font-sans-semibold`, nunca bold pesado. Peso se escolhe pela família:
-  `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`. Dinheiro com `Price` (centavos menores).
+- Tipografia: Manrope; títulos em `font-sans-semibold`, nunca bold pesado. Peso se escolhe pela família:
+  `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`. Dinheiro com `formatMoney`/`formatCents`, centavos no mesmo peso e cor.
 - Só tema claro por enquanto (`userInterfaceStyle: "light"` no `app.json`).
 - **Sem header padrão do navigator** (`headerShown: false`). Telas internas usam `ScreenHeader` (voltar em
-  círculo cinza, título centralizado, ação à direita). Raízes de aba com o título dentro do conteúdo (a inicial) não têm
-  header fixo: usam `compactTitle` no `ScreenLayout`. As raízes antigas ainda usam `ScreenHeader variant="large"` até
-  migrarem. Botões só de ícone usam `IconButton`.
+  círculo branco, título centralizado, ação à direita). Raízes de aba não têm header fixo: o título fica no conteúdo
+  (`PageTitle`, ou a saudação na inicial) e o `compactTitle` do `ScreenLayout` mostra o título ao rolar. Botões só de
+  ícone usam `IconButton`.
 - Navbar: barra branca larga, com borda fina, ícone + nome em três abas (Início, Vendas, Estoque; a ativa em laranja) e
   um botão "+" laranja ao lado. O "+" abre a gaveta de ações rápidas (`QuickActionsSheet`): nova venda, nova compra,
   novo produto, novo cliente. Sem contadores nas abas. Com `TabTrigger asChild`, descarte o
   `style` que ele injeta no botão (senão o ícone sai do centro).
 - **Tela inicial** (o modelo):
-  - Um brilho laranja bem leve (`HOME_GLOW`: 12% no topo, 4% e 2% descendo) cobre a página e rola com ela. Mais que
-    isso fica laranja demais; só no topo deixa o resto cru.
+  - Sem brilho laranja no fundo: foi testado e saiu. A página é só o cinza claro.
   - O título fica dentro do conteúdo (saudação: avatar + "Boa tarde," + nome da loja) e rola junto; o `compactTitle`
     mostra "Início" no header de vidro ao rolar.
   - Card de destaque: rótulo + olho que esconde os valores, lucro real do mês grande (toque abre o relatório), variação
@@ -129,11 +150,14 @@ mock ainda seguem a versão antiga e migram aos poucos para as regras abaixo.
   de vidro fosco (`CompactHeader`: blur do `expo-blur` + véu branco `GLASS`), cobre a barra de status e tem uma linha
   fina embaixo. O blur aparece animando a `intensity`, nunca a opacidade.
 - Sem barra de rolagem vertical visível nas telas (`showsVerticalScrollIndicator={false}` no `ScreenLayout`).
-- Transições entre telas: **todas** deslizam da direita (`ios_from_right`), formulários também. Nada de transição de
-  tela com fade (`fade`, `fade_from_bottom`) nem fade no conteúdo ao abrir a tela.
+- Transições entre telas: deslizam da direita (`ios_from_right`). Formulários de criar e editar abrem como folha, imitando
+  o modal do iPhone: sobem de baixo, deixam um espaço em cima com a tela anterior aparecendo, têm cantos arredondados e
+  um botão grande de fechar (`ScreenLayout sheet` + `SheetHeader`; a rota entra em `SHEETS` no `(app)/_layout.tsx`).
+  Nada de transição de tela com fade (`fade`, `fade_from_bottom`) nem fade no conteúdo ao abrir a tela.
 - Gavetas (bottom sheets, como a do "+"): sobem deslizando de baixo com `withTiming` (abre ~320 ms com
   `Easing.out(Easing.cubic)`, fecha ~220 ms) e descem ao fechar. Só o fundo escurecido (`BACKDROP`) muda de opacidade; a
-  gaveta nunca faz fade. `Modal` com `animationType="none"`; a animação é nossa.
+  gaveta nunca faz fade. `Modal` com `animationType="none"`; a animação é nossa. Exceção: folhas de tela inteira fora da navegação
+  (`SheetModal`, leitor de código) usam o `animationType="slide"` nativo, que já sobe de baixo.
 - **Animações suaves, sem bounce:** Reanimated com `withTiming` (120–320 ms). `LinearTransition` quando itens entram,
   saem ou expandem, e `FadeIn` só para pedaços pequenos que surgem dentro da tela (erro de campo, detalhe
   expandido), nunca na tela inteira. Nada de `springify()`. Não ponha `className` em
@@ -143,13 +167,41 @@ mock ainda seguem a versão antiga e migram aos poucos para as regras abaixo.
   ação principal (o "+", botões laranja; o `Button` já faz sozinho). Dentro de conteúdo que rola, a vibração vai no
   `onPress` (ao soltar), não no `onPressIn`, para não vibrar quando a pessoa só começa a rolar. Na navbar e no header,
   que não rolam, pode ser `onPressIn`.
-- Detalhes de um item abrem no próprio card (`ExpandableRow`), sem navegar para outra tela.
-- Formulários: `FormField` (label + input + erro), `FormSection` (grupo com título), `ChoiceChips` (escolha única) e
-  `FormFooter` (resumo + botão). A validação é com Zod e o erro aparece embaixo do campo só depois da primeira tentativa
-  de envio.
+- **Listas:** `ListCard` + `ListRow` para listas curtas. Listas que crescem (produtos, vendas, compras, clientes,
+  alertas) são paginadas e virtualizadas: `ScreenLayout list` + `useInfiniteList`. Escolher produto é sempre pelo
+  `ProductPicker` (folha, busca, leitura de código, filtros), nunca por um seletor simples: o catálogo é grande.
+- **Linha de item (`ItemRow`)**, a mesma em vendas, compras, produtos, clientes, revendedoras e itens de uma venda:
+  miniatura à esquerda, título e uma linha pequena no meio, valor e uma nota pequena colorida à direita. Mesma altura em
+  todas (`py-4`, título 15px). Nada de pílula de status dentro da linha (aumenta a altura): o estado vai na nota embaixo
+  do valor ("estoque baixo" em laranja, "sem estoque" em vermelho). Produto sem foto: quadrado em tom suave com as
+  iniciais (`ProductThumb`); pessoa: círculo com as iniciais (`PersonAvatar`). Venda e compra mostram os 3 primeiros
+  produtos sobrepostos, com um quadrado "+N" para o resto (`ThumbStack`). Quantidade como "5x". Cancelado: riscado e
+  apagado.
+- **Menos coisa na tela:** a lista mostra o que se usa no dia a dia; custo, valor em estoque e o resto ficam no detalhe.
+- **Números:** o topo de detalhes e resumos mostra os dois números principais grandes, lado a lado (`FigurePair`:
+  vendido e lucro real, preço e estoque, total gasto e compras). Lucro positivo em verde (`text-success`), prejuízo em
+  vermelho. Centavos com o mesmo peso e cor do resto do valor.
+- **Datas** como as pessoas falam (`formatDayHeading`: "Hoje", "Ontem", dia da semana, "2 de novembro"); listas de
+  vendas e compras agrupadas por dia. Campo de data abre o calendário do sistema (`DateField`), nunca digitação.
+- **Seletores:** escolha única em formulário é `SelectField` (abre uma gaveta com as opções em blocos separados, rádio
+  suave à direita e ícone opcional, que aparece também no campo). Várias escolhas usam `Checkbox` no mesmo estilo.
+  Cliente e revendedora se escolhem numa folha própria (`PersonPicker`), com busca, avatar e um "+" laranja no topo
+  que abre outra folha para cadastrar na hora.
+- **Carregando:** botão em andamento mostra spinner no lugar do texto (`Button loading`). Puxar a lista para baixo
+  atualiza.
+- **Estados:** toda tela trata carregando, erro com "Tentar de novo" e vazio (`QueryView`, `ScreenQuery`,
+  `useInfiniteList`, `EmptyState`).
+- Formulários: `FormScreen` (folha + campos + rodapé com o botão), `FormField` (label + input + erro), `FormSection`
+  (card com título), `SelectField` (escolha única), `CollapsibleSection` (o que costuma ficar no padrão, como custos e
+  desconto, recolhido), `DiscardGuard` (pergunta antes de sair com coisa preenchida) e `FormFooter` (quando o rodapé tem resumo). O estado fica no
+  `useZodForm`: a validação é com Zod e o erro aparece embaixo do campo só depois da primeira tentativa de envio. Erro da
+  API sobre um campo vai para o campo; os outros, para o rodapé.
 - Ícones: [Phosphor](https://phosphoricons.com) pelo `Icon`, importando cada ícone pelo caminho dele
   (`phosphor-react-native/src/icons/<Nome>`), nunca pelo pacote inteiro, que traz os 1500 ícones para o app. Peso
-  `regular` no geral e `fill` na aba ativa da navbar.
+  `bold` no geral (o `regular` fica fino demais), `regular` dentro das opções de um seletor e `fill` na aba ativa.
+- **Como o mantenedor revisa:** olhando o app no iPhone. Ajuste visual em passos pequenos, dizendo os valores mudados
+  (px, %), para ele pedir "mais" ou "menos". Não mexa no emulador ou no app aberto dele sem pedir, e não diga que algo
+  funciona sem ter visto rodando.
 - Componentes base vêm do [React Native Reusables](https://reactnativereusables.com/docs) e ficam em
   `src/components/ui/`. Para adicionar um: `bunx --bun @react-native-reusables/cli@latest add <componente>` (em
   `apps/mobile`), depois troque `font-<peso>` pelas famílias, os ícones do lucide pelos do Phosphor, ajuste ao estilo acima e rode `bun run check:fix`.

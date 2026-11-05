@@ -1,42 +1,79 @@
 import { Link } from "expo-router";
-import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button } from "@/components/ui/button";
+import { Pressable, View } from "react-native";
+import { QueryView } from "@/components/query-states";
+import { ScreenLayout } from "@/components/screen-layout";
+import { SummarySkeleton } from "@/components/skeleton";
 import { Text } from "@/components/ui/text";
-import { ApiStatus } from "./partials/api-status";
+import { hapticTap } from "@/lib/haptics";
+import { initials } from "@/lib/masks";
+import { useSession } from "@/queries/auth/use-auth";
+import { useHomeSummary } from "@/queries/home/use-home";
+import { homeSections } from "./partials/home-shortcuts";
+import { ProfitHighlight } from "./partials/profit-highlight";
+import { ShortcutCarousel } from "./partials/shortcut-carousel";
 
-export function HomeScreen() {
-	const insets = useSafeAreaInsets();
+function greeting() {
+	const hour = new Date().getHours();
+	if (hour < 12) return "Bom dia";
+	if (hour < 18) return "Boa tarde";
+	return "Boa noite";
+}
+
+/** Greeting row. Lives inside the scroll content so it scrolls away with the page. */
+function HomeGreeting() {
+	const session = useSession();
+	const storeName = session.data?.store.name ?? "";
 
 	return (
-		<View
-			className="flex-1 justify-end gap-6 bg-background px-4"
-			style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 16 }}
+		<Link href="/store" asChild>
+			<Pressable
+				onPress={hapticTap}
+				accessibilityRole="button"
+				accessibilityLabel={`${storeName}, abrir dados da loja`}
+				className="flex-row items-center gap-3 pt-2"
+			>
+				<View className="h-10 w-10 items-center justify-center rounded-full bg-background">
+					<Text className="font-sans-semibold text-primary text-xs">
+						{initials(storeName)}
+					</Text>
+				</View>
+				<View className="flex-1">
+					<Text className="text-muted-foreground text-xs">{greeting()},</Text>
+					<Text className="font-sans-semibold text-base" numberOfLines={1}>
+						{storeName}
+					</Text>
+				</View>
+			</Pressable>
+		</Link>
+	);
+}
+
+/**
+ * Home (light-gray page, white cards): month summary on top, then one carousel of shortcuts per group of modules.
+ * A store that just started sees a zeroed summary and "nothing yet" subtitles.
+ */
+export function HomeScreen() {
+	const query = useHomeSummary();
+
+	return (
+		<ScreenLayout
+			bottom="tabs"
+			tone="muted"
+			compactTitle="Início"
+			onRefresh={() => query.refetch()}
+			contentClassName="gap-7 pt-3"
 		>
-			<View className="gap-1">
-				<Text className="font-sans-bold text-3xl tracking-tight">Loja</Text>
-				<ApiStatus />
-			</View>
-			<View className="gap-2">
-				<Link href="/mock/dashboard" asChild>
-					<Button size="lg">
-						<Text>Ver protótipo do ERP</Text>
-					</Button>
-				</Link>
-				<Link
-					href={{ pathname: "/mock/dashboard", params: { empty: "1" } }}
-					asChild
-				>
-					<Button size="lg" variant="outline">
-						<Text>Ver loja começando (vazia)</Text>
-					</Button>
-				</Link>
-				<Link href="/design-system" asChild>
-					<Button size="lg" variant="outline">
-						<Text>Ver design system</Text>
-					</Button>
-				</Link>
-			</View>
-		</View>
+			<HomeGreeting />
+			<QueryView query={query} skeleton={<SummarySkeleton />}>
+				{(summary) => <ProfitHighlight summary={summary} />}
+			</QueryView>
+			{homeSections(query.data).map((section) => (
+				<ShortcutCarousel
+					key={section.title}
+					section={section}
+					failed={query.isError}
+				/>
+			))}
+		</ScreenLayout>
 	);
 }

@@ -21,6 +21,7 @@ module.exports = {
 					DEFAULT: "hsl(var(--secondary))",
 					foreground: "hsl(var(--secondary-foreground))",
 				},
+				success: "hsl(var(--success))",
 				destructive: {
 					DEFAULT: "hsl(var(--destructive))",
 					foreground: "hsl(var(--destructive-foreground))",
@@ -44,10 +45,10 @@ module.exports = {
 			},
 			// Each weight is its own font family (loaded in src/lib/fonts.ts); use these instead of font-<weight>.
 			fontFamily: {
-				sans: ["PlusJakartaSans_400Regular"],
-				"sans-medium": ["PlusJakartaSans_500Medium"],
-				"sans-semibold": ["PlusJakartaSans_600SemiBold"],
-				"sans-bold": ["PlusJakartaSans_700Bold"],
+				sans: ["Manrope_400Regular"],
+				"sans-medium": ["Manrope_500Medium"],
+				"sans-semibold": ["Manrope_600SemiBold"],
+				"sans-bold": ["Manrope_700Bold"],
 			},
 			borderRadius: {
 				lg: "var(--radius)",

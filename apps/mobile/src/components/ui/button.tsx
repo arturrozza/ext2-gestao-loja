@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Platform, Pressable } from "react-native";
+import { Platform, Pressable, View } from "react-native";
+import { Spinner } from "@/components/ui/spinner";
 import { TextClassContext } from "@/components/ui/text";
 import { hapticPress, hapticTap } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -98,19 +99,41 @@ const buttonTextVariants = cva(
 );
 
 type ButtonProps = React.ComponentProps<typeof Pressable> &
-	VariantProps<typeof buttonVariants>;
+	VariantProps<typeof buttonVariants> & {
+		/** Work in progress: a spinner takes the place of the label (the button keeps its size) and taps are ignored. */
+		loading?: boolean;
+		children?: React.ReactNode;
+	};
 
-function Button({ className, variant, size, onPress, ...props }: ButtonProps) {
+function spinnerColor(variant: ButtonProps["variant"]) {
+	if (variant === "default" || variant == null)
+		return "text-primary-foreground";
+	if (variant === "destructive") return "text-white";
+	return "text-foreground";
+}
+
+function Button({
+	className,
+	variant,
+	size,
+	onPress,
+	loading = false,
+	disabled,
+	children,
+	...props
+}: ButtonProps) {
 	return (
 		<TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
 			<Pressable
 				className={cn(
-					props.disabled && "opacity-50",
+					disabled && !loading && "opacity-50",
 					buttonVariants({ variant, size }),
 					className,
 				)}
 				role="button"
 				{...props}
+				disabled={disabled || loading}
+				accessibilityState={{ disabled: disabled || loading, busy: loading }}
 				onPress={(event) => {
 					// On press (release), not press-in, so starting a scroll on a button never buzzes.
 					// Primary (orange) buttons get a firmer tap than the others.
@@ -118,7 +141,20 @@ function Button({ className, variant, size, onPress, ...props }: ButtonProps) {
 					else hapticTap();
 					onPress?.(event);
 				}}
-			/>
+			>
+				{loading ? (
+					<>
+						<View className="flex-row items-center gap-2 opacity-0">
+							{children}
+						</View>
+						<View className="absolute inset-0 items-center justify-center">
+							<Spinner className={spinnerColor(variant)} />
+						</View>
+					</>
+				) : (
+					children
+				)}
+			</Pressable>
 		</TextClassContext.Provider>
 	);
 }

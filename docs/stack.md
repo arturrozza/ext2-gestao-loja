@@ -23,7 +23,11 @@ juntas.
 | expo-blur | ~58.0 | mobile: vidro fosco do header compacto (`CompactHeader`) | https://docs.expo.dev/versions/v58.0.0/sdk/blur-view/ |
 | phosphor-react-native | ^3.0 (+ `react-native-svg` 15.16) | mobile: ícones, via `Icon` (`src/components/ui/icon.tsx`) | https://github.com/duongdev/phosphor-react-native |
 | expo-linear-gradient | ~58 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v58.0.0/sdk/linear-gradient/ |
-| Plus Jakarta Sans | `@expo-google-fonts/plus-jakarta-sans` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |
+| expo-camera | ~58.0 | mobile: leitor de código de barras (`BarcodeScanner`) | https://docs.expo.dev/versions/v58.0.0/sdk/camera/ |
+| expo-image-picker | ~58.0 | mobile: foto do produto (tirar ou escolher) | https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/ |
+| @react-native-community/datetimepicker | 9.2.1 | mobile: calendário dos campos de data (`DateField`) | https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/ |
+| react-native-gesture-handler | ~3.3 | mobile: arrastar gavetas e folhas para fechar (`useDragToClose`) | https://docs.swmansion.com/react-native-gesture-handler/ |
+| Manrope | `@expo-google-fonts/manrope` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |
 | EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~58 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |
 | TanStack Query | ^5 | mobile | https://tanstack.com/query/latest/docs/framework/react/react-native |
 | Biome | 2.5.15 (versão exata) | raiz | https://biomejs.dev |
@@ -43,6 +47,9 @@ Fica em `package.json` → `workspaces.catalog`, e os workspaces referenciam com
 
 Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de novo:
 
+- **Telas com dados falsos** (MUN-21). Os hooks de `src/queries/<módulo>/` chamam `<módulo>.fake.ts` em vez do cliente
+  `api`, até a task de cada módulo ligar a API (a MUN-20 remove o que sobrar). Os módulos falsos dependem uns dos outros
+  (`queries/fake/`), então o dado de demonstração só some por inteiro no fim.
 - **Linker `hoisted` do Bun** (`bunfig.toml`). Com o `isolated` (o padrão), o `expo-doctor` acusa módulos nativos
   duplicados (`expo-font`, `expo-symbols`...), e isso quebra builds nativos. Testar o `isolated` de novo ao subir o
   Expo.

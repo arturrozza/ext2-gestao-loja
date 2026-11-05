@@ -44,6 +44,7 @@ src/
     partials/                  components used ONLY by this screen
   components/                  components shared by more than one screen (ui/: design system base components)
   queries/<module>/            TanStack Query hooks + query keys per API module (mirrors server modules)
+                               `*.fake.ts`: temporary fake backend of the module (queries/fake/: its tables and stock rules)
   lib/                         api (Eden), query-client, env, fonts, theme and utilities (cn)
   providers/                   global providers (QueryClient, SafeArea...)
   global.css                   Tailwind directives + design tokens (imported in the root _layout)
@@ -74,19 +75,20 @@ Alias: `@/*` → `src/*`.
 - Design system rules (tokens, surfaces, radius, header, navbar, animations, forms) live in `docs/conventions.md`
   (Mobile: design system). Read it before building UI. In short (the home screen is the model): light-gray page
   (`tone="muted"`) with white borderless cards, orange `bg-primary` only for actions and details, **never black or
-  solid-orange cards**, **no shadows**, cards `rounded-2xl` and controls `rounded-full` (no `rounded-3xl`), loose icons
+  solid-orange cards**, **no shadows**, cards `rounded-2xl`, buttons and chips `rounded-full`, fields `rounded-[8px]`, nested radius = outer − gap (no `rounded-3xl`), loose icons
   with no tile in a soft gray (`text-foreground/50`), no default navigator header (`ScreenHeader` or `compactTitle`),
   timing-based Reanimated animations, never `className` on `Animated.View`.
 - Screens use `ScreenLayout` (header + content + hairline under the header on scroll + bottom gradient behind the tab
   bar; `compactTitle` adds the iOS-style frosted-glass compact bar, `CompactHeader`, that appears on scroll; no vertical
-  scroll indicator). On Android, `expo-blur` only blurs inside a `BlurTargetView` passed as `blurTarget`. Every stack screen, forms included, slides
-  in from the right (`ios_from_right` in `_layout.tsx`). No fade screen transitions and no fade-in of whole screens.
-  Bottom sheets slide up with `withTiming` (`Modal animationType="none"`); only the backdrop fades.
-- Font: Plus Jakarta Sans (`src/lib/fonts.ts`). Each weight is its own family: `font-sans`, `font-sans-medium`,
+  scroll indicator). On Android, `expo-blur` only blurs inside a `BlurTargetView` passed as `blurTarget`. Stack screens slide in from the right
+  (`ios_from_right` in `_layout.tsx`); create/edit forms open as a sheet from the bottom (`SHEETS` there, `ScreenLayout
+  sheet` + `SheetHeader`). No fade screen transitions and no fade-in of whole screens.
+  Bottom sheets slide up with `withTiming` (`Modal animationType="none"`), close by dragging down, and only the backdrop fades.
+- Font: Manrope (`src/lib/fonts.ts`). Each weight is its own family: `font-sans`, `font-sans-medium`,
   `font-sans-semibold`, `font-sans-bold`; never `font-medium`/`font-bold`.
 - Base components: React Native Reusables in `src/components/ui/` (ours to edit). Icons: Phosphor (`phosphor-react-native`) via
   `Icon`, one import per icon path (`import { HouseIcon } from "phosphor-react-native/src/icons/House"`), never the
-  barrel (it pulls all 1500 icons into the bundle). Default weight `regular`; `fill` for the active tab. Never lucide.
+  barrel (it pulls all 1500 icons into the bundle). Default weight `bold` (`regular` reads too thin); `fill` for the active tab. Never lucide.
 - Haptics on every tap via `src/lib/haptics.ts` (`hapticTap`, `hapticSelect`, `hapticPress`), never `expo-haptics`
   directly. Inside scroll content use `onPress`, not `onPressIn` (starting a scroll must not buzz).
 - Render text with `Text` from `@/components/ui/text`. Merge classes with `cn()` (`@/lib/utils`).
@@ -94,6 +96,11 @@ Alias: `@/*` → `src/*`.
 
 ### Data (TanStack Query + Eden)
 - Every API call goes through the `api` client (`src/lib/api.ts`), typed with the server's `type App`. No raw `fetch`.
+- **Fake data (MUN-21):** until a module's feature task lands, its hooks call `queries/<module>/<module>.fake.ts` instead
+  of `api`. To connect a module: swap the fake calls inside its hooks for `api`, keep the hook shape and
+  `<module>.types.ts`; screens don't change. Anything marked "FAKE" goes away in MUN-20.
+  Screens rely on errors being an `ApiError` (`code`, pt-BR `message`, `details.field`) and on `unauthorized` ending the
+  session, so the first real module must also convert Eden errors to `ApiError`.
 - Server state lives **only** in TanStack Query. Don't copy API data into `useState`/context.
 - Each module in `src/queries/<module>/` exposes hooks (`useProducts`, `useCreateSale`...) and a query key factory
   (`productsKeys.all`, `productsKeys.detail(id)`), like `src/queries/health/use-health.ts`.

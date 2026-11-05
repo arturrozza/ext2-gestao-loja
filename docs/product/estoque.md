@@ -7,7 +7,8 @@ própria: fica na lista e na tela de [Produtos](produtos.md).
 
 ## Funcionalidades
 
-- **Na lista:** valor total em estoque e, em cada produto, quantidade, custo, valor e localização.
+- **Na lista:** valor total em estoque e, em cada produto, quantidade, preço e localização. Custo e valor ficam na tela do
+  produto.
 - **Filtros:** estoque baixo, sem estoque, perto de vencer e vencido.
 - **Na tela do produto:** quantidade por validade e histórico de movimentações, com acesso à compra ou venda de origem.
 - Ajustar o estoque.

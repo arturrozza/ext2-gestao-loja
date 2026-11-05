@@ -12,6 +12,52 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-04: Fonte Manrope no lugar da Plus Jakarta Sans
+
+**Decisão:** o app usa a Manrope. Também foram testadas a Geist (centraliza melhor, mas tem cara de ferramenta técnica)
+e a Figtree; a Manrope foi a escolhida pela aparência, mais calorosa.
+**Por quê:** na Plus Jakarta Sans o texto ficava visivelmente abaixo do centro nos campos do iPhone (as minúsculas
+ficam 2,2px abaixo do meio da linha a 16px) e exigia ajuste manual. Na Manrope ficam 1,8px abaixo e as maiúsculas
+a 0,4px do centro, sem ajuste.
+
+## 2026-11-04: Telas mais enxutas depois de ver o app rodando
+
+**Decisão:** cada tela mostra primeiro o que se usa todo dia, e o resto fica a um toque:
+
+- **Estoque:** a linha do produto mostra quantidade, preço e localização. Custo e valor em estoque ficam na tela do produto.
+- **Vendas e Estoque:** um só botão de criar, o **+** da barra de baixo. Canal e categoria viram filtro em uma folha.
+- **Nova venda:** desconto, custos, cliente e data ficam recolhidos. Nova venda e nova compra perguntam antes de descartar.
+- **Alertas:** agrupados por tipo, com a contagem de cada um. **Relatórios:** divididos em Resumo, Produtos e Canais.
+
+**Por quê:** ao ver o app rodando, as telas estavam corretas, mas carregadas demais em comparação com a tela inicial.
+
+## 2026-11-04: Telas definitivas com dados falsos e padrões a confirmar
+
+**Decisão:** as telas antigas do mock foram apagadas e refeitas nas rotas definitivas, seguindo a tela inicial como
+modelo, com dados falsos isolados por módulo (`src/queries/<módulo>/<módulo>.fake.ts`). As listas que crescem são
+paginadas e virtualizadas, e produto se escolhe sempre por um seletor em tela cheia com busca, código de barras e filtros.
+
+Onde as regras não diziam, as telas adotaram estes padrões, provisórios até o mantenedor ou o cliente confirmar:
+
+- **Condição de pagamento:** "À vista" e "A prazo".
+- **Janela da margem:** o mesmo período do produto parado (60 dias por padrão), já que as regras usam um número só.
+- **Produto parado que nunca vendeu:** conta a partir da primeira entrada em estoque.
+- **Margem por produto:** os custos e o desconto da venda são divididos pelo valor de cada item.
+- **Cancelar compra:** bloqueado também se unidades saíram por ajuste, não só por venda.
+- **Unidades vencidas:** contam no valor em estoque até serem descartadas.
+- **Motivos de ajuste:** aumentar só aceita contagem ou outro; "vencido descartado" só para unidades vencidas.
+- **Corrigir custo:** não aparece sem estoque, porque a próxima compra define o custo.
+- **Obrigatórios além das regras:** preço base maior que zero e comissão padrão da revendedora.
+- **Categoria:** nome repetido é recusado.
+- **Outros limites de formulário:** senha com pelo menos 8 caracteres, dias de alerta entre 1 e 365, período do
+  relatório de até 5 anos, rankings com 5 produtos, desconto até o valor da venda e CPF/CNPJ conferido só pela quantidade
+  de dígitos.
+- **Produto arquivado** não gera alerta.
+- **Tendência da tela inicial:** compara com os mesmos dias do mês anterior, não com o mês inteiro.
+
+**Por quê:** ver e validar o app inteiro antes do backend, sem refazer tela quando cada módulo ligar na API. O catálogo
+vai ser grande, pedido do mantenedor, por isso o seletor e a paginação.
+
 ## 2026-11-04: Transições só com deslize, sem fade
 
 **Decisão:** toda tela entra deslizando da direita, formulários também (antes subiam com `fade_from_bottom`). O
