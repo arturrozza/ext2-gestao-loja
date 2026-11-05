@@ -204,8 +204,9 @@ O app não vai para as lojas: é de um cliente só. A instalação é feita com 
   channel no binário e usa o environment do EAS de mesmo nome.
 - **TestFlight (iOS, equipe):** o perfil `testflight` gera build de loja (`"distribution": "store"`) no channel
   `production` e envia para o App Store Connect (`--auto-submit`). Testadores internos (usuários do App Store Connect)
-  recebem sem revisão da Apple. Cada build do TestFlight expira em 90 dias: gere outra antes disso, mesmo sem
-  mudança nativa. O cliente segue no ad hoc (perfil `production`), que não expira assim.
+  recebem sem revisão da Apple. O `ascAppId` (id do app no App Store Connect) fica no perfil de submit `testflight`
+  do `eas.json`, para o envio funcionar sem modo interativo. Cada build do TestFlight expira em 90 dias: gere outra
+  antes disso, mesmo sem mudança nativa. O cliente segue no ad hoc (perfil `production`), que não expira assim.
 - **Pendente, número de build (iOS):** o App Store Connect rejeita duas builds com o mesmo `buildNumber` na mesma
   `version`, e o `eas.json` usa `"appVersionSource": "local"` sem `autoIncrement`. A segunda build do perfil
   `testflight` na mesma versão (renovação dos 90 dias, por exemplo) falharia no envio. Antes dela, passar para
