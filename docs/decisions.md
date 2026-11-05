@@ -12,6 +12,14 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Imposto e taxa do Mercado Livre começam em 0%
+
+**Decisão:** a loja nasce com imposto padrão e taxa do Mercado Livre em 0%, e os alertas com os padrões de
+[Alertas](product/alertas.md) (30 dias, 60 dias e 10%). Percentuais vão de 0 a 100 com até duas casas, e os períodos
+de 1 a 365 dias.
+**Por quê:** os percentuais reais ainda não foram confirmados com o cliente. Começar em 0% não inventa um número: a
+venda não sugere custo nenhum até a loja configurar os dela.
+
 ## 2026-11-05: Auth própria, usuários criados no app e senha mestra
 
 **Decisão:** login com e-mail e senha feito por nós, sem lib: senha em argon2id (`Bun.password`), sessão com token

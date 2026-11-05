@@ -141,13 +141,10 @@ export type CustomerRow = {
 	createdAt: string;
 };
 
-export type StoreRow = {
-	name: string;
-	document: string | null;
-	phone: string | null;
-	address: string | null;
-};
-
+/**
+ * Copy of the store settings for the fake modules that still read them (alerts, products, sales). The real ones live
+ * in the API; `mirrorSettings` keeps this copy in step.
+ */
 export type SettingsRow = {
 	defaultTaxPercent: number;
 	mercadoLivreFeePercent: number;
@@ -164,7 +161,6 @@ export type UserRow = {
 
 export type FakeDb = {
 	user: UserRow;
-	store: StoreRow;
 	settings: SettingsRow;
 	categories: CategoryRow[];
 	products: ProductRow[];
@@ -182,12 +178,6 @@ export function emptyDb(): FakeDb {
 		user: {
 			id: "user-1",
 			name: "Madalena",
-		},
-		store: {
-			name: "Mundo Madam Cosméticos",
-			document: null,
-			phone: null,
-			address: null,
 		},
 		settings: {
 			defaultTaxPercent: 6,

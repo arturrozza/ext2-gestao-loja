@@ -33,6 +33,8 @@ Garantir que só quem é da loja acesse os dados dela e permitir manter os dados
 - Dados da loja: nome, documento, telefone e endereço.
 - Configurações: imposto padrão, taxa do Mercado Livre, antecedência de vencimento, período de produto parado e limite de
   margem baixa.
+- Uma loja nova começa com imposto e taxa do Mercado Livre em 0% e os alertas em 30 dias, 60 dias e 10%
+  ([Alertas](alertas.md)).
 
 ## Em aberto
 

@@ -368,12 +368,6 @@ function seedSales(
 }
 
 function fillDemoStore() {
-	db.current.store = {
-		name: "Mundo Madam Cosméticos",
-		document: "12.345.678/0001-90",
-		phone: "(11) 98765-4321",
-		address: "Rua das Flores, 120 – Centro, São Paulo/SP",
-	};
 	const categoryIds = new Map(
 		LINES.map((line) => [line.category, insertCategory(line.category).id]),
 	);

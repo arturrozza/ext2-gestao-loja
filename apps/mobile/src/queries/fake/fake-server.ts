@@ -8,6 +8,7 @@
 import { ApiError } from "@/lib/api-error";
 import { bootFakeDb } from "./fake-boot";
 import { db } from "./fake-db";
+import { syncFakeSettings } from "./fake-settings";
 
 const LATENCY_MS = 350;
 
@@ -23,6 +24,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function fakeRequest<T>(handler: () => T): Promise<T> {
 	bootFakeDb();
+	await syncFakeSettings();
 	await wait(LATENCY_MS);
 	while (fakeControls.loading) await wait(LATENCY_MS);
 	if (fakeControls.offline) {

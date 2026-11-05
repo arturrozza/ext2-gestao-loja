@@ -8,6 +8,7 @@ import {
 } from "./lib/http-error";
 import { authController } from "./modules/auth/auth.controller";
 import { healthController } from "./modules/health/health.controller";
+import { storeController } from "./modules/store/store.controller";
 import { usersController } from "./modules/users/users.controller";
 
 export type { ErrorBody } from "./lib/http-error";
@@ -42,6 +43,7 @@ export const app = new Elysia()
 	})
 	.use(healthController)
 	.use(authController)
-	.use(usersController);
+	.use(usersController)
+	.use(storeController);
 
 export type App = typeof app;
