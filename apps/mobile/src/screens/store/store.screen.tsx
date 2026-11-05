@@ -1,6 +1,7 @@
 import { Link } from "expo-router";
 import { KeyIcon } from "phosphor-react-native/src/icons/Key";
 import { SignOutIcon } from "phosphor-react-native/src/icons/SignOut";
+import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import { useState } from "react";
 import { Pressable } from "react-native";
 import { InfoRow } from "@/components/info-row";
@@ -93,6 +94,7 @@ export function StoreScreen() {
 			<ListCard title="Conta">
 				<InfoRow label="Usuário" value={session.data?.user.name} />
 				<InfoRow label="E-mail" value={session.data?.user.email} />
+				<ListRow title="Usuários" icon={UsersIcon} href="/store/users" />
 				<ListRow title="Trocar senha" icon={KeyIcon} href="/store/password" />
 				<ListRow
 					title="Sair"

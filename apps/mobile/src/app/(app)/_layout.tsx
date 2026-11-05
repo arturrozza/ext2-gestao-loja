@@ -1,11 +1,5 @@
 import { Stack } from "expo-router";
-
-/** Create and edit forms: a sheet that slides up over the screen it came from (`ScreenLayout sheet`). */
-const SHEET = {
-	presentation: "transparentModal",
-	animation: "slide_from_bottom",
-	contentStyle: { backgroundColor: "transparent" },
-} as const;
+import { SHEET } from "@/lib/navigation";
 
 const SHEETS = [
 	"sales/new",
@@ -21,6 +15,7 @@ const SHEETS = [
 	"store/edit",
 	"store/settings",
 	"store/password",
+	"store/users/new",
 ];
 
 // Other screens slide in from the right. No fade transitions.

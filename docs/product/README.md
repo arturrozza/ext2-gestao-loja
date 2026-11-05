@@ -84,7 +84,7 @@ confirma ao testar. Se algo mudar, atualize o módulo e registre o porquê em [`
 
 | Ponto | Padrão adotado |
 | --- | --- |
-| Usuários | Só o dono. Mais gente é só criar conta; permissões entram se ele pedir |
+| Usuários | O dono entra primeiro e cria os outros pelo app, todos com as mesmas permissões; permissões entram se ele pedir |
 | Lojas | Uma loja |
 | Revendedora | Só comissão, sem consignado nem acerto (o mantenedor acha que é assim) |
 | Taxa do Mercado Livre e imposto | Percentuais configuráveis, editáveis em cada venda |

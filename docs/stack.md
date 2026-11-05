@@ -25,6 +25,7 @@ juntas.
 | expo-linear-gradient | ~58 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v58.0.0/sdk/linear-gradient/ |
 | expo-camera | ~58.0 | mobile: leitor de código de barras (`BarcodeScanner`) | https://docs.expo.dev/versions/v58.0.0/sdk/camera/ |
 | expo-image-picker | ~58.0 | mobile: foto do produto (tirar ou escolher) | https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/ |
+| expo-secure-store | ~58.0 | mobile: token da sessão no Keychain/Keystore (`src/lib/session-token.ts`) | https://docs.expo.dev/versions/v58.0.0/sdk/securestore/ |
 | @react-native-community/datetimepicker | 9.2.1 | mobile: calendário dos campos de data (`DateField`) | https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/ |
 | react-native-gesture-handler | ~3.3 | mobile: arrastar gavetas e folhas para fechar (`useDragToClose`) | https://docs.swmansion.com/react-native-gesture-handler/ |
 | Manrope | `@expo-google-fonts/manrope` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |

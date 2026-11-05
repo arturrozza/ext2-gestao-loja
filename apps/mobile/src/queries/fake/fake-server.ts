@@ -6,6 +6,7 @@
  * (to preview error states), and returns a JSON copy so screens can never mutate the fake database by accident.
  */
 import { ApiError } from "@/lib/api-error";
+import { bootFakeDb } from "./fake-boot";
 import { db } from "./fake-db";
 
 const LATENCY_MS = 350;
@@ -21,6 +22,7 @@ export const fakeControls = {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function fakeRequest<T>(handler: () => T): Promise<T> {
+	bootFakeDb();
 	await wait(LATENCY_MS);
 	while (fakeControls.loading) await wait(LATENCY_MS);
 	if (fakeControls.offline) {

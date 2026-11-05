@@ -34,9 +34,11 @@ src/
   index.ts            starts the server (the only place that calls .listen)
   app.ts              builds the Elysia app and exports `type App` (used by Eden in mobile)
   env.ts              env validated with Zod; never read process.env anywhere else
+  lib/http-error.ts   `ErrorModel` ({ code, message, field? }) and `httpError()`: the body of every error response
   db/
     index.ts          Drizzle client
-    migrate.ts        applies migrations at runtime (Docker)
+    migrate.ts        applies migrations, then seeds the first store + user (`seed.ts`) while there's no user
+    seed.ts           first account from SEED_* (idempotent)
     schema/           tables (one file per domain) + index.ts re-exporting everything
   modules/<module>/               one folder per module, e.g. modules/products/
     <module>.controller.ts        Elysia instance with the module's routes (prefixed), exported as `<module>Controller`
@@ -61,6 +63,11 @@ Dockerfile
   with `.use()`. No barrel `index.ts` in modules.
 - **Always chain** Elysia methods (`new Elysia().get(...).post(...)`). Without chaining type inference breaks and
   Eden loses the types in mobile.
+- **Auth:** business routes `.use(authMacro)` and set `auth: true`; the handler gets `session` (user + store). Scope
+  every query by `session.store.id`, never by an id sent by the app. Declare `401: ErrorModel` in the route response.
+- **Errors:** services `throw httpError(status, { code, message, field? })` (pt-BR `message`, stable snake_case
+  `code`) and the route declares that status with `ErrorModel`. Validation errors become 422 `validation` and anything
+  unexpected a generic 500 `internal` in `app.ts` (never echo an error's message: Drizzle's carries SQL and params).
 - Don't pass the whole `Context` to services; destructure only what you need (`({ body, params }) => ...`).
 - Request-independent services are plain objects (`export const XService = { ... }`). No static-only classes:
   Biome blocks them (`noStaticOnlyClass`).

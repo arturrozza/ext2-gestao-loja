@@ -2,6 +2,7 @@ import {
 	defineRailway,
 	github,
 	postgres,
+	preserve,
 	project,
 	service,
 	volume,
@@ -56,7 +57,16 @@ export default defineRailway(() => {
 			serviceDomains: { "mundomadam.up.railway.app": { port: 3000 } },
 		},
 		// PORT is pinned so it matches the domain's target port (Railway would inject 8080 otherwise).
-		env: { DATABASE_URL: Postgres.env.DATABASE_URL, PORT: "3000" },
+		// Secrets are `preserve()`: the value is set once with `railway variables --set` and never lives in the repo.
+		env: {
+			DATABASE_URL: Postgres.env.DATABASE_URL,
+			PORT: "3000",
+			MASTER_PASSWORD: preserve(),
+			SEED_STORE_NAME: preserve(),
+			SEED_USER_NAME: preserve(),
+			SEED_USER_EMAIL: preserve(),
+			SEED_USER_PASSWORD: preserve(),
+		},
 	});
 
 	return project("server", {

@@ -9,7 +9,8 @@ Versões e ferramentas: [`stack.md`](stack.md).
   rede volta (`onlineManager`) ou o app volta pro foreground (`focusManager`). Não existe banco local nem fila de sync.
 - **Multi-loja no schema, uma loja na prática:** toda tabela de negócio tem `store_id`, e o server descobre a loja
   pela sessão do usuário (nunca por parâmetro vindo do app) e filtra todas as consultas e escritas por ela. O MVP tem
-  uma loja e um usuário, criados por um comando de setup; não existe cadastro nem troca de loja no app. Para várias
+  uma loja. A loja e o primeiro usuário são criados no deploy (seed, ver "Acesso" abaixo); os outros usuários são
+  criados no app por quem já está logado. Não existe cadastro aberto nem troca de loja. Para várias
   lojas por usuário no futuro, basta trocar o vínculo usuário → loja por uma tabela de associação.
 
 ## Visão geral
@@ -21,6 +22,40 @@ Versões e ferramentas: [`stack.md`](stack.md).
 │ TanStack Query (cache)   │ ◀── tipos: `type App` ───── │ app.ts exporta App       │      └────────────┘
 └──────────────────────────┘                             └──────────────────────────┘
 ```
+
+## Acesso (auth)
+
+Auth própria e enxuta, sem lib: só e-mail e senha, sem cadastro aberto, e-mail ou OAuth (decisão em
+[`decisions.md`](decisions.md)).
+
+- **Senha:** argon2id pelo `Bun.password` (sal e parâmetros dentro do hash). E-mail guardado em minúsculas.
+- **Sessão:** token opaco de 256 bits, mandado pelo app em `Authorization: Bearer <token>` (RFC 6750). O banco guarda
+  só o SHA-256 do token (`sessions.token_hash`). Expira após 30 dias sem uso: cada uso empurra a validade, no máximo
+  uma escrita por dia. Sair apaga a sessão; trocar a senha apaga as outras sessões do usuário; desativar um usuário
+  apaga as dele.
+- **No server:** a macro `auth` (`modules/auth/auth.macro.ts`) protege a rota com `auth: true` e põe a `session` no
+  contexto (usuário e loja). A loja de toda consulta vem de `session.store.id`. Sem sessão válida: 401 com
+  `WWW-Authenticate: Bearer`. O Elysia valida o body antes do `resolve` da macro, então um body inválido sem sessão
+  responde 422, não 401; não vaza dado nenhum (os schemas já estão nos tipos do app).
+- **Tentativas:** 5 senhas erradas em 15 minutos bloqueiam aquele e-mail (login) ou aquele usuário (troca de senha)
+  até a janela acabar (429 `too_many_attempts`), inclusive para a senha mestra. A tentativa é reservada antes de
+  conferir a senha, então requisições em paralelo não passam do limite. No máximo 3 hashes de senha rodam ao mesmo
+  tempo (cada um usa ~64 MiB); o excedente recebe 429. Tudo em memória (`auth.rate-limit.ts`), o que basta com uma
+  instância só do server; com mais réplicas, teria que ir para o banco ou um Redis.
+- **No app:** o token fica no `expo-secure-store` (Keychain/Keystore) e o client Eden manda em toda requisição. Um 401
+  (`unauthorized`) em qualquer chamada apaga o token e volta para a tela de entrada.
+- **Senha mestra (`MASTER_PASSWORD`):** opcional (vazia = desligada, mínimo 16 caracteres). Entra como qualquer usuário
+  ativo e também vale como "senha atual" para trocar a senha (é assim que a equipe redefine uma senha esquecida). A
+  sessão fica marcada (`via_master_password`) e o server loga cada uso.
+- **Primeiro usuário (seed):** o `src/db/migrate.ts` (pre-deploy no Railway, start no Docker) cria a loja e o primeiro
+  usuário a partir de `SEED_STORE_NAME`, `SEED_USER_NAME`, `SEED_USER_EMAIL` e `SEED_USER_PASSWORD` (todas ou nenhuma),
+  só enquanto não existe nenhum usuário. Rodar de novo não faz nada. Troque a senha do primeiro usuário no primeiro
+  acesso: a `SEED_USER_PASSWORD` continua no Railway e só volta a valer se a tabela de usuários ficar vazia.
+- **Erros da API:** sempre `{ code, message, field? }` (`ErrorModel` em `src/lib/http-error.ts`), com `message` em
+  pt-BR. Erro de validação vira 422 `validation` com o `field`. Rota inexistente vira 404 `not_found` e JSON
+  quebrado vira 400 `invalid_body`. Qualquer outro erro vira 500 `internal` com mensagem genérica: a mensagem original
+  nunca sai, e o log guarda só a causa de um erro do Drizzle, porque a mensagem dele traz o SQL e os parâmetros. No app, `request()` (`src/lib/api.ts`) transforma isso
+  em `ApiError`.
 
 ## Estrutura do repositório
 
@@ -155,7 +190,8 @@ A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesm
 - **Healthcheck:** `/health`. A versão nova só entra no ar se responder; senão, a anterior continua.
 - **Banco:** Postgres gerenciado do Railway. O server recebe `DATABASE_URL: Postgres.env.DATABASE_URL` (rede privada).
 - **Variáveis:** são gerenciadas pelo arquivo (`variables: { managed: true }`): variável que não estiver lá é apagada no
-  apply. O `PORT` é fixado em `3000` (sem isso o Railway
+  apply. Segredos (`MASTER_PASSWORD`, `SEED_*`) ficam como `preserve()`: o arquivo declara a variável, mas o valor é
+  definido uma vez com `railway variables --set` e nunca entra no repo. O `PORT` é fixado em `3000` (sem isso o Railway
   injeta `8080` e o domínio, que aponta para a 3000, responde 502). Variável nova do server entra em `apps/server/src/env.ts`, no `.env.example` e no
   `env` do service em `.railway/railway.ts`.
 

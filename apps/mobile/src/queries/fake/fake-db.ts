@@ -156,11 +156,10 @@ export type SettingsRow = {
 	lowMarginPercent: number;
 };
 
+/** Author of the fake records; the signed-in user comes from the API. */
 export type UserRow = {
 	id: string;
 	name: string;
-	email: string;
-	password: string;
 };
 
 export type FakeDb = {
@@ -178,19 +177,11 @@ export type FakeDb = {
 	sequence: number;
 };
 
-/** Credentials of the fake account (shown on the login screen while the app runs on fake data). */
-export const FAKE_LOGIN = {
-	email: "dono@mundomadam.com",
-	password: "madam123",
-};
-
 export function emptyDb(): FakeDb {
 	return {
 		user: {
 			id: "user-1",
 			name: "Madalena",
-			email: FAKE_LOGIN.email,
-			password: FAKE_LOGIN.password,
 		},
 		store: {
 			name: "Mundo Madam Cosméticos",

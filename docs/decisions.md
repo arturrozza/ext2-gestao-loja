@@ -12,6 +12,18 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Auth própria, usuários criados no app e senha mestra
+
+**Decisão:** login com e-mail e senha feito por nós, sem lib: senha em argon2id (`Bun.password`), sessão com token
+opaco Bearer (RFC 6750) guardado só como hash, 30 dias sem uso. A loja e o primeiro usuário são criados no deploy a
+partir de variáveis `SEED_*`, só quando não há usuário nenhum. Quem está logado cria, desativa e reativa os outros
+usuários; todos podem o mesmo. Uma senha mestra opcional (`MASTER_PASSWORD`) entra como qualquer usuário, em qualquer
+ambiente, para suporte. 5 senhas erradas em 15 minutos bloqueiam o e-mail, contando em memória.
+**Por quê:** só existe login com e-mail e senha, sem cadastro aberto, e-mail ou OAuth. O better-auth (usado em outro
+projeto do mantenedor) traria tabelas e fluxos que não usamos e deixaria a senha mestra mais difícil. O seed no deploy
+dispensa um passo manual no Railway. A senha mestra substitui a tela de "esqueci a senha" por enquanto: a equipe entra
+como a pessoa e troca a senha. Ninguém desativa o próprio usuário, para a loja nunca ficar sem acesso.
+
 ## 2026-11-05: Nome "MM Vendas" e ícone da sacola
 
 **Decisão:** o app aparece no celular como **MM Vendas**. O ícone e a splash são uma sacola de compras branca e

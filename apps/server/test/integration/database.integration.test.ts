@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { sql } from "drizzle-orm";
+import { getTableName, sql } from "drizzle-orm";
+import { getTableConfig } from "drizzle-orm/pg-core";
 import { db } from "../../src/db";
+import { sessions, users } from "../../src/db/schema";
 import { assertTestDatabase, resetDatabase } from "../support/database";
 
 describe("assertTestDatabase", () => {
@@ -42,5 +44,31 @@ describe("resetDatabase", () => {
 			sql`INSERT INTO reset_probe (label) VALUES ('c') RETURNING id`,
 		);
 		expect(row?.id).toBe(1);
+	});
+});
+
+describe("schema indexes", () => {
+	it("indexes the columns every request filters by", () => {
+		const indexed = (table: typeof users | typeof sessions) =>
+			getTableConfig(table).indexes.flatMap((index) =>
+				index.config.columns.map(
+					(column) => (column as { name?: string }).name,
+				),
+			);
+
+		expect(indexed(users)).toEqual(["store_id"]);
+		expect(indexed(sessions)).toEqual(["user_id"]);
+	});
+});
+
+describe("schema foreign keys", () => {
+	it("tie users to their store and sessions to their user", () => {
+		const targets = (table: typeof users | typeof sessions) =>
+			getTableConfig(table).foreignKeys.map((key) =>
+				getTableName(key.reference().foreignTable),
+			);
+
+		expect(targets(users)).toEqual(["stores"]);
+		expect(targets(sessions)).toEqual(["users"]);
 	});
 });

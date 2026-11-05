@@ -100,11 +100,13 @@ Alias: `@/*` → `src/*`.
   of `api`. To connect a module: swap the fake calls inside its hooks for `api`, keep the hook shape and
   `<module>.types.ts`; screens don't change. Anything marked "FAKE" goes away in MUN-20.
   Screens rely on errors being an `ApiError` (`code`, pt-BR `message`, `details.field`) and on `unauthorized` ending the
-  session, so the first real module must also convert Eden errors to `ApiError`.
+  session: wrap every Eden call with `request()` from `src/lib/api.ts`, which returns the data or throws that `ApiError`
+  (`network` when the server can't be reached). The session token lives in `src/lib/session-token.ts` (SecureStore) and
+  `api` sends it as a Bearer header.
 - Server state lives **only** in TanStack Query. Don't copy API data into `useState`/context.
 - Each module in `src/queries/<module>/` exposes hooks (`useProducts`, `useCreateSale`...) and a query key factory
   (`productsKeys.all`, `productsKeys.detail(id)`), like `src/queries/health/use-health.ts`.
-- In `queryFn`, destructure `{ data, error }` from Eden and `throw error` so Query treats it as an error.
+- In `queryFn`/`mutationFn`, call `request(api.x.get())`: it throws the `ApiError` so Query treats it as an error.
 - After mutations, invalidate the affected keys.
 - `onlineManager` (expo-network) and `focusManager` (AppState) are already wired in `src/lib/query-client.ts`.
 
