@@ -34,7 +34,7 @@ function InsufficientStock({
 				<Button
 					size="sm"
 					variant="outline"
-					className="flex-1 bg-background"
+					className="flex-1 bg-field-raised"
 					onPress={() =>
 						router.push({
 							pathname: "/purchases/new",
@@ -47,7 +47,7 @@ function InsufficientStock({
 				<Button
 					size="sm"
 					variant="outline"
-					className="flex-1 bg-background"
+					className="flex-1 bg-field-raised"
 					onPress={() => router.push(`/products/${productId}/adjust`)}
 				>
 					<Text className="text-sm">Ajustar estoque</Text>
@@ -77,7 +77,7 @@ export function SaleItemCard({
 	const missing = shortage(item, product);
 
 	return (
-		<View className="gap-4 rounded-2xl bg-background p-4">
+		<View className="gap-4 border-border border-b pb-5">
 			<View className="flex-row items-center gap-3">
 				<ProductThumb uri={item.product.photoUri} name={item.product.name} />
 				<View className="flex-1 gap-0.5">
@@ -131,7 +131,7 @@ export function SaleItemCard({
 				/>
 			) : null}
 			{item.quantity > 1 ? (
-				<View className="flex-row justify-between border-border border-t pt-3">
+				<View className="flex-row justify-between px-1">
 					<Text className="text-muted-foreground text-sm">Total do item</Text>
 					<Text className="font-sans-semibold text-sm">
 						{price === null ? "—" : formatCents(price * item.quantity)}

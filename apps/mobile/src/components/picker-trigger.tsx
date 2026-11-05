@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 /** The field shell of every picker (select, date, person): looks like an input, opens something when tapped. */
 export const FIELD_SHELL =
-	"h-12 flex-row items-center gap-3 rounded-[8px] border border-transparent bg-card px-4 active:bg-accent";
+	"h-12 flex-row items-center gap-3 rounded-[8px] border border-transparent bg-field px-4 active:bg-accent";
 
 /**
  * A field that opens a picker: optional label above, an icon and the chosen value (or the placeholder), a caret, and

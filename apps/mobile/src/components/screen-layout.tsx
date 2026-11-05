@@ -20,7 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CompactHeader } from "@/components/compact-header";
-import { SheetFrame } from "@/components/sheet-frame";
+import { SheetFrame, sheetTop } from "@/components/sheet-frame";
 import { Text } from "@/components/ui/text";
 import { DIVIDER, FADE, FADE_MUTED, THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -85,6 +85,35 @@ function MaybeSheet({
 	children: ReactNode;
 }) {
 	return sheet ? <SheetFrame>{children}</SheetFrame> : children;
+}
+
+/**
+ * Keeps the focused field above the keyboard without lifting the footer: the footer stays at the bottom, under the
+ * keyboard, and only the scroll area makes room. On iOS the scroll view does it itself
+ * (`automaticallyAdjustKeyboardInsets`, which also scrolls to the focused field). On Android (edge-to-edge: the window
+ * doesn't resize) the scroll area alone gets padding. `KeyboardAvoidingView` compares its frame, relative to its parent,
+ * with the keyboard's position on screen, so in a sheet the gap above it goes in as the offset.
+ */
+function KeyboardRoom({
+	sheet,
+	children,
+}: {
+	sheet: boolean;
+	children: ReactNode;
+}) {
+	const insets = useSafeAreaInsets();
+	if (Platform.OS !== "android") {
+		return <View className="flex-1">{children}</View>;
+	}
+	return (
+		<KeyboardAvoidingView
+			behavior="padding"
+			keyboardVerticalOffset={sheet ? sheetTop(insets.top) : 0}
+			className="flex-1"
+		>
+			{children}
+		</KeyboardAvoidingView>
+	);
 }
 
 /**
@@ -208,6 +237,7 @@ function ListBody<T>({
 type ScrollProps = {
 	keyboardShouldPersistTaps: "handled";
 	keyboardDismissMode: "on-drag";
+	automaticallyAdjustKeyboardInsets: true;
 	showsVerticalScrollIndicator: false;
 	scrollEventThrottle: number;
 	onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -231,6 +261,8 @@ function scrollPropsFor(
 	return {
 		keyboardShouldPersistTaps: "handled",
 		keyboardDismissMode: "on-drag",
+		// iOS: makes room for the keyboard and scrolls to the focused field (Android: `KeyboardRoom`).
+		automaticallyAdjustKeyboardInsets: true,
 		showsVerticalScrollIndicator: false,
 		scrollEventThrottle: 16,
 		onScroll: (event) => {
@@ -281,16 +313,14 @@ export function ScreenLayout<T = never>({
 		<View className={cn("gap-6 px-5 pt-2", contentClassName)}>{children}</View>
 	);
 
-	// The whole screen (footer included) rises above the keyboard; on Android edge-to-edge the window no longer
-	// resizes by itself (Expo keyboard-handling guide).
+	// Only the scroll area makes room for the keyboard; the footer stays at the bottom, under it (`KeyboardRoom`).
 	return (
 		<MaybeSheet sheet={sheet}>
-			<KeyboardAvoidingView
-				behavior="padding"
+			<View
 				className={cn("flex-1", tone === "muted" ? "bg-card" : "bg-background")}
 			>
 				{header}
-				<View className="flex-1">
+				<KeyboardRoom sheet={sheet}>
 					<BlurTargetView ref={blurTarget} style={styles.fill}>
 						{list ? (
 							<ListBody
@@ -322,9 +352,9 @@ export function ScreenLayout<T = never>({
 						locations={withTabs ? [0, 0.35, 0.6] : [0, 0.5, 1]}
 						style={[styles.edge, withTabs ? styles.bottomTabs : styles.bottom]}
 					/>
-				</View>
+				</KeyboardRoom>
 				{footer}
-			</KeyboardAvoidingView>
+			</View>
 		</MaybeSheet>
 	);
 }

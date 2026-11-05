@@ -7,8 +7,8 @@ type ChoiceChipsProps<T extends string> = {
 	options: readonly { value: T; label: string }[];
 	value: T | undefined;
 	onChange: (value: T) => void;
-	/** `page`: chips sit on the gray page (white when unselected). `card`: inside a white card (gray). */
-	surface?: "page" | "card";
+	/** `page`: chips sit on the gray page (white when unselected). `field`: on white, the gray of the form fields. */
+	surface?: "page" | "field";
 };
 
 /** Single-choice chips in a horizontal scroll (filters, payment method, category...). */
@@ -16,9 +16,9 @@ export function ChoiceChips<T extends string>({
 	options,
 	value,
 	onChange,
-	surface = "card",
+	surface = "field",
 }: ChoiceChipsProps<T>) {
-	const idle = surface === "page" ? "bg-background" : "bg-card";
+	const idle = surface === "page" ? "bg-background" : "bg-field";
 	const chips = options.map((option) => {
 		const selected = option.value === value;
 		return (

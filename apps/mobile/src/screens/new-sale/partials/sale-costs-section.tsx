@@ -119,7 +119,7 @@ export function SaleCostsSection({
 							)}
 							accessibilityRole="button"
 							className={cn(
-								"h-9 justify-center rounded-full bg-card px-3 active:bg-accent",
+								"h-9 justify-center rounded-full bg-field px-3 active:bg-accent",
 							)}
 						>
 							<Text className="text-xs">+ {SALE_COST_KINDS[kind]}</Text>

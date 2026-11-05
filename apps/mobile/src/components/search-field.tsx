@@ -2,8 +2,9 @@ import { BarcodeIcon } from "phosphor-react-native/src/icons/Barcode";
 import { MagnifyingGlassIcon } from "phosphor-react-native/src/icons/MagnifyingGlass";
 import { XCircleIcon } from "phosphor-react-native/src/icons/XCircle";
 import { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { DoneTextInput } from "@/components/done-text-input";
 import { Icon } from "@/components/ui/icon";
 import { hapticSelect, hapticTap, withHaptic } from "@/lib/haptics";
 import { THEME } from "@/lib/theme";
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Search input with a magnifier, a clear button and, with `scan`, a barcode button that fills the search with the
- * scanned code. `surface`: white on the gray page, gray inside a white card.
+ * scanned code. `surface`: `page` is white on the gray page, `field` the gray of the form fields (on white).
  */
 export function SearchField({
 	value,
@@ -24,7 +25,7 @@ export function SearchField({
 	onChangeText: (text: string) => void;
 	placeholder?: string;
 	scan?: boolean;
-	surface?: "page" | "card";
+	surface?: "page" | "field";
 }) {
 	const [scanning, setScanning] = useState(false);
 
@@ -32,11 +33,11 @@ export function SearchField({
 		<View
 			className={cn(
 				"h-12 flex-row items-center gap-2 rounded-[8px] pr-1.5 pl-4",
-				surface === "page" ? "bg-background" : "bg-card",
+				surface === "page" ? "bg-background" : "bg-field",
 			)}
 		>
 			<Icon as={MagnifyingGlassIcon} size={18} className="text-foreground/45" />
-			<TextInput
+			<DoneTextInput
 				value={value}
 				onChangeText={onChangeText}
 				placeholder={placeholder}

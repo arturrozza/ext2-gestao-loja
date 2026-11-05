@@ -12,6 +12,24 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Formulários sem card em volta dos campos, e o teclado não levanta o rodapé
+
+**Decisão:** os campos dos formulários ficam direto na folha branca, sem card em volta; grupos se separam por um
+titulozinho e itens repetidos por um fio. Os controles ganham uma cor própria (`--field`, 95,5%) que a folha não troca.
+Com o teclado aberto, o botão de salvar fica embaixo, coberto, e só a área que rola sobe; no iOS, todo campo tem a
+barra com "OK" para fechar o teclado.
+**Por quê:** o mantenedor vetou card dentro de card. Sem o card cinza, os campos brancos sumiam na folha branca, daí a
+cor própria. O teclado foi resolvido só com o que vem no React Native (`automaticallyAdjustKeyboardInsets`,
+`KeyboardAvoidingView`, `InputAccessoryView`) para continuar rodando no Expo Go; o `react-native-keyboard-controller`,
+que o guia do Expo recomenda, pede development build.
+
+## 2026-11-05: Tela inicial em três seções de três atalhos
+
+**Decisão:** os atalhos da tela inicial ficam em três seções de três: Dia a dia (Vendas, Compras, Produtos), Pessoas
+(Clientes, Revendedoras, Usuários) e Gestão (Relatórios, Alertas, Loja). Usuários ganha atalho próprio, antes só
+dentro de Loja. Seção com mais de três só se for preciso.
+**Por quê:** seções com dois cards pareciam vazias, e duas seções grandes (testadas antes) não agradaram ao mantenedor.
+
 ## 2026-11-05: Imposto e taxa do Mercado Livre começam em 0%
 
 **Decisão:** a loja nasce com imposto padrão e taxa do Mercado Livre em 0%, e os alertas com os padrões de

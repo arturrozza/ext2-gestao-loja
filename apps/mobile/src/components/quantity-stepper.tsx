@@ -1,6 +1,7 @@
 import { MinusIcon } from "phosphor-react-native/src/icons/Minus";
 import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { DoneTextInput } from "@/components/done-text-input";
 import { Icon } from "@/components/ui/icon";
 import { hapticSelect, withHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ function StepButton({
 			accessibilityLabel={label}
 			hitSlop={4}
 			className={cn(
-				"h-10 w-10 items-center justify-center rounded-full bg-background active:bg-accent",
+				"h-10 w-10 items-center justify-center rounded-full bg-field-raised active:bg-accent",
 				disabled && "opacity-40",
 			)}
 		>
@@ -50,7 +51,7 @@ export function QuantityStepper({
 	return (
 		<View
 			className={cn(
-				"flex-row items-center gap-1 self-start rounded-full border border-transparent bg-card p-1",
+				"flex-row items-center gap-1 self-start rounded-full border border-transparent bg-field p-1",
 				invalid && "border-destructive",
 			)}
 		>
@@ -60,7 +61,7 @@ export function QuantityStepper({
 				disabled={value <= min}
 				onPress={() => onChange(Math.max(min, value - 1))}
 			/>
-			<TextInput
+			<DoneTextInput
 				value={String(value)}
 				onChangeText={(text) =>
 					onChange(Number(text.replace(/\D/g, "").slice(0, MAX_DIGITS)))

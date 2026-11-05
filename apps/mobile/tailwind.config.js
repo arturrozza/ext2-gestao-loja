@@ -42,6 +42,10 @@ module.exports = {
 					DEFAULT: "hsl(var(--card))",
 					foreground: "hsl(var(--card-foreground))",
 				},
+				field: {
+					DEFAULT: "hsl(var(--field))",
+					raised: "hsl(var(--field-raised))",
+				},
 			},
 			// Each weight is its own font family (loaded in src/lib/fonts.ts); use these instead of font-<weight>.
 			fontFamily: {

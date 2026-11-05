@@ -56,7 +56,7 @@ export function PurchaseItemCard({
 	const cost = parseMoneyInput(item.unitCost);
 
 	return (
-		<View className="gap-4 rounded-2xl bg-background p-4">
+		<View className="gap-4 border-border border-b pb-5">
 			<View className="flex-row items-center gap-3">
 				<ProductThumb uri={item.product.photoUri} name={item.product.name} />
 				<Text className="flex-1 font-sans-semibold text-sm" numberOfLines={2}>
@@ -111,7 +111,7 @@ export function PurchaseItemCard({
 					{errors.quantity ?? errors.unitCost}
 				</Text>
 			) : null}
-			<View className="flex-row justify-between border-border border-t pt-3">
+			<View className="flex-row justify-between px-1">
 				<Text className="text-muted-foreground text-sm">Total do item</Text>
 				<Text className="font-sans-semibold text-sm">
 					{cost === null ? "—" : formatCents(cost * item.quantity)}

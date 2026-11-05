@@ -54,7 +54,7 @@ export function ItemsSection({
 }) {
 	const { values, errors } = sale.form;
 	return (
-		<View className="gap-3">
+		<View className="gap-4">
 			<Text className="px-1 font-sans-semibold text-base">Produtos</Text>
 			{values.items.map((item, index) => (
 				<SaleItemCard
@@ -78,7 +78,7 @@ export function ItemsSection({
 			{errors.items ? (
 				<Text className="px-1 text-destructive text-sm">{errors.items}</Text>
 			) : null}
-			<Button variant="outline" className="bg-background" onPress={onAdd}>
+			<Button variant="outline" onPress={onAdd}>
 				<Icon as={PlusIcon} size={16} />
 				<Text>Adicionar produtos</Text>
 			</Button>
@@ -123,26 +123,33 @@ export function AdjustmentSection({ sale }: { sale: Sale }) {
 	);
 }
 
-/** How the sale happened: channel (and reseller), payment condition and method, in one card. */
+/** How the sale happened: channel (and reseller), payment condition and method. */
 export function PaymentSection({ sale }: { sale: Sale }) {
 	const { values, errors, set } = sale.form;
 	return (
-		<FormSection>
+		<FormSection title="Canal e pagamento">
 			<ChannelFields sale={sale} />
-			<SelectField
-				label="Pagamento"
-				options={CONDITION_OPTIONS}
-				value={values.paymentCondition}
-				onChange={(condition) => set("paymentCondition", condition)}
-			/>
-			<SelectField
-				label="Forma de pagamento"
-				options={METHOD_OPTIONS}
-				value={values.paymentMethod}
-				onChange={(method) => set("paymentMethod", method)}
-				placeholder="Escolher forma"
-				error={errors.paymentMethod}
-			/>
+			{/* Condition and method side by side: short values, read together. */}
+			<View className="flex-row items-start gap-3">
+				<View className="flex-1">
+					<SelectField
+						label="Pagamento"
+						options={CONDITION_OPTIONS}
+						value={values.paymentCondition}
+						onChange={(condition) => set("paymentCondition", condition)}
+					/>
+				</View>
+				<View className="flex-1">
+					<SelectField
+						label="Forma de pagamento"
+						options={METHOD_OPTIONS}
+						value={values.paymentMethod}
+						onChange={(method) => set("paymentMethod", method)}
+						placeholder="Escolher"
+						error={errors.paymentMethod}
+					/>
+				</View>
+			</View>
 		</FormSection>
 	);
 }

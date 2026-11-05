@@ -1,18 +1,17 @@
-import { Platform, TextInput } from "react-native";
+import type { ComponentProps } from "react";
+import { Platform } from "react-native";
+import { DoneTextInput } from "@/components/done-text-input";
 import { cn } from "@/lib/utils";
 
 /**
  * Text input. Size with `text-[16px]`, never `text-base`: Tailwind's `text-base` also sets a 24px line height, and on
- * iOS a TextInput with a fixed line height draws its text low.
+ * iOS a TextInput with a fixed line height draws its text low. On iOS the keyboard gets an "OK" bar to close it.
  */
-function Input({
-	className,
-	...props
-}: React.ComponentProps<typeof TextInput>) {
+function Input({ className, ...props }: ComponentProps<typeof DoneTextInput>) {
 	return (
-		<TextInput
+		<DoneTextInput
 			className={cn(
-				"font-sans dark:bg-input/30 border-transparent bg-card text-foreground flex h-12 w-full min-w-0 flex-row items-center rounded-[8px] border px-4 py-1 text-[16px] focus:border-primary",
+				"font-sans dark:bg-input/30 border-transparent bg-field text-foreground flex h-12 w-full min-w-0 flex-row items-center rounded-[8px] border px-4 py-1 text-[16px] focus:border-primary",
 				props.editable === false &&
 					cn(
 						"opacity-50",

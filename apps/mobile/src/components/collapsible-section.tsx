@@ -7,8 +7,10 @@ import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
 
 /**
- * White card that shows one line (title and current value) and opens on tap: the exceptions of a form stay out of the
- * way. `forceOpen` keeps it open while something inside needs attention, such as a validation error.
+ * One line (title and current value) straight on the page, split from the next by a hairline, that opens on tap: the
+ * exceptions of a form stay out of the way. No card around it. `forceOpen` keeps it open while something inside needs
+ * attention, such as a validation error. Stack them in a `border-border border-t` group so the first one gets a line on
+ * top too.
  */
 export function CollapsibleSection({
 	title,
@@ -25,14 +27,14 @@ export function CollapsibleSection({
 	const open = toggled || forceOpen;
 
 	return (
-		<View className="overflow-hidden rounded-2xl bg-background">
+		<View className="border-border border-b">
 			<Pressable
 				onPress={withHaptic(hapticTap, () => setToggled(!toggled))}
 				accessibilityRole="button"
 				accessibilityState={{ expanded: open }}
-				className="flex-row items-center gap-3 px-4 py-3.5 active:bg-accent"
+				className="-mx-5 flex-row items-center gap-3 px-6 py-4 active:bg-accent"
 			>
-				<Text className="font-sans-semibold text-sm">{title}</Text>
+				<Text className="font-sans-semibold text-[15px]">{title}</Text>
 				<Text
 					className="flex-1 text-right text-muted-foreground text-sm"
 					numberOfLines={1}
@@ -45,7 +47,7 @@ export function CollapsibleSection({
 					className="text-foreground/45"
 				/>
 			</Pressable>
-			{open ? <View className="gap-4 px-4 pb-4">{children}</View> : null}
+			{open ? <View className="gap-4 pb-5">{children}</View> : null}
 		</View>
 	);
 }

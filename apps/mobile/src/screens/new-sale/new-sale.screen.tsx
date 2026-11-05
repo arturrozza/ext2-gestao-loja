@@ -35,7 +35,7 @@ function NewSaleForm({ settings }: { settings: StoreSettings }) {
 		>
 			<ItemsSection sale={sale} onAdd={() => setPicking(true)} />
 			<PaymentSection sale={sale} />
-			<View className="gap-2">
+			<View className="border-border border-t">
 				<AdjustmentSection sale={sale} />
 				<CollapsibleSection
 					title="Custos"

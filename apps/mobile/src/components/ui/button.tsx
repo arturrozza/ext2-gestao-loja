@@ -26,7 +26,7 @@ const buttonVariants = cva(
 					}),
 				),
 				outline: cn(
-					"bg-card active:bg-accent",
+					"bg-field active:bg-accent",
 					Platform.select({
 						web: "hover:bg-accent dark:hover:bg-input/50",
 					}),

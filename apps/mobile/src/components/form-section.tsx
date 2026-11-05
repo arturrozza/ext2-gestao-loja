@@ -3,7 +3,10 @@ import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
 
-/** Titled white card grouping form controls, with an optional animated error under it. */
+/**
+ * A group of form controls straight on the page, never inside a card: an optional small title (and description) on top
+ * and an optional animated error under it.
+ */
 export function FormSection({
 	title,
 	description,
@@ -25,7 +28,7 @@ export function FormSection({
 					) : null}
 				</View>
 			) : null}
-			<View className="gap-4 rounded-2xl bg-background p-4">{children}</View>
+			<View className="gap-4">{children}</View>
 			{error ? (
 				<Animated.View
 					key={error}

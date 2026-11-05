@@ -1,6 +1,7 @@
 import type { Href } from "expo-router";
 import { BellIcon } from "phosphor-react-native/src/icons/Bell";
 import { ChartBarIcon } from "phosphor-react-native/src/icons/ChartBar";
+import { HandshakeIcon } from "phosphor-react-native/src/icons/Handshake";
 import { PackageIcon } from "phosphor-react-native/src/icons/Package";
 import { ReceiptIcon } from "phosphor-react-native/src/icons/Receipt";
 import { StorefrontIcon } from "phosphor-react-native/src/icons/Storefront";
@@ -9,6 +10,8 @@ import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import type { IconType } from "@/components/ui/icon";
 import type { HomeSummary } from "@/queries/home/home.types";
+import { useHomeSummary } from "@/queries/home/use-home";
+import { useUsers } from "@/queries/users/use-users";
 
 export type Shortcut = {
 	title: string;
@@ -39,9 +42,13 @@ function alertsSubtitle(summary: HomeSummary | undefined, alerts: number) {
 	return alerts > 0 ? "Para resolver" : "Tudo certo";
 }
 
-/** Every module is reachable from the home screen, grouped as in docs/product/README.md. */
-export function homeSections(
+/**
+ * Every module is reachable from the home screen, in three groups of three: what's done every day (sell, buy, products),
+ * the people around the store, and managing it (results, alerts, settings).
+ */
+function homeSections(
 	summary: HomeSummary | undefined,
+	activeUsers: number | undefined,
 ): ShortcutSection[] {
 	// Until the summary arrives (or if it fails) the shortcuts still lead everywhere, just without numbers.
 	const counts = summary?.counts ?? NO_COUNTS;
@@ -66,11 +73,6 @@ export function homeSections(
 					icon: TruckIcon,
 					href: "/purchases",
 				},
-			],
-		},
-		{
-			title: "Estoque",
-			items: [
 				{
 					title: "Produtos",
 					subtitle: summary
@@ -79,12 +81,35 @@ export function homeSections(
 					icon: PackageIcon,
 					href: "/products",
 				},
+			],
+		},
+		{
+			title: "Pessoas",
+			items: [
 				{
-					title: "Alertas",
-					subtitle: alertsSubtitle(summary, counts.alerts),
-					icon: BellIcon,
-					href: "/alerts",
-					badge: counts.alerts,
+					title: "Clientes",
+					subtitle: summary
+						? count(counts.activeCustomers, "ativos", "Nenhum ainda")
+						: "",
+					icon: UserIcon,
+					href: "/customers",
+				},
+				{
+					title: "Revendedoras",
+					subtitle: summary
+						? count(counts.activeResellers, "ativas", "Nenhuma ainda")
+						: "",
+					icon: HandshakeIcon,
+					href: "/resellers",
+				},
+				{
+					title: "Usuários",
+					subtitle:
+						activeUsers === undefined
+							? ""
+							: count(activeUsers, "ativos", "Nenhum ainda"),
+					icon: UsersIcon,
+					href: "/store/users",
 				},
 			],
 		},
@@ -98,20 +123,11 @@ export function homeSections(
 					href: "/reports",
 				},
 				{
-					title: "Revendedoras",
-					subtitle: summary
-						? count(counts.activeResellers, "ativas", "Nenhuma ainda")
-						: "",
-					icon: UsersIcon,
-					href: "/resellers",
-				},
-				{
-					title: "Clientes",
-					subtitle: summary
-						? count(counts.activeCustomers, "ativos", "Nenhum ainda")
-						: "",
-					icon: UserIcon,
-					href: "/customers",
+					title: "Alertas",
+					subtitle: alertsSubtitle(summary, counts.alerts),
+					icon: BellIcon,
+					href: "/alerts",
+					badge: counts.alerts,
 				},
 				{
 					title: "Loja",
@@ -122,4 +138,21 @@ export function homeSections(
 			],
 		},
 	];
+}
+
+/**
+ * The home's month summary and its shortcut sections. Users aren't in the summary (they come from the real API, the
+ * summary is still fake), so their count comes from the users list. `failed`: a number behind the subtitles failed to
+ * load, so the cards show nothing instead of a loading line forever.
+ */
+export function useHomeShortcuts() {
+	const summary = useHomeSummary();
+	const users = useUsers();
+	const activeUsers = users.data?.filter((user) => user.active).length;
+	return {
+		summary,
+		sections: homeSections(summary.data, activeUsers),
+		failed: summary.isError || users.isError,
+		refetch: () => Promise.all([summary.refetch(), users.refetch()]),
+	};
 }

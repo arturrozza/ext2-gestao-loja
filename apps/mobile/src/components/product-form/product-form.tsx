@@ -48,7 +48,7 @@ function BarcodeField({
 				onPress={withHaptic(hapticTap, () => setScanning(true))}
 				accessibilityRole="button"
 				accessibilityLabel="Ler código de barras com a câmera"
-				className="mt-7 h-12 w-12 items-center justify-center rounded-[8px] bg-card active:bg-accent"
+				className="mt-7 h-12 w-12 items-center justify-center rounded-[8px] bg-field active:bg-accent"
 			>
 				<Icon as={BarcodeIcon} size={20} className="text-foreground/70" />
 			</Pressable>

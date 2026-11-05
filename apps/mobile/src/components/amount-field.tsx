@@ -1,4 +1,5 @@
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { DoneTextInput } from "@/components/done-text-input";
 import { Text } from "@/components/ui/text";
 import { hapticSelect, withHaptic } from "@/lib/haptics";
 import { THEME } from "@/lib/theme";
@@ -35,14 +36,14 @@ export function AmountField({
 		<View className="gap-2">
 			<View
 				className={cn(
-					"h-12 flex-row items-center rounded-[8px] border border-transparent bg-card pr-1 pl-4",
+					"h-12 flex-row items-center rounded-[8px] border border-transparent bg-field pr-1 pl-4",
 					error && "border-destructive",
 				)}
 			>
 				{mode === "amount" ? (
 					<Text className="pr-1.5 text-base text-muted-foreground">R$</Text>
 				) : null}
-				<TextInput
+				<DoneTextInput
 					value={value}
 					onChangeText={onChangeText}
 					keyboardType="decimal-pad"
@@ -54,7 +55,7 @@ export function AmountField({
 				{mode === "percent" ? (
 					<Text className="pr-3 text-base text-muted-foreground">%</Text>
 				) : null}
-				<View className="flex-row rounded-full bg-background p-1">
+				<View className="flex-row rounded-full bg-field-raised p-1">
 					{MODES.map((option) => {
 						const on = option.value === mode;
 						return (

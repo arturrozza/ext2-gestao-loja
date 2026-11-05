@@ -19,6 +19,11 @@ const SHEET_SURFACES = vars({
 	"--background": "0 0% 97.5%",
 	"--card": "0 0% 100%",
 });
+/** Gap between the top of the screen and the sheet, where the previous screen shows. */
+export function sheetTop(insetTop: number) {
+	return insetTop + 10;
+}
+
 /** Position of the dragged sheet and its gesture. */
 function useSheetDrag(onClose: () => void) {
 	const y = useSharedValue(0);
@@ -45,7 +50,7 @@ export function SheetFrame({
 	const insets = useSafeAreaInsets();
 	const drag = useSheetDrag(onClose ?? (() => leaveScreen(router)));
 	return (
-		<View className="flex-1" style={{ paddingTop: insets.top + 10 }}>
+		<View className="flex-1" style={{ paddingTop: sheetTop(insets.top) }}>
 			<Animated.View
 				style={[styles.fill, styles.lift, drag.style]}
 				onLayout={(event) => {

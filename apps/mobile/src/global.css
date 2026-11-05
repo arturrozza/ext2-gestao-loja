@@ -10,6 +10,10 @@
 		--foreground: 0 0% 10%;
 		--card: 0 0% 97.5%;
 		--card-foreground: 0 0% 10%;
+		/* Fill of form controls (inputs, pickers, steppers, chips, outline buttons) and what sits inside them. Never
+		   swapped by a sheet: controls always sit on white, and 95.5% reads on it without a card around them. */
+		--field: 0 0% 95.5%;
+		--field-raised: 0 0% 100%;
 		--popover: 0 0% 100%;
 		--popover-foreground: 0 0% 10%;
 		--primary: 20.5 90.2% 48.2%;

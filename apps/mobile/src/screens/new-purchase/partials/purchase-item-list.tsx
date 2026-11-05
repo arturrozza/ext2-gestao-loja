@@ -24,7 +24,7 @@ export function PurchaseItemList({
 	onAdd: () => void;
 }) {
 	return (
-		<View className="gap-3">
+		<View className="gap-4">
 			<Text className="px-1 font-sans-semibold text-base">Produtos</Text>
 			{items.map((item, index) => (
 				<PurchaseItemCard
@@ -54,7 +54,7 @@ export function PurchaseItemList({
 			{errors.items ? (
 				<Text className="px-1 text-destructive text-sm">{errors.items}</Text>
 			) : null}
-			<Button variant="outline" className="bg-background" onPress={onAdd}>
+			<Button variant="outline" onPress={onAdd}>
 				<Icon as={PlusIcon} size={16} />
 				<Text>Adicionar produtos</Text>
 			</Button>

@@ -6,6 +6,8 @@ export const THEME = {
 	foreground: "hsl(0 0% 10%)",
 	card: "hsl(0 0% 97.5%)",
 	cardForeground: "hsl(0 0% 10%)",
+	field: "hsl(0 0% 95.5%)",
+	fieldRaised: "hsl(0 0% 100%)",
 	popover: "hsl(0 0% 100%)",
 	popoverForeground: "hsl(0 0% 10%)",
 	primary: "hsl(20.5 90.2% 48.2%)",

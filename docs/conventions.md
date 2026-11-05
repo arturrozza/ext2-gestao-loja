@@ -79,7 +79,11 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   `src/lib/theme.ts` espelha as cores para APIs sem `className`; mudou um token no CSS, mude lá também.
   Use as classes semânticas, nunca cores soltas como `text-red-600`:
   - `bg-background`: fundo da tela (branco).
-  - `bg-card`: superfície cinza clara preenchida (inputs, chips, tiles, blocos de total, botões secundários).
+  - `bg-card`: superfície cinza clara preenchida (tiles, blocos de total).
+  - `bg-field`: preenchimento dos controles de formulário (inputs, seletores, campo de data, controle de quantidade,
+    chips, busca e filtros sobre branco, botão `outline`), cinza um pouco mais forte (95,5%) para ler sobre o branco
+    sem card em volta. `bg-field-raised` (branco) é o que fica dentro deles (botões − e +, alternância R$/%). A folha
+    não troca esses dois.
   - `bg-primary`: laranja (`#EA580C`), para a ação principal e a seleção.
   - `bg-secondary`: preto. **Não use em cards ou blocos** (o mantenedor vetou card preto); só em texto forte ou no
     véu de fundo (`BACKDROP`).
@@ -88,8 +92,8 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   - `text-success`: lucro positivo, nas linhas pequenas das listas e nos números grandes de lucro.
 - **Sem sombras**, com uma exceção: folhas e gavetas têm uma sombra bem suave no topo (`SHEET_SHADOW`), para se
   descolarem da tela de trás. A profundidade vem da cor: card branco sobre fundo cinza claro (`tone="muted"`, o padrão do
-  `ScreenLayout`), sem borda. Campos e chips dentro de card são cinza; chips e busca direto na página são brancos
-  (`surface="page"`).
+  `ScreenLayout`), sem borda. Campos e chips são sempre cinza (`bg-field`) sobre branco; chips e busca direto na
+  página cinza são brancos (`surface="page"`; sobre branco, `surface="field"`).
 - **Nada de card preto nem card laranja cheio.** Laranja só em detalhes: variação, link, badge de ação, ícone de
   destaque, botão principal.
 - Ícones Phosphor em `bold` por padrão (`regular` fica fino demais); `fill` na aba ativa.
@@ -192,10 +196,20 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
 - **Estados:** toda tela trata carregando, erro com "Tentar de novo" e vazio (`QueryView`, `ScreenQuery`,
   `useInfiniteList`, `EmptyState`).
 - Formulários: `FormScreen` (folha + campos + rodapé com o botão), `FormField` (label + input + erro), `FormSection`
-  (card com título), `SelectField` (escolha única), `CollapsibleSection` (o que costuma ficar no padrão, como custos e
-  desconto, recolhido), `DiscardGuard` (pergunta antes de sair com coisa preenchida) e `FormFooter` (quando o rodapé tem resumo). O estado fica no
+  (grupo de campos com um titulozinho opcional), `SelectField` (escolha única), `CollapsibleSection` (o que costuma
+  ficar no padrão, como custos e desconto, recolhido numa linha com fio embaixo), `DiscardGuard` (pergunta antes de
+  sair com coisa preenchida) e `FormFooter` (quando o rodapé tem resumo). O estado fica no
   `useZodForm`: a validação é com Zod e o erro aparece embaixo do campo só depois da primeira tentativa de envio. Erro da
   API sobre um campo vai para o campo; os outros, para o rodapé.
+- **Teclado:** o rodapé do formulário (botão de salvar) não sobe com o teclado; fica embaixo, coberto por ele, e só a área
+  que rola abre espaço e leva o campo focado para cima do teclado (`ScreenLayout`: no iOS o próprio `ScrollView`, com
+  `automaticallyAdjustKeyboardInsets`; no Android, `KeyboardAvoidingView` só em volta da área que rola). No iOS todo
+  campo de texto tem uma barra com "OK" em cima do teclado para fechá-lo (`DoneTextInput`: todo campo de texto usa
+  ele, nunca um `TextInput` puro; `Input`, `AmountField`, `QuantityStepper` e `SearchField` já usam). Gavetas (`BottomSheet`) continuam subindo com o teclado.
+- **Nada de card em volta de campos** (o mantenedor vetou card dentro de card): os campos ficam direto na folha branca.
+  Para separar grupos, use o título da `FormSection`; para separar itens repetidos (produtos de uma venda ou compra,
+  custos), um fio (`border-border border-b`). Blocos só de leitura (resultado da venda, custo atual, prévia do ajuste)
+  continuam como bloco cinza.
 - Ícones: [Phosphor](https://phosphoricons.com) pelo `Icon`, importando cada ícone pelo caminho dele
   (`phosphor-react-native/src/icons/<Nome>`), nunca pelo pacote inteiro, que traz os 1500 ícones para o app. Peso
   `bold` no geral (o `regular` fica fino demais), `regular` dentro das opções de um seletor e `fill` na aba ativa.

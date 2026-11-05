@@ -151,9 +151,7 @@ export function PersonPicker({
 					showsVerticalScrollIndicator={false}
 					contentContainerClassName="px-5 pb-10"
 				>
-					<View className="gap-4 rounded-2xl bg-background p-4">
-						{renderNew(() => setAdding(false))}
-					</View>
+					<View className="gap-4">{renderNew(() => setAdding(false))}</View>
 				</ScrollView>
 			</SheetModal>
 		</SheetModal>

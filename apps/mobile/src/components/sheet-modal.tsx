@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Modal, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SheetFrame } from "@/components/sheet-frame";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SheetFrame, sheetTop } from "@/components/sheet-frame";
 import { SheetHeader } from "@/components/sheet-header";
 
 /**
@@ -21,6 +22,7 @@ export function SheetModal({
 	headerLeft?: ReactNode;
 	children: ReactNode;
 }) {
+	const insets = useSafeAreaInsets();
 	return (
 		<Modal
 			visible={open}
@@ -33,7 +35,12 @@ export function SheetModal({
 			{/* A modal is its own window: gestures need their own root there. */}
 			<GestureHandlerRootView style={styles.root}>
 				<SheetFrame onClose={onClose}>
-					<KeyboardAvoidingView behavior="padding" className="flex-1 bg-card">
+					{/* The view measures itself from the sheet, below the gap on top: the offset puts that gap back. */}
+					<KeyboardAvoidingView
+						behavior="padding"
+						keyboardVerticalOffset={sheetTop(insets.top)}
+						className="flex-1 bg-card"
+					>
 						<SheetHeader title={title} onClose={onClose} left={headerLeft} />
 						{children}
 					</KeyboardAvoidingView>

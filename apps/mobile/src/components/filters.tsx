@@ -110,7 +110,7 @@ function FilterChips({
 						accessibilityState={{ checked: on }}
 						className={cn(
 							"h-9 justify-center rounded-full px-3.5",
-							on ? "bg-primary" : "bg-card active:bg-accent",
+							on ? "bg-primary" : "bg-field active:bg-accent",
 						)}
 					>
 						<Text

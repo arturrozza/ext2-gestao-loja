@@ -169,11 +169,11 @@ export function DetailSkeleton() {
 	);
 }
 
-/** A form loading its data: labels and fields in a white card. */
+/** A form loading its data: labels and fields straight on the page, no card. */
 export function FormSkeleton() {
 	return (
 		<Pulse>
-			<View className="gap-4 rounded-2xl bg-background p-4">
+			<View className="gap-4">
 				{[0, 1, 2, 3].map((index) => (
 					<View key={index} className="gap-2">
 						<Bone

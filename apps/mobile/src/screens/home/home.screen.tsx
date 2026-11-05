@@ -7,8 +7,7 @@ import { Text } from "@/components/ui/text";
 import { hapticTap } from "@/lib/haptics";
 import { initials } from "@/lib/masks";
 import { useSession } from "@/queries/auth/use-auth";
-import { useHomeSummary } from "@/queries/home/use-home";
-import { homeSections } from "./partials/home-shortcuts";
+import { useHomeShortcuts } from "./partials/home-shortcuts";
 import { ProfitHighlight } from "./partials/profit-highlight";
 import { ShortcutCarousel } from "./partials/shortcut-carousel";
 
@@ -53,25 +52,25 @@ function HomeGreeting() {
  * A store that just started sees a zeroed summary and "nothing yet" subtitles.
  */
 export function HomeScreen() {
-	const query = useHomeSummary();
+	const home = useHomeShortcuts();
 
 	return (
 		<ScreenLayout
 			bottom="tabs"
 			tone="muted"
 			compactTitle="Início"
-			onRefresh={() => query.refetch()}
+			onRefresh={home.refetch}
 			contentClassName="gap-7 pt-3"
 		>
 			<HomeGreeting />
-			<QueryView query={query} skeleton={<SummarySkeleton />}>
+			<QueryView query={home.summary} skeleton={<SummarySkeleton />}>
 				{(summary) => <ProfitHighlight summary={summary} />}
 			</QueryView>
-			{homeSections(query.data).map((section) => (
+			{home.sections.map((section) => (
 				<ShortcutCarousel
 					key={section.title}
 					section={section}
-					failed={query.isError}
+					failed={home.failed}
 				/>
 			))}
 		</ScreenLayout>
