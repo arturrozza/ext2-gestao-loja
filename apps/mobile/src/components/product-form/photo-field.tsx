@@ -1,9 +1,11 @@
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { CameraIcon } from "phosphor-react-native/src/icons/Camera";
 import { ImageIcon } from "phosphor-react-native/src/icons/Image";
 import { TrashIcon } from "phosphor-react-native/src/icons/Trash";
 import { Alert, Linking, View } from "react-native";
 import { ProductThumb } from "@/components/product-thumb";
+import { showToast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -12,8 +14,31 @@ const OPTIONS: ImagePicker.ImagePickerOptions = {
 	mediaTypes: ["images"],
 	allowsEditing: true,
 	aspect: [1, 1],
-	quality: 0.7,
+	// Compression happens once, in shrink().
+	quality: 1,
 };
+
+/** Longest side (px) of a saved product photo: plenty for the app, a fraction of a camera photo's size. */
+const MAX_SIDE = 1080;
+
+/** Shrinks the cropped square to MAX_SIDE and saves it as a compressed JPEG, before it is uploaded. Never upscales. */
+async function shrink(uri: string) {
+	const image = await ImageManipulator.manipulate(uri, {
+		maxWidth: MAX_SIDE,
+		maxHeight: MAX_SIDE,
+	}).renderAsync();
+	const saved = await image.saveAsync({
+		format: SaveFormat.JPEG,
+		compress: 0.7,
+	});
+	return saved.uri;
+}
+
+/** The picked photo, ready to save, or null when the user cancelled. */
+async function toPhoto(result: ImagePicker.ImagePickerResult) {
+	const uri = result.canceled ? undefined : result.assets[0]?.uri;
+	return uri ? shrink(uri) : null;
+}
 
 /** Camera denied: the user can only allow it in the system settings. */
 function explainCameraDenied() {
@@ -33,13 +58,11 @@ async function takePhoto() {
 		explainCameraDenied();
 		return null;
 	}
-	const result = await ImagePicker.launchCameraAsync(OPTIONS);
-	return result.canceled ? null : (result.assets[0]?.uri ?? null);
+	return toPhoto(await ImagePicker.launchCameraAsync(OPTIONS));
 }
 
 async function pickPhoto() {
-	const result = await ImagePicker.launchImageLibraryAsync(OPTIONS);
-	return result.canceled ? null : (result.assets[0]?.uri ?? null);
+	return toPhoto(await ImagePicker.launchImageLibraryAsync(OPTIONS));
 }
 
 /** Take or pick a square photo of the product (produtos.md). Without one, an icon shows in its place. */
@@ -51,8 +74,12 @@ export function PhotoField({
 	onChange: (uri: string | null) => void;
 }) {
 	const set = (pick: () => Promise<string | null>) => async () => {
-		const picked = await pick();
-		if (picked) onChange(picked);
+		try {
+			const picked = await pick();
+			if (picked) onChange(picked);
+		} catch {
+			showToast("Não foi possível usar essa foto. Tente outra.");
+		}
 	};
 
 	return (

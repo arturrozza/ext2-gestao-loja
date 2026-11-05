@@ -12,6 +12,15 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-05: Libs nativas do MVP instaladas de uma vez, push incluído
+
+**Decisão:** todas as libs nativas que o MVP usa entram no binário 1.2.0, incluindo o `expo-notifications`, mesmo com
+push fora do MVP. Fotos de produto são reduzidas no aparelho (lado máximo de 1080 px, JPEG) antes do upload. Não entram
+lib de gráfico (os gráficos usam `View` e `react-native-svg`) nem de compartilhar (exportação está fora do MVP).
+**Por quê:** cada lib nativa exige um binário novo, e reinstalar o app no aparelho do cliente custa mais que uma
+atualização OTA. Push vai existir no futuro, então a lib já vai no binário; ligar o envio (FCM, chave da Apple, pedir
+permissão) fica para a MUN-7.
+
 ## 2026-11-05: Formulários sem card em volta dos campos, e o teclado não levanta o rodapé
 
 **Decisão:** os campos dos formulários ficam direto na folha branca, sem card em volta; grupos se separam por um

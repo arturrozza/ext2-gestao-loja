@@ -25,6 +25,8 @@ juntas.
 | expo-linear-gradient | ~58 | mobile: degradês nas bordas da rolagem | https://docs.expo.dev/versions/v58.0.0/sdk/linear-gradient/ |
 | expo-camera | ~58.0 | mobile: leitor de código de barras (`BarcodeScanner`) | https://docs.expo.dev/versions/v58.0.0/sdk/camera/ |
 | expo-image-picker | ~58.0 | mobile: foto do produto (tirar ou escolher) | https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/ |
+| expo-image-manipulator | ~58.0 | mobile: reduz a foto do produto antes do upload (`PhotoField`) | https://docs.expo.dev/versions/v58.0.0/sdk/imagemanipulator/ |
+| expo-notifications | ~58.1 | mobile: instalada para push, ainda sem uso (MUN-7) | https://docs.expo.dev/versions/v58.0.0/sdk/notifications/ |
 | expo-secure-store | ~58.0 | mobile: token da sessão no Keychain/Keystore (`src/lib/session-token.ts`) | https://docs.expo.dev/versions/v58.0.0/sdk/securestore/ |
 | @react-native-community/datetimepicker | 9.2.1 | mobile: calendário dos campos de data (`DateField`) | https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/ |
 | react-native-gesture-handler | ~3.3 | mobile: arrastar gavetas e folhas para fechar (`useDragToClose`) | https://docs.swmansion.com/react-native-gesture-handler/ |
@@ -43,6 +45,17 @@ juntas.
 Fica em `package.json` → `workspaces.catalog`, e os workspaces referenciam com `"catalog:"`. Hoje estão lá `zod`,
 `elysia`, `@elysia/eden`, `typescript`, `@types/bun` e os peers do Elysia (`@sinclair/typebox`, `file-type`,
 `openapi-types`). O Elysia precisa estar no catalog porque o Eden exige **a mesma versão** no server e no client.
+
+## Libs nativas
+
+Lib com código nativo só chega ao aparelho num **binário novo**: atualização OTA (EAS Update) leva só JS e assets. Por
+isso as libs nativas do MVP entraram todas de uma vez, na versão 1.2.0 do app (MUN-23), e as features seguintes saem
+por OTA. O que está instalado é o que está nas `dependencies` de `apps/mobile/package.json`.
+
+Antes de adicionar uma lib, veja se dá para resolver só com JS ou com uma lib que já está instalada. Se ela for nativa
+(tem config plugin ou não roda no Expo Go), ela exige subir o `version` do app e gerar binários novos, como explica
+[`architecture.md`](architecture.md#mobile-eas-build--eas-update) (`runtimeVersion`). O mesmo vale para permissão nova
+ou mudança em plugin do `app.json`.
 
 ## Restrições conhecidas
 
