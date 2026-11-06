@@ -66,6 +66,14 @@ export default defineRailway(() => {
 			SEED_USER_NAME: preserve(),
 			SEED_USER_EMAIL: preserve(),
 			SEED_USER_PASSWORD: preserve(),
+			// Product photos (Cloudflare R2). Only the bucket name lives here; the S3 endpoint, the bucket's token and its
+			// public URL are `preserve()` like the other secrets. Set those four before the release that adds this block:
+			// with only R2_BUCKET the group is partial and the server refuses to boot (src/env.ts).
+			R2_ENDPOINT: preserve(),
+			R2_ACCESS_KEY_ID: preserve(),
+			R2_SECRET_ACCESS_KEY: preserve(),
+			R2_BUCKET: "mundomadam-photos-prod",
+			PHOTOS_PUBLIC_URL: preserve(),
 		},
 	});
 

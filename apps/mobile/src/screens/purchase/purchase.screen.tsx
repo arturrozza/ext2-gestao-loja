@@ -91,7 +91,7 @@ export function PurchaseScreen() {
 								href={`/products/${item.productId}`}
 								label={`${item.productName}, ${times(item.quantity)}`}
 								leading={
-									<ProductThumb uri={item.photoUri} name={item.productName} />
+									<ProductThumb uri={item.photoUrl} name={item.productName} />
 								}
 								title={item.productName}
 								subtitle={itemLine(item)}

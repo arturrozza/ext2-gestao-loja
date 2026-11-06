@@ -11,10 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
 import { useZodForm } from "@/lib/use-zod-form";
-import type { Product, ProductInput } from "@/queries/products/products.types";
+import type { Product, ProductSave } from "@/queries/products/products.types";
 import { CategoryField } from "./category-field";
+import { PhotoField } from "./photo-field";
 import {
 	type ProductFormValues,
+	photoChange,
 	productFormSchema,
 } from "./product-form.schema";
 
@@ -61,8 +63,8 @@ function BarcodeField({
 }
 
 /**
- * Product create/edit form (produtos.md). Stock and cost aren't here: they only come in through purchases. The photo
- * field comes back with photos (MUN-11).
+ * Product create/edit form (produtos.md). Stock and cost aren't here: they only come in through purchases. A new photo
+ * is sent when the form is saved, right before the product.
  * `onSaved` runs after the mutation succeeds (the screen decides where to go).
  */
 export function ProductForm({
@@ -75,17 +77,19 @@ export function ProductForm({
 	title: string;
 	submitLabel: string;
 	initial: ProductFormValues;
-	mutation: UseMutationResult<Product, Error, ProductInput>;
+	mutation: UseMutationResult<Product, Error, ProductSave>;
 	onSaved: (product: Product) => void;
 }) {
 	const form = useZodForm(productFormSchema, initial);
+	// The photo as the form opened: `initial` is rebuilt when the product refetches, the form's values aren't.
+	const [savedPhoto] = useState(initial.photoUri);
 	const { values, errors, set } = form;
-	const submit = form.handleSubmit((data) => {
+	const submit = form.handleSubmit(({ photoUri, ...data }) => {
 		if (!mutation.isPending)
-			mutation.mutate(data, {
-				onSuccess: onSaved,
-				onError: form.applyApiError,
-			});
+			mutation.mutate(
+				{ ...data, photo: photoChange(savedPhoto, photoUri) },
+				{ onSuccess: onSaved, onError: form.applyApiError },
+			);
 	});
 
 	return (
@@ -97,6 +101,10 @@ export function ProductForm({
 			onSubmit={submit}
 		>
 			<FormSection>
+				<PhotoField
+					uri={values.photoUri}
+					onChange={(uri) => set("photoUri", uri)}
+				/>
 				<FormField
 					label="Nome"
 					value={values.name}

@@ -66,8 +66,8 @@ async function pickPhoto() {
 }
 
 /**
- * Take or pick a square photo of the product (produtos.md). Without one, an icon shows in its place. Not in the form
- * until photos are saved by the API (MUN-11).
+ * Take or pick a square photo of the product (produtos.md). Without one, an icon shows in its place. The photo is only
+ * sent when the form is saved; a photo the API refuses shows in the form's footer (its field isn't one of the form's).
  */
 export function PhotoField({
 	uri,

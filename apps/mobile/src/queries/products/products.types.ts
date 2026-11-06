@@ -14,6 +14,8 @@ export type Product = {
 	minStock: number | null;
 	location: string | null;
 	hasExpiry: boolean;
+	/** Public address of the photo; null without one (the thumb shows the initials). */
+	photoUrl: string | null;
 	archived: boolean;
 };
 
@@ -38,6 +40,16 @@ export type ProductInput = {
 	minStock: number | null;
 	location: string | null;
 	hasExpiry: boolean;
+	/** A key `POST /products/photos` gave back; `null` removes the photo; left out keeps it. */
+	photoKey?: string | null;
+};
+
+/** The photo part of a product save: left out keeps it, `null` removes it, `{ uri }` is a new local photo to send. */
+export type PhotoChange = { uri: string } | null | undefined;
+
+/** What the product form saves: the API input, with the photo still a local file until it is sent. */
+export type ProductSave = Omit<ProductInput, "photoKey"> & {
+	photo: PhotoChange;
 };
 
 /** Store category: just a name (produtos.md). Archived ones keep their products but can't be picked. */
@@ -66,7 +78,7 @@ export type StockFilter =
 export type ItemPreview = {
 	productId: string;
 	name: string;
-	photoUri: string | null;
+	photoUrl: string | null;
 };
 
 /** The product list with stock filters (the picker of sales and purchases). */
@@ -87,9 +99,8 @@ export type StockFlags = {
 	expired: boolean;
 };
 
-/** A product with its photo (MUN-11) and stock (MUN-12/13). */
+/** A product with its stock (MUN-12/13). */
 export type ProductListItem = Product & {
-	photoUri: string | null;
 	/** Units in stock, expired included until they're discarded. */
 	stock: number;
 	/** Units that can be sold (not expired). */

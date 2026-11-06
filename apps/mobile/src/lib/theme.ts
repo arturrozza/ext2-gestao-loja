@@ -50,6 +50,9 @@ export const HEADER_BORDER = "rgba(0, 0, 0, 0.16)";
 /** Dim layer behind sheets and dialogs (the black token at 40%). */
 export const BACKDROP = "rgba(28, 28, 28, 0.4)";
 
+/** Behind a photo shown over the whole screen: black, like the phone's own gallery, so its colors read true. */
+export const PHOTO_BACKDROP = "#000";
+
 /**
  * The one shadow in the app: sheets and drawers lift off the screen behind them, barely. Everything else gets depth
  * from color.

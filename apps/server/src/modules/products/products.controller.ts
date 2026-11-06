@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { ErrorModel } from "../../lib/http-error";
-import { authMacro } from "../auth/auth.macro";
+import { authMacro, tokenBeforeBody } from "../auth/auth.macro";
 import { ProductsModel } from "./products.model";
 import { ProductsService } from "./products.service";
 
@@ -13,6 +13,7 @@ const byId = {
 
 export const productsController = new Elysia({ prefix: "/products" })
 	.use(authMacro)
+	.use(tokenBeforeBody("POST", "/products/photos"))
 	.get(
 		"/",
 		({ session, query }) => ProductsService.list(session.store.id, query),
@@ -30,8 +31,23 @@ export const productsController = new Elysia({ prefix: "/products" })
 			401: ErrorModel,
 			409: ErrorModel,
 			422: ErrorModel,
+			503: ErrorModel,
 		},
 	})
+	.post(
+		"/photos",
+		({ session, body }) => ProductsService.uploadPhoto(session, body.photo),
+		{
+			auth: true,
+			body: ProductsModel.photoUpload,
+			response: {
+				200: ProductsModel.uploadedPhoto,
+				401: ErrorModel,
+				422: ErrorModel,
+				503: ErrorModel,
+			},
+		},
+	)
 	.get(
 		"/:id",
 		({ session, params }) => ProductsService.get(session.store.id, params.id),
@@ -45,7 +61,7 @@ export const productsController = new Elysia({ prefix: "/products" })
 			auth: true,
 			params: ProductsModel.params,
 			body: ProductsModel.body,
-			response: { ...byId, 409: ErrorModel },
+			response: { ...byId, 409: ErrorModel, 503: ErrorModel },
 		},
 	)
 	.post(

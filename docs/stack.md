@@ -26,10 +26,12 @@ juntas.
 | expo-camera | ~58.0 | mobile: leitor de código de barras (`BarcodeScanner`) | https://docs.expo.dev/versions/v58.0.0/sdk/camera/ |
 | expo-image-picker | ~58.0 | mobile: foto do produto (tirar ou escolher) | https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/ |
 | expo-image-manipulator | ~58.0 | mobile: reduz a foto do produto antes do upload (`PhotoField`) | https://docs.expo.dev/versions/v58.0.0/sdk/imagemanipulator/ |
+| expo-file-system | ~58.0 | mobile: envia a foto do produto para a API (`uploadFile` em `src/lib/api.ts`) | https://docs.expo.dev/versions/v58.0.0/sdk/filesystem/ |
+| Cloudflare R2 | — (API S3, pelo `S3Client` do Bun) | server: fotos dos produtos (`src/lib/photo-storage.ts`) | https://developers.cloudflare.com/r2/ |
 | expo-notifications | ~58.1 | mobile: instalada para push, ainda sem uso (MUN-7) | https://docs.expo.dev/versions/v58.0.0/sdk/notifications/ |
 | expo-secure-store | ~58.0 | mobile: token da sessão no Keychain/Keystore (`src/lib/session-token.ts`) | https://docs.expo.dev/versions/v58.0.0/sdk/securestore/ |
 | @react-native-community/datetimepicker | 9.2.1 | mobile: calendário dos campos de data (`DateField`) | https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/ |
-| react-native-gesture-handler | ~3.3 | mobile: arrastar gavetas e folhas para fechar (`useDragToClose`) | https://docs.swmansion.com/react-native-gesture-handler/ |
+| react-native-gesture-handler | ~3.3 | mobile: arrastar gavetas e folhas para fechar (`useDragToClose`) e zoom da foto (`PhotoViewer`) | https://docs.swmansion.com/react-native-gesture-handler/ |
 | Manrope | `@expo-google-fonts/manrope` ^0.4 | mobile: fonte do app | https://docs.expo.dev/develop/user-interface/fonts/ |
 | EAS (Build + Update) | `eas-cli` >= 27.4.1 (via `bunx eas-cli`), `expo-updates` ~58 | mobile: APK/iOS ad hoc e updates OTA (`apps/mobile/eas.json`) | https://docs.expo.dev/eas-update/introduction/ |
 | TanStack Query | ^5 | mobile | https://tanstack.com/query/latest/docs/framework/react/react-native |
@@ -50,7 +52,9 @@ Fica em `package.json` → `workspaces.catalog`, e os workspaces referenciam com
 
 Lib com código nativo só chega ao aparelho num **binário novo**: atualização OTA (EAS Update) leva só JS e assets. Por
 isso as libs nativas do MVP entraram todas de uma vez, na versão 1.2.0 do app (MUN-23), e as features seguintes saem
-por OTA. O que está instalado é o que está nas `dependencies` de `apps/mobile/package.json`.
+por OTA. O que está instalado é o que está nas `dependencies` de `apps/mobile/package.json`. O `expo-file-system` virou
+dependência direta na MUN-11, mas já estava no binário 1.2.0 como dependência do `expo` (mesma versão), então não pediu
+binário novo.
 
 Antes de adicionar uma lib, veja se dá para resolver só com JS ou com uma lib que já está instalada. Se ela for nativa
 (tem config plugin ou não roda no Expo Go), ela exige subir o `version` do app e gerar binários novos, como explica
@@ -106,6 +110,16 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   pelo config plugin, para os nomes serem iguais em iOS, Android e web e funcionar no Expo Go.
 - **Componentes do Reusables são código nosso.** Ao rodar o `add` de novo (ou com `--overwrite`), refaça a troca de
   `font-<peso>` pelas famílias acima.
+
+- **Fotos pelo `r2.dev`.** A URL pública de desenvolvimento do R2 tem limite de taxa e não tem cache nem WAF; o
+  Cloudflare pede um domínio próprio para produção. Para trocar: um domínio no Cloudflare, **R2 → bucket → Settings →
+  Custom Domains**, e mudar `PHOTOS_PUBLIC_URL` na Railway. O banco guarda só a chave, então nada mais muda.
+- **Foto enviada pela API, não direto ao bucket.** O `presign` do Bun (1.4) só assina o `host`, não o `Content-Type`
+  nem o tamanho, então uma URL pré-assinada aceitaria qualquer arquivo. Se um dia o upload direto voltar, confira os
+  `X-Amz-SignedHeaders` da URL antes.
+- **`uploadFile` fora do Eden** (`apps/mobile/src/lib/api.ts`). O Eden só manda multipart quando o campo é um `Blob`,
+  e o `File` do `expo-file-system` não passa no `instanceof Blob`; o `Blob` do React Native não aceita bytes. O envio
+  usa o `File.upload` nativo do Expo, com o mesmo token e os mesmos `ApiError`. É a única chamada fora do `api`.
 
 ## Como atualizar
 

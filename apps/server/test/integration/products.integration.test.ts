@@ -1,9 +1,12 @@
 import { describe, expect, it } from "bun:test";
+import { and, eq } from "drizzle-orm";
+import { db } from "../../src/db";
 import { audited } from "../../src/db/audit";
-import { products } from "../../src/db/schema";
+import { auditLog, products } from "../../src/db/schema";
 import { MAX_CENTS } from "../../src/lib/money";
 import { PAGE_SIZE } from "../../src/lib/pagination";
 import { CategoriesService } from "../../src/modules/categories/categories.service";
+import { newPhotoKey } from "../../src/modules/products/products.photo";
 import { ProductsService } from "../../src/modules/products/products.service";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
@@ -12,8 +15,14 @@ import {
 	createProduct,
 	productBody,
 } from "../support/factories/catalog";
+import {
+	jpegBytes,
+	jpegFile,
+	useFakePhotoStorage,
+} from "../support/photo-storage";
 
 useTestDatabase();
+const bucket = useFakePhotoStorage();
 
 const names = (page: { items: { name: string }[] }) =>
 	page.items.map((item) => item.name);
@@ -376,5 +385,185 @@ describe("ProductsService.list", () => {
 		expect(first.items).toHaveLength(PAGE_SIZE);
 		expect(names(second)).toEqual([`P${PAGE_SIZE}`]);
 		expect(second.nextCursor).toBeNull();
+	});
+});
+
+describe("ProductsService photos", () => {
+	/** A photo the API already stored for the store (what `uploadPhoto` leaves behind). */
+	function stored(storeId: string) {
+		const key = newPhotoKey(storeId);
+		bucket.put(key);
+		return key;
+	}
+
+	it("stores a sent JPEG under a new key in the store's folder, as image/jpeg", async () => {
+		const { session } = await signedIn();
+		const bytes = jpegBytes(300);
+
+		const { key } = await ProductsService.uploadPhoto(session, jpegFile(bytes));
+
+		expect(key).toStartWith(`stores/${session.store.id}/products/`);
+		expect(bucket.objects.get(key)).toEqual({ bytes, type: "image/jpeg" });
+	});
+
+	it("stores nothing for a file that isn't a JPEG", async () => {
+		const { session } = await signedIn();
+		const png = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "x.jpg", {
+			type: "image/jpeg",
+		});
+
+		await expect(
+			ProductsService.uploadPhoto(session, png),
+		).rejects.toMatchObject({
+			code: 422,
+			response: { code: "photo_invalid", field: "photo" },
+		});
+		expect(bucket.objects.size).toBe(0);
+	});
+
+	it("saves a product with a stored photo and returns its public URL", async () => {
+		const { session } = await signedIn();
+		const key = stored(session.store.id);
+
+		const product = await ProductsService.create(
+			session,
+			productBody({ photoKey: key }),
+		);
+		const read = await ProductsService.get(session.store.id, product.id);
+
+		expect(product.photoUrl).toBe(`https://photos.test/${key}`);
+		expect(read.photoUrl).toBe(product.photoUrl);
+	});
+
+	it("keeps the photo when the edit leaves it out, swaps it for a new key and removes it with null", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const first = stored(storeId);
+		const second = stored(storeId);
+		const product = await createProduct(storeId, { photoKey: first });
+		const body = productBody();
+
+		const kept = await ProductsService.update(session, product.id, body);
+		const swapped = await ProductsService.update(session, product.id, {
+			...body,
+			photoKey: second,
+		});
+		const removed = await ProductsService.update(session, product.id, {
+			...body,
+			photoKey: null,
+		});
+
+		expect(kept.photoUrl).toBe(`https://photos.test/${first}`);
+		expect(swapped.photoUrl).toBe(`https://photos.test/${second}`);
+		expect(removed.photoUrl).toBeNull();
+	});
+
+	it("refuses a photo that was never stored or is another store's, and saves nothing", async () => {
+		const { session } = await signedIn();
+		const other = await signedIn();
+		const storeId = session.store.id;
+
+		await expect(
+			ProductsService.create(
+				session,
+				productBody({ photoKey: newPhotoKey(storeId) }),
+			),
+		).rejects.toMatchObject({
+			code: 422,
+			response: { code: "photo_not_found", field: "photoKey" },
+		});
+		await expect(
+			ProductsService.create(
+				session,
+				productBody({ photoKey: stored(other.session.store.id) }),
+			),
+		).rejects.toMatchObject({
+			code: 422,
+			response: { code: "photo_key_invalid", field: "photoKey" },
+		});
+		expect((await ProductsService.list(storeId, {})).total).toBe(0);
+	});
+
+	it("logs the photo change in the audit log, with the old key", async () => {
+		const { session } = await signedIn();
+		const first = stored(session.store.id);
+		const second = stored(session.store.id);
+		const product = await createProduct(session.store.id, { photoKey: first });
+
+		await ProductsService.update(session, product.id, {
+			...productBody(),
+			photoKey: second,
+		});
+
+		const [entry] = await db
+			.select()
+			.from(auditLog)
+			.where(
+				and(eq(auditLog.recordId, product.id), eq(auditLog.action, "update")),
+			);
+		expect(entry?.changedFields).toContain("photo_key");
+		expect(entry?.oldValues).toMatchObject({ photo_key: first });
+		expect(entry?.newValues).toMatchObject({ photo_key: second });
+	});
+
+	it("keeps the saved photo when an edit brings a bad one, or the bucket is down", async () => {
+		const { session } = await signedIn();
+		const key = stored(session.store.id);
+		const product = await createProduct(session.store.id, { photoKey: key });
+
+		await expect(
+			ProductsService.update(session, product.id, {
+				...productBody(),
+				photoKey: newPhotoKey(session.store.id),
+			}),
+		).rejects.toMatchObject({ response: { code: "photo_not_found" } });
+		bucket.failing(true);
+		await expect(
+			ProductsService.update(session, product.id, {
+				...productBody(),
+				photoKey: stored(session.store.id),
+			}),
+		).rejects.toMatchObject({ code: 503 });
+		bucket.failing(false);
+		const read = await ProductsService.get(session.store.id, product.id);
+		expect(read.photoUrl).toBe(`https://photos.test/${key}`);
+	});
+
+	it("answers for an unknown or archived product before looking at the photo", async () => {
+		const { session } = await signedIn();
+		const archived = await createProduct(session.store.id, { archived: true });
+		const body = productBody({ photoKey: newPhotoKey(session.store.id) });
+
+		await expect(
+			ProductsService.update(session, crypto.randomUUID(), body),
+		).rejects.toMatchObject({ code: 404 });
+		await expect(
+			ProductsService.update(session, archived.id, body),
+		).rejects.toMatchObject({ response: { code: "product_archived" } });
+	});
+
+	it("answers 503 for a photo while photos are off, hides saved photos, and still saves products without one", async () => {
+		const { session } = await signedIn();
+		const withPhoto = await createProduct(session.store.id, {
+			photoKey: stored(session.store.id),
+		});
+		bucket.off();
+
+		await expect(
+			ProductsService.uploadPhoto(session, jpegFile()),
+		).rejects.toMatchObject({
+			code: 503,
+			response: { code: "photos_unavailable" },
+		});
+		await expect(
+			ProductsService.create(
+				session,
+				productBody({ photoKey: newPhotoKey(session.store.id) }),
+			),
+		).rejects.toMatchObject({ code: 503 });
+		const plain = await ProductsService.create(session, productBody());
+		const hidden = await ProductsService.get(session.store.id, withPhoto.id);
+		expect(plain.photoUrl).toBeNull();
+		expect(hidden.photoUrl).toBeNull();
 	});
 });

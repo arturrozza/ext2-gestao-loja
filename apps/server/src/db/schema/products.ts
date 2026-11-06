@@ -34,6 +34,8 @@ export const products = snakeCase.table(
 		minStock: integer(),
 		location: text(),
 		hasExpiry: boolean().notNull().default(false),
+		/** Object key of the photo in the photo bucket (`stores/<store>/products/<uuid>.jpg`). Null = no photo. */
+		photoKey: text(),
 		/** Name and codes lowercased and without accents (`normalizeSearch`): what the search matches. */
 		searchText: text().notNull(),
 		archivedAt: timestamp({ withTimezone: true }),

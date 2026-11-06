@@ -16,9 +16,17 @@ import { archivedAtValue, insertedRow } from "../../db/rows";
 import { categories, products } from "../../db/schema";
 import { guardUnique, httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
+import { photoStorage } from "../../lib/photo-storage";
 import { searchPatterns } from "../../lib/search";
 import type { AuthSession } from "../auth/auth.model";
 import type { ProductsModel } from "./products.model";
+import {
+	assertJpeg,
+	assertStorePhotoKey,
+	newPhotoKey,
+	PHOTO_CONTENT_TYPE,
+	photoNotFound,
+} from "./products.photo";
 import { normalizeProduct, type ProductValues } from "./products.rules";
 
 const columns = {
@@ -32,18 +40,42 @@ const columns = {
 	minStock: products.minStock,
 	location: products.location,
 	hasExpiry: products.hasExpiry,
+	photoKey: products.photoKey,
 	archivedAt: products.archivedAt,
 };
 
-type ProductRow = Omit<ProductsModel["product"], "archived"> & {
+type ProductRow = Omit<ProductsModel["product"], "archived" | "photoUrl"> & {
+	photoKey: string | null;
 	archivedAt: Date | null;
 };
 
 function toProduct({
 	archivedAt,
+	photoKey,
 	...row
 }: ProductRow): ProductsModel["product"] {
-	return { ...row, archived: archivedAt !== null };
+	return {
+		...row,
+		// While photos are off the storage gives no address, so the app shows the initials instead of a broken image.
+		photoUrl: photoKey ? photoStorage().publicUrl(photoKey) : null,
+		archived: archivedAt !== null,
+	};
+}
+
+/**
+ * The photo columns of a save: left out keeps the current photo, `null` removes it, and a key must be one the API
+ * stored for this store. Checked before the transaction: it asks the bucket, and no row is locked while it waits.
+ */
+async function checkedPhotoColumns(
+	storeId: string,
+	photoKey: string | null | undefined,
+): Promise<{ photoKey?: string | null }> {
+	if (photoKey === undefined) return {};
+	if (photoKey !== null) {
+		assertStorePhotoKey(storeId, photoKey);
+		if (!(await photoStorage().exists(photoKey))) throw photoNotFound();
+	}
+	return { photoKey };
 }
 
 const notFound = () =>
@@ -162,16 +194,20 @@ async function codeTaken(
 	return undefined;
 }
 
-/** Locks the product for an edit: it must be in the store and active (archived products aren't edited, produtos.md). */
-async function lockEditable(tx: Transaction, storeId: string, id: string) {
-	const [current] = await tx
+function selectEditable(executor: Executor, storeId: string, id: string) {
+	return executor
 		.select({
 			categoryId: products.categoryId,
 			archivedAt: products.archivedAt,
 		})
 		.from(products)
-		.where(and(eq(products.id, id), eq(products.storeId, storeId)))
-		.for("update");
+		.where(and(eq(products.id, id), eq(products.storeId, storeId)));
+}
+
+/** A product can be edited when it is in the store and active (archived products aren't edited, produtos.md). */
+function assertEditable<T extends { archivedAt: Date | null }>(
+	current: T | undefined,
+): T {
 	if (!current) throw notFound();
 	if (current.archivedAt) {
 		throw httpError(409, {
@@ -180,6 +216,12 @@ async function lockEditable(tx: Transaction, storeId: string, id: string) {
 		});
 	}
 	return current;
+}
+
+/** Locks the product for an edit, after checking it can be edited. */
+async function lockEditable(tx: Transaction, storeId: string, id: string) {
+	const [current] = await selectEditable(tx, storeId, id).for("update");
+	return assertEditable(current);
 }
 
 /**
@@ -212,12 +254,32 @@ export const ProductsService = {
 		return find(db, storeId, id);
 	},
 
-	create(
+	/**
+	 * Stores one photo the app sent (a JPEG it already shrank) under a new key, which the product form then saves. A
+	 * photo sent for a form that is never saved stays in the bucket unused (~150 KB; see docs/decisions.md).
+	 */
+	async uploadPhoto(
+		session: AuthSession,
+		photo: File,
+	): Promise<ProductsModel["uploadedPhoto"]> {
+		const storeId = session.store.id;
+		const userId = session.user.id;
+		const bytes = new Uint8Array(await photo.arrayBuffer());
+		assertJpeg(bytes);
+		const key = newPhotoKey(storeId);
+		await photoStorage().write(key, bytes, PHOTO_CONTENT_TYPE);
+		// The bucket keeps no author: this line is the trail of who stored what.
+		console.info("[photos] stored", { storeId, userId, key });
+		return { key };
+	},
+
+	async create(
 		session: AuthSession,
 		input: ProductsModel["body"],
 	): Promise<ProductsModel["product"]> {
 		const storeId = session.store.id;
 		const values = normalizeProduct(input);
+		const photo = await checkedPhotoColumns(storeId, input.photoKey);
 		return guardUnique(
 			() =>
 				audited(session.user.id, async (tx) => {
@@ -225,7 +287,7 @@ export const ProductsService = {
 					const { id } = insertedRow(
 						await tx
 							.insert(products)
-							.values({ storeId, ...values })
+							.values({ storeId, ...values, ...photo })
 							.returning({ id: products.id }),
 					);
 					return find(tx, storeId, id);
@@ -234,13 +296,18 @@ export const ProductsService = {
 		);
 	},
 
-	update(
+	async update(
 		session: AuthSession,
 		id: string,
 		input: ProductsModel["body"],
 	): Promise<ProductsModel["product"]> {
 		const storeId = session.store.id;
 		const values = normalizeProduct(input);
+		if (typeof input.photoKey === "string") {
+			// Unknown or archived answers before the bucket is asked about a new photo (no row is locked meanwhile).
+			assertEditable((await selectEditable(db, storeId, id))[0]);
+		}
+		const photo = await checkedPhotoColumns(storeId, input.photoKey);
 		return guardUnique(
 			() =>
 				audited(session.user.id, async (tx) => {
@@ -253,7 +320,7 @@ export const ProductsService = {
 					);
 					await tx
 						.update(products)
-						.set(values)
+						.set({ ...values, ...photo })
 						.where(and(eq(products.id, id), eq(products.storeId, storeId)));
 					return find(tx, storeId, id);
 				}),

@@ -122,6 +122,41 @@ ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem g
   `public` ficar sem ela (exceções: `sessions`, o próprio `audit_log` e tabelas de rascunho dos testes).
 - Ainda não há tela para consultar o registro.
 
+### Fotos dos produtos (Cloudflare R2)
+
+- **Fluxo:** o app reduz a foto (JPEG, 1080 px) e manda para `POST /products/photos` (multipart, campo `photo`). A API
+  confere pelos bytes (começo e fim do JPEG) que é JPEG de até 2 MB, grava no bucket com uma chave nova
+  (`stores/<loja>/products/<uuid>.jpg`, `Content-Type: image/jpeg`) e devolve `{ key }`. Criar ou editar o produto
+  manda essa chave em `photoKey` (sem o campo, mantém; `null`, remove); a API confere que a chave é da loja e existe no
+  bucket antes de gravar. A resposta do produto traz `photoUrl`, montada com `PHOTOS_PUBLIC_URL`.
+- **Só a API escreve no bucket.** Arquivo nunca é sobrescrito nem apagado: trocar a foto grava outra chave. A API
+  registra no log quem guardou cada foto (o bucket não guarda autor).
+- **Quem vê a foto:** o bucket é público (só leitura, sem listagem): qualquer um com a URL vê a foto, e a proteção é a
+  chave ter um UUID impossível de adivinhar e a API só devolver URLs da loja da sessão. Como nada se apaga, uma URL
+  que vazar continua valendo. Não guarde ali nada que não possa ser público.
+- **Variáveis:** `R2_ENDPOINT` (`https://<ACCOUNT_ID>.r2.cloudflarestorage.com`), `R2_ACCESS_KEY_ID`,
+  `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` e `PHOTOS_PUBLIC_URL` (a URL pública do bucket). Todas ou nenhuma: sem elas as
+  fotos ficam desligadas (o server avisa ao subir, os produtos vêm sem foto e enviar uma responde 503). Os testes rodam
+  assim, com um bucket em memória (`test/support/photo-storage.ts`).
+- **Corpo das requisições:** o server recusa (413) corpo acima de 2 MB + 64 KB antes de ler. O envio da foto sem
+  nenhum header de sessão leva 401 antes de o corpo ser lido (`tokenBeforeBody`); um token inválido leva o 401 depois
+  do corpo, como nas outras rotas.
+
+#### Criando um bucket (dev ou prod)
+
+1. No Cloudflare, **R2 Object Storage → Create bucket**: nome `mundomadam-photos-dev` (ou `-prod`), Location
+   Automatic, sem jurisdiction, Standard.
+2. No bucket, **Settings → Public Development URL → Enable**, digite `allow`. A URL `https://pub-….r2.dev` é o
+   `PHOTOS_PUBLIC_URL`.
+3. **R2 Object Storage → Overview → API Tokens: Manage → Create Account API token**: Object Read & Write, só esse
+   bucket, TTL Forever. Copie o Access Key ID e o Secret Access Key (64 caracteres, aparece uma vez só) com o botão de
+   copiar.
+4. O `R2_ENDPOINT` usa o **Account ID** (em Overview → Account Details), não o Access Key ID: os dois têm 32
+   caracteres.
+5. Dev: preencha as cinco variáveis no `.env` da raiz. Prod: `R2_BUCKET` está no `.railway/railway.ts`; as outras
+   quatro são `preserve()` e têm de existir na Railway **antes** do release que as declara, senão o grupo fica pela
+   metade e o server não sobe.
+
 ## Mobile
 
 ```

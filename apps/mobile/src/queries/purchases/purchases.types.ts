@@ -29,7 +29,7 @@ export type PurchaseItem = {
 	id: string;
 	productId: string;
 	productName: string;
-	photoUri: string | null;
+	photoUrl: string | null;
 	quantity: number;
 	unitCost: Money;
 	total: Money;

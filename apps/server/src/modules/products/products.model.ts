@@ -14,6 +14,8 @@ const product = t.Object({
 	minStock: t.Union([t.Null(), t.Integer()]),
 	location: t.Union([t.Null(), t.String()]),
 	hasExpiry: t.Boolean(),
+	/** Public address of the photo; null without one (the app shows its initials). */
+	photoUrl: t.Union([t.Null(), t.String()]),
 	archived: t.Boolean(),
 });
 
@@ -28,7 +30,24 @@ const body = t.Object({
 	minStock: t.Union([t.Null(), t.Integer({ minimum: 0, maximum: 1_000_000 })]),
 	location: optionalText(120),
 	hasExpiry: t.Boolean(),
+	/**
+	 * The `key` `POST /products/photos` gave back for the photo; `null` removes the photo. Left out, the product keeps
+	 * the photo it has (none on create).
+	 */
+	// Real keys are under 100 characters and their shape is checked by the service; this only keeps junk out.
+	photoKey: t.Optional(t.Union([t.Null(), t.String({ maxLength: 200 })])),
 });
+
+/**
+ * One photo, as multipart: a JPEG the app already shrank. Its size and format are checked by its bytes in the service
+ * (`assertJpeg`, with its own messages); the server's body limit already caps what is read (`src/index.ts`).
+ */
+const photoUpload = t.Object({
+	photo: t.File(),
+});
+
+/** Where the photo was stored: what the product form saves as `photoKey`. */
+const uploadedPhoto = t.Object({ key: t.String() });
 
 const listQuery = t.Object({
 	/** Name, internal code or barcode; every word has to match. */
@@ -46,6 +65,8 @@ export const ProductsModel = {
 	product,
 	page: pageOf(product),
 	body,
+	photoUpload,
+	uploadedPhoto,
 	listQuery,
 	params: t.Object({ id: t.String({ format: "uuid" }) }),
 };
@@ -54,5 +75,6 @@ export type ProductsModel = {
 	product: UnwrapSchema<typeof ProductsModel.product>;
 	page: UnwrapSchema<typeof ProductsModel.page>;
 	body: UnwrapSchema<typeof ProductsModel.body>;
+	uploadedPhoto: UnwrapSchema<typeof ProductsModel.uploadedPhoto>;
 	listQuery: UnwrapSchema<typeof ProductsModel.listQuery>;
 };

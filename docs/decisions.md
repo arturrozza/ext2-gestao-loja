@@ -12,6 +12,25 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-06: Foto do produto no Cloudflare R2, enviada pela API (MUN-11)
+
+**Decisão:** a foto do produto fica num bucket do Cloudflare R2 (`mundomadam-photos-prod`, e `mundomadam-photos-dev`
+para o desenvolvimento local), servido pela URL pública `r2.dev`. O app manda a foto que já reduziu (JPEG, lado máximo
+de 1080 px) para a API (`POST /products/photos`); a API confere pelos bytes que é um JPEG de até 2 MB, grava com uma
+chave nova (`stores/<loja>/products/<uuid>.jpg`) e devolve a chave, que o produto salva como `photoKey`. Trocar ou
+remover a foto não apaga o arquivo antigo, e a foto de um cadastro que não foi salvo fica sem uso no bucket. Sem as
+variáveis do R2 as fotos ficam desligadas: os produtos aparecem sem foto e enviar uma responde 503. As duas regras do
+leitor de código (adicionar direto na venda e na compra, oferecer cadastro na lista) foram escritas em `produtos.md`;
+o código delas já existia desde as telas da MUN-21.
+**Por quê:** a primeira ideia foi o app enviar direto para o bucket por uma URL pré-assinada, mas o `presign` do Bun só
+assina o `host`: quem tivesse a URL mandaria qualquer arquivo, de qualquer tamanho e tipo, e poderia trocá-lo depois
+de validado, num bucket público. Passando pela API, só ela escreve no bucket, e o que fica lá é sempre um JPEG
+conferido. O custo é a foto (uns 150 KB) passar pelo server, e uma chamada fora do Eden no app (`uploadFile`): o Eden
+só monta multipart com `Blob`, e o arquivo do Expo não é um (o `Blob` do React Native nem aceita bytes). Não apagar a
+foto antiga segue o "nada se apaga" e mantém a auditoria apontando para algo que existe; o espaço das fotos sem uso é
+irrisório. O `r2.dev` tem limite de taxa e é para desenvolvimento: troca-se por um domínio próprio só mudando
+`PHOTOS_PUBLIC_URL` (ver `stack.md`).
+
 ## 2026-11-05: Dinheiro em centavos inteiros e percentuais em pontos-base (MUN-24)
 
 **Decisão:** dinheiro passa a ser guardado, trafegado e calculado em centavos inteiros (R$ 92,50 = `9250`) e

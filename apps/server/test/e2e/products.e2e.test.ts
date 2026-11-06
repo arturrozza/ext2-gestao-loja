@@ -8,8 +8,10 @@ import {
 	createProduct,
 	productBody,
 } from "../support/factories/catalog";
+import { jpegFile, useFakePhotoStorage } from "../support/photo-storage";
 
 useTestDatabase();
+const bucket = useFakePhotoStorage();
 
 const api = treaty(app);
 
@@ -248,5 +250,114 @@ describe("products routes", () => {
 		expect(statuses.map((result) => result.error?.status)).toEqual([
 			401, 401, 401, 401, 401, 401,
 		]);
+	});
+
+	it("stores a photo, then saves the product with it and removes it", async () => {
+		const { headers, session } = await signedIn();
+
+		const upload = await api.products.photos.post(
+			{ photo: jpegFile() },
+			{ headers },
+		);
+		if (!upload.data) throw new Error(`upload failed: ${upload.status}`);
+		const { key } = upload.data;
+		const created = await api.products.post(productBody({ photoKey: key }), {
+			headers,
+		});
+		if (!created.data) throw new Error(`create failed: ${created.status}`);
+		const removed = await api
+			.products({ id: created.data.id })
+			.put(productBody({ photoKey: null }), { headers });
+
+		expect(key).toStartWith(`stores/${session.store.id}/products/`);
+		expect(bucket.objects.get(key)?.type).toBe("image/jpeg");
+		expect(created.data.photoUrl).toBe(`https://photos.test/${key}`);
+		expect(removed.data?.photoUrl).toBeNull();
+	});
+
+	it("answers 422 for a photo that isn't a JPEG, one over 2 MB and a missing one", async () => {
+		const { headers } = await signedIn();
+		const gif = new File([new Uint8Array([0x47, 0x49, 0x46, 0x38])], "x.jpg", {
+			type: "image/jpeg",
+		});
+
+		const notJpeg = await api.products.photos.post({ photo: gif }, { headers });
+		const tooLarge = await api.products.photos.post(
+			{ photo: jpegFile(new Uint8Array(2 * 1024 * 1024 + 1)) },
+			{ headers },
+		);
+		// @ts-expect-error: what a client outside the contract sends
+		const missing = await api.products.photos.post({}, { headers });
+
+		expect(notJpeg.error?.value).toMatchObject({
+			code: "photo_invalid",
+			field: "photo",
+		});
+		expect(tooLarge.error?.value).toMatchObject({
+			code: "photo_too_large",
+			field: "photo",
+		});
+		expect(missing.error?.status).toBe(422);
+		expect(bucket.objects.size).toBe(0);
+	});
+
+	it("answers 422 on save and edit for a photo key that was never stored or is too long", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const neverStored = `stores/${session.store.id}/products/${crypto.randomUUID()}.jpg`;
+
+		const create = await api.products.post(
+			productBody({ photoKey: neverStored }),
+			{ headers },
+		);
+		const edit = await api
+			.products({ id: product.id })
+			.put(productBody({ photoKey: neverStored }), { headers });
+		const long = await api.products.post(
+			productBody({ photoKey: "x".repeat(201) }),
+			{ headers },
+		);
+
+		expect(create.error?.value).toMatchObject({
+			code: "photo_not_found",
+			field: "photoKey",
+		});
+		expect(edit.error?.value).toMatchObject({ code: "photo_not_found" });
+		expect(long.error?.value).toMatchObject({
+			code: "validation",
+			field: "photoKey",
+		});
+	});
+
+	it("answers 401 for a photo without a session, before looking at the body", async () => {
+		const valid = await api.products.photos.post({ photo: jpegFile() });
+		// @ts-expect-error: what a client outside the contract sends
+		const invalid = await api.products.photos.post({});
+
+		expect(valid.error?.status).toBe(401);
+		expect(valid.error?.value).toMatchObject({ code: "unauthorized" });
+		expect(valid.response?.headers.get("www-authenticate")).toContain("Bearer");
+		expect(invalid.error?.status).toBe(401);
+		expect(bucket.objects.size).toBe(0);
+	});
+
+	it("answers 503 for a photo and a photo key while photos are off", async () => {
+		const { headers, session } = await signedIn();
+		bucket.off();
+
+		const upload = await api.products.photos.post(
+			{ photo: jpegFile() },
+			{ headers },
+		);
+		const create = await api.products.post(
+			productBody({
+				photoKey: `stores/${session.store.id}/products/${crypto.randomUUID()}.jpg`,
+			}),
+			{ headers },
+		);
+
+		expect(upload.error?.status).toBe(503);
+		expect(upload.error?.value).toMatchObject({ code: "photos_unavailable" });
+		expect(create.error?.status).toBe(503);
 	});
 });

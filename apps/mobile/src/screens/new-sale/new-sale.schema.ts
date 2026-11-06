@@ -12,7 +12,7 @@ import type {
 
 export type SaleItemDraft = {
 	key: string;
-	product: { id: string; name: string; photoUri: string | null };
+	product: { id: string; name: string; photoUrl: string | null };
 	quantity: number;
 	unitPrice: string;
 };

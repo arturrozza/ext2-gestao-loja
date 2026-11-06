@@ -73,7 +73,7 @@ export function ThumbStack({
 				>
 					{"item" in tile ? (
 						<ProductThumb
-							uri={tile.item.photoUri}
+							uri={tile.item.photoUrl}
 							name={tile.item.name}
 							size="xs"
 						/>

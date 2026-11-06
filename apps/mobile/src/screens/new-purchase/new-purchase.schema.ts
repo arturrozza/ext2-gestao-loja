@@ -9,7 +9,7 @@ export type PurchaseItemDraft = {
 		id: string;
 		name: string;
 		hasExpiry: boolean;
-		photoUri: string | null;
+		photoUrl: string | null;
 	};
 	quantity: number;
 	unitCost: string;

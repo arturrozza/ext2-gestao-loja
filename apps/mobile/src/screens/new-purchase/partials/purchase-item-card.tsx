@@ -58,7 +58,7 @@ export function PurchaseItemCard({
 	return (
 		<View className="gap-4 border-border border-b pb-5">
 			<View className="flex-row items-center gap-3">
-				<ProductThumb uri={item.product.photoUri} name={item.product.name} />
+				<ProductThumb uri={item.product.photoUrl} name={item.product.name} />
 				<Text className="flex-1 font-sans-semibold text-sm" numberOfLines={2}>
 					{item.product.name}
 				</Text>

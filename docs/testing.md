@@ -56,6 +56,10 @@ preferência escritos antes do código (TDD). Código sem teste não entra.
   Bearer para passar ao Eden (`api.users.get({ headers })`) e a `session` que os services de escrita recebem.
 - Regra que lança erro de domínio (`httpError`, que não é um `Error`): `thrown(() => ...)` (`test/support/thrown.ts`)
   devolve o que foi lançado, para comparar com `toMatchObject({ code: 422, response: { field } })`.
+- Fotos: os testes rodam sem as variáveis do R2 (fotos desligadas). Quem testa foto chama `useFakePhotoStorage()`
+  (`test/support/photo-storage.ts`), um bucket em memória por teste, com `put` (uma foto já enviada), `failing` (o
+  bucket fora do ar) e `off` (fotos desligadas). O `r2Storage` de verdade é testado contra um S3 falso local
+  (`Bun.serve`), sem rede.
 - O `bun test` roda os arquivos em sequência, num processo só. Não ligue execução concorrente nos testes que usam
   banco: eles compartilham o `ext2_test`.
 

@@ -41,6 +41,7 @@ src/
   lib/money.ts        `MAX_CENTS`, `FULL_PERCENT`, `divideRounded()` and `percentOf()`: the one rounding rule
   lib/text.ts         `blankToNull()` (blank optional text → null) and `onlyDigits()`
   lib/phone.ts        `phoneDigits()`: a phone with area code (10/11 digits) or a 422 on `phone`
+  lib/photo-storage.ts  product photo bucket (Cloudflare R2 via Bun's S3Client): `photoStorage()`, off without R2 env
   db/
     index.ts          Drizzle client
     migrate.ts        applies migrations, then seeds the first store + user (`seed.ts`) while there's no user

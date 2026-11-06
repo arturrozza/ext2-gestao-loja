@@ -12,7 +12,7 @@ export const ErrorModel = t.Object({
 
 export type ErrorBody = UnwrapSchema<typeof ErrorModel>;
 
-type ErrorStatus = 400 | 401 | 404 | 409 | 422 | 429;
+type ErrorStatus = 400 | 401 | 404 | 409 | 422 | 429 | 503;
 
 /** A domain error as an HTTP response. Services `throw` it; Elysia sends it with the status. */
 export function httpError(code: ErrorStatus, body: ErrorBody) {

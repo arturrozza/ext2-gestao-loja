@@ -10,6 +10,7 @@ a tela do produto também concentram o [Estoque](estoque.md).
 - Cadastrar e editar produto.
 - Buscar por nome, código interno ou código de barras.
 - Ler o código de barras pela câmera no cadastro, na busca, na venda e na compra.
+- Ver a foto do produto em tela cheia, com zoom.
 - Arquivar e reativar produto.
 - Criar, renomear, arquivar e reativar categorias, e filtrar a lista por elas.
 - Tirar ou escolher uma foto.
@@ -32,13 +33,20 @@ a tela do produto também concentram o [Estoque](estoque.md).
 - O nome da categoria não se repete na loja, contando as arquivadas (sem diferenciar maiúsculas e acentos).
 - Categoria não é excluída, só arquivada. Arquivada não aparece para escolher no cadastro nem no filtro, mas os
   produtos que já estão nela continuam com ela, inclusive nos relatórios. Dá para reativar.
-- Sem foto, aparece um ícone no lugar.
+- Sem foto, aparece um ícone no lugar (nas listas, as iniciais do nome).
+- A foto é uma por produto, tirada na hora ou escolhida da galeria, e recortada em quadrado. O app reduz a foto antes de
+  enviar, então ela chega leve.
+- Trocar ou remover a foto não apaga a anterior: ela continua guardada, como tudo no sistema.
+- Ler um código de barras na venda ou na compra já adiciona o produto que tem esse código, sem precisar tocar nele, e
+  deixa a busca pronta para o próximo.
+- Na lista de produtos, ler ou digitar um código de barras que nenhum produto tem oferece cadastrar um produto com
+  ele, já preenchido.
 - O preço base é o preço normal de venda, sugerido na venda e editável nela.
 
 ## Ainda não disponível no app
 
-A foto do produto, o estoque na lista e na tela do produto e a sugestão de "Cadastrar primeira entrada" chegam junto
-com a foto, Compras e Estoque. Até lá, o estoque aparece como "—".
+O estoque na lista e na tela do produto e a sugestão de "Cadastrar primeira entrada" chegam com Compras e Estoque. Até
+lá, o estoque aparece como "—".
 
 ## Fora do escopo
 

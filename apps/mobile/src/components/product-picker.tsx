@@ -91,7 +91,7 @@ function PickerRow({
 				added && "opacity-50",
 			)}
 		>
-			<ProductThumb uri={product.photoUri} name={product.name} />
+			<ProductThumb uri={product.photoUrl} name={product.name} />
 			<View className="flex-1 gap-1">
 				<Text className="font-sans-semibold text-sm" numberOfLines={2}>
 					{product.name}

@@ -129,7 +129,7 @@ function SaleItemRow({ item }: { item: SaleItem }) {
 		<ItemRow
 			href={`/products/${item.productId}`}
 			label={`${item.productName}, ${times(item.quantity)}`}
-			leading={<ProductThumb uri={item.photoUri} name={item.productName} />}
+			leading={<ProductThumb uri={item.photoUrl} name={item.productName} />}
 			title={item.productName}
 			subtitle={`${times(item.quantity)} ${formatMoney(item.unitPrice)}`}
 			value={formatMoney(item.total)}

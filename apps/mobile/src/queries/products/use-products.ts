@@ -6,7 +6,8 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { api, request } from "@/lib/api";
+import { api, request, uploadFile } from "@/lib/api";
+import { isApiError } from "@/lib/api-error";
 import { searchParam } from "@/lib/search";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { type Page, pagedQuery } from "@/queries/pagination";
@@ -15,10 +16,12 @@ import type {
 	Category,
 	CostCorrectionInput,
 	Movement,
+	PhotoChange,
 	ProductDetail,
 	ProductInput,
 	ProductListFilters,
 	ProductListPage,
+	ProductSave,
 	StockAdjustmentInput,
 	StockListFilters,
 } from "./products.types";
@@ -64,11 +67,60 @@ export function useProduct(id: string) {
 	});
 }
 
+/** The answer of `POST /products/photos` (`api.products.photos`, sent with `uploadFile` instead of Eden). */
+function readUploadedPhoto(value: unknown): string | null {
+	const key = (value as { key?: unknown } | null)?.key;
+	return typeof key === "string" && key ? key : null;
+}
+
+/**
+ * Keys of photos already sent, by local file: saving again after a refused save (a repeated code, no internet) reuses
+ * the key instead of sending the same photo once more. A shrunk photo gets a new file each time it is picked.
+ */
+const sentPhotos = new Map<string, string>();
+
+/** The photo the app already shrank goes to the API first; its key goes in the save. */
+async function photoKeyOf(
+	photo: PhotoChange,
+): Promise<string | null | undefined> {
+	if (!photo) return photo;
+	const sent = sentPhotos.get(photo.uri);
+	if (sent) return sent;
+	const key = await uploadFile("/products/photos", photo.uri, {
+		fieldName: "photo",
+		mimeType: "image/jpeg",
+		read: readUploadedPhoto,
+	});
+	sentPhotos.set(photo.uri, key);
+	return key;
+}
+
+/**
+ * A save with its photo: a new photo is sent first, then the product points at it. The key is kept for a retry until
+ * the product is saved, or until the API refuses it (the next save sends the photo again).
+ */
+async function saveWithPhoto<T>(
+	{ photo, ...rest }: ProductSave,
+	send: (input: ProductInput) => Promise<T>,
+): Promise<T> {
+	try {
+		const saved = await send({ ...rest, photoKey: await photoKeyOf(photo) });
+		if (photo) sentPhotos.delete(photo.uri);
+		return saved;
+	} catch (error) {
+		if (photo && isApiError(error) && error.details.field === "photoKey") {
+			sentPhotos.delete(photo.uri);
+		}
+		throw error;
+	}
+}
+
 /** A product change shows in the list, the categories' counts and the home, so all business data is refetched. */
 export function useCreateProduct() {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: ProductInput) => request(api.products.post(input)),
+		mutationFn: (save: ProductSave) =>
+			saveWithPhoto(save, (input) => request(api.products.post(input))),
 		onSuccess: invalidate,
 	});
 }
@@ -76,8 +128,8 @@ export function useCreateProduct() {
 export function useUpdateProduct(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: ProductInput) =>
-			request(api.products({ id }).put(input)),
+		mutationFn: (save: ProductSave) =>
+			saveWithPhoto(save, (input) => request(api.products({ id }).put(input))),
 		onSuccess: invalidate,
 	});
 }

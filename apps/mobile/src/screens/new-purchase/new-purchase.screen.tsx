@@ -31,7 +31,7 @@ import { PurchaseItemList } from "./partials/purchase-item-list";
 function draftFor(
 	product: Pick<
 		ProductListItem,
-		"id" | "name" | "hasExpiry" | "photoUri" | "averageCost"
+		"id" | "name" | "hasExpiry" | "photoUrl" | "averageCost"
 	>,
 	quantity = 1,
 ): PurchaseItemDraft {
@@ -41,7 +41,7 @@ function draftFor(
 			id: product.id,
 			name: product.name,
 			hasExpiry: product.hasExpiry,
-			photoUri: product.photoUri,
+			photoUrl: product.photoUrl,
 		},
 		quantity,
 		unitCost: product.averageCost > 0 ? moneyToInput(product.averageCost) : "",

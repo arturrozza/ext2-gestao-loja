@@ -81,7 +81,7 @@ export type SaleItem = {
 	id: string;
 	productId: string;
 	productName: string;
-	photoUri: string | null;
+	photoUrl: string | null;
 	quantity: number;
 	unitPrice: Money;
 	/** Average cost when the sale was registered; never changes. */

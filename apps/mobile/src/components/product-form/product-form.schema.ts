@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { optionalText } from "@/lib/form-fields";
 import { moneyToInput, parseMoneyInput } from "@/lib/money";
-import type { Product } from "@/queries/products/products.types";
+import type { PhotoChange, Product } from "@/queries/products/products.types";
 
 /** Product form (produtos.md): name and base price required; stock and cost never typed here. */
 export const productFormSchema = z.object({
@@ -44,6 +44,11 @@ export const productFormSchema = z.object({
 		"Use até 120 caracteres.",
 	),
 	hasExpiry: z.boolean(),
+	/**
+	 * The photo shown: the saved one's address, a new local photo (`file://`), or none. Not named `photo`/`photoKey`:
+	 * the API's photo errors carry those fields, and only names that aren't form fields reach the footer.
+	 */
+	photoUri: z.string().nullable(),
 });
 
 export type ProductFormValues = z.input<typeof productFormSchema>;
@@ -57,6 +62,7 @@ export const EMPTY_PRODUCT: ProductFormValues = {
 	minStock: "",
 	location: "",
 	hasExpiry: false,
+	photoUri: null,
 };
 
 export function productToForm(product: Product): ProductFormValues {
@@ -69,5 +75,18 @@ export function productToForm(product: Product): ProductFormValues {
 		minStock: product.minStock === null ? "" : String(product.minStock),
 		location: product.location ?? "",
 		hasExpiry: product.hasExpiry,
+		photoUri: product.photoUrl,
 	};
+}
+
+/**
+ * What changed in the photo since the form opened (`saved`): nothing (keep), removed, or a new photo to send (a picked
+ * photo is always a new local file, never the saved address).
+ */
+export function photoChange(
+	saved: string | null,
+	current: string | null,
+): PhotoChange {
+	if (current === saved) return undefined;
+	return current === null ? null : { uri: current };
 }

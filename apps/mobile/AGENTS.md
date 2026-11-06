@@ -97,6 +97,8 @@ Alias: `@/*` → `src/*`.
 
 ### Data (TanStack Query + Eden)
 - Every API call goes through the `api` client (`src/lib/api.ts`), typed with the server's `type App`. No raw `fetch`.
+  The one exception is sending a local file (`uploadFile` there, used for the product photo): Eden only sends a `Blob`
+  as multipart and an Expo file isn't one. It keeps the session header and the `ApiError`s; give it a `read` guard.
 - **Modules not built yet** (no API): their routes render `underConstructionRoute("Title", presentation)`
   (`screens/under-construction/`), with a comment pointing at the real screen, which stays in `screens/`. Their hooks
   keep the shape the screens need but call `underConstruction()` (`queries/under-construction.ts`), which fails like a

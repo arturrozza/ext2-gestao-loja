@@ -19,7 +19,7 @@ export function ProductRow({ product }: { product: Product }) {
 		<ItemRow
 			href={`/products/${product.id}`}
 			label={product.archived ? `${product.name}, arquivado` : product.name}
-			leading={<ProductThumb name={product.name} />}
+			leading={<ProductThumb uri={product.photoUrl} name={product.name} />}
 			title={product.name}
 			subtitle={detailLine(product)}
 			value="—"

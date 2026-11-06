@@ -30,7 +30,7 @@ function draftFor(product: ProductListItem): SaleItemDraft {
 		product: {
 			id: product.id,
 			name: product.name,
-			photoUri: product.photoUri,
+			photoUrl: product.photoUrl,
 		},
 		quantity: 1,
 		unitPrice: moneyToInput(product.basePrice),

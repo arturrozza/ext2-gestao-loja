@@ -46,4 +46,52 @@ describe("env", () => {
 			"SEED_USER_PASSWORD",
 		]);
 	});
+
+	it("takes all photo variables or none", () => {
+		const photos = {
+			R2_ENDPOINT: "https://account.r2.cloudflarestorage.com",
+			R2_ACCESS_KEY_ID: "key-id",
+			R2_SECRET_ACCESS_KEY: "secret",
+			R2_BUCKET: "mundomadam-photos-dev",
+			PHOTOS_PUBLIC_URL: "https://pub-abc.r2.dev",
+		};
+		expect(envSchema.safeParse({ ...base, ...photos }).success).toBe(true);
+		expect(envSchema.safeParse(base).success).toBe(true);
+		const partial = envSchema.safeParse({
+			...base,
+			R2_BUCKET: photos.R2_BUCKET,
+		});
+		expect(partial.error?.issues.map((issue) => issue.path[0])).toEqual([
+			"R2_ENDPOINT",
+			"R2_ACCESS_KEY_ID",
+			"R2_SECRET_ACCESS_KEY",
+			"PHOTOS_PUBLIC_URL",
+		]);
+	});
+
+	it("groups the photo variables as env.photos, https only", () => {
+		const photos = {
+			R2_ENDPOINT: "https://account.r2.cloudflarestorage.com",
+			R2_ACCESS_KEY_ID: "key-id",
+			R2_SECRET_ACCESS_KEY: "secret",
+			R2_BUCKET: "mundomadam-photos-dev",
+			PHOTOS_PUBLIC_URL: "https://pub-abc.r2.dev",
+		};
+
+		expect(envSchema.parse({ ...base, ...photos }).photos).toEqual({
+			endpoint: photos.R2_ENDPOINT,
+			accessKeyId: photos.R2_ACCESS_KEY_ID,
+			secretAccessKey: photos.R2_SECRET_ACCESS_KEY,
+			bucket: photos.R2_BUCKET,
+			publicUrl: photos.PHOTOS_PUBLIC_URL,
+		});
+		expect(envSchema.parse({ ...base, R2_BUCKET: "" }).photos).toBeUndefined();
+		expect(
+			envSchema.safeParse({
+				...base,
+				...photos,
+				R2_ENDPOINT: "http://account.r2.cloudflarestorage.com",
+			}).success,
+		).toBe(false);
+	});
 });

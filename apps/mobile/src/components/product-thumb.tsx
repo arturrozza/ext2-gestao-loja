@@ -37,7 +37,7 @@ export function ProductThumb({
 	name,
 	size = "sm",
 }: {
-	/** Absent until products get photos (MUN-11). */
+	/** The photo: its public address, or a local file while a form holds a new one. */
 	uri?: string | null;
 	name?: string;
 	size?: keyof typeof SIZES;

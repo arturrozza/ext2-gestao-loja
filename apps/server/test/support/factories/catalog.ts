@@ -61,6 +61,7 @@ export async function createProduct(
 				.values({
 					storeId,
 					...normalizeProduct(productBody(body)),
+					photoKey: body.photoKey ?? null,
 					archivedAt: archived ? new Date() : null,
 				})
 				.returning(),
