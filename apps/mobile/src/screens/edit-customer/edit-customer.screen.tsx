@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { CustomerForm } from "@/components/person-form/customer-form";
 import { customerToForm } from "@/components/person-form/customer-form.schema";
 import { ScreenQuery } from "@/components/screen-query";
@@ -9,6 +9,10 @@ import {
 	useUpdateCustomer,
 } from "@/queries/customers/use-customers";
 
+/**
+ * Edit a customer's data. An archived one isn't edited: reaching this route anyway (a link, the back stack) leads to
+ * their screen, where they can be reactivated.
+ */
 export function EditCustomerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = useCustomer(id);
@@ -20,18 +24,22 @@ export function EditCustomerScreen() {
 			skeleton={<FormSkeleton />}
 			sheet
 		>
-			{(customer) => (
-				<CustomerForm
-					title="Editar cliente"
-					submitLabel="Salvar"
-					initial={customerToForm(customer)}
-					mutation={update}
-					onSaved={() => {
-						showToast("Cliente salvo");
-						router.back();
-					}}
-				/>
-			)}
+			{(customer) =>
+				customer.archived ? (
+					<Redirect href={`/customers/${customer.id}`} />
+				) : (
+					<CustomerForm
+						title="Editar cliente"
+						submitLabel="Salvar"
+						initial={customerToForm(customer)}
+						mutation={update}
+						onSaved={() => {
+							showToast("Cliente salvo");
+							router.back();
+						}}
+					/>
+				)
+			}
 		</ScreenQuery>
 	);
 }

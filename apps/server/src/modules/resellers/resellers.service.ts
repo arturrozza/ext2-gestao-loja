@@ -1,22 +1,13 @@
-import {
-	and,
-	asc,
-	eq,
-	isNotNull,
-	isNull,
-	like,
-	or,
-	type SQL,
-} from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, type SQL } from "drizzle-orm";
 import { db } from "../../db";
 import { audited, type Executor, type Transaction } from "../../db/audit";
 import { archivedAtValue, insertedRow } from "../../db/rows";
 import { resellers } from "../../db/schema";
 import { httpError } from "../../lib/http-error";
-import { likePattern } from "../../lib/search";
+import { personSearchFilter } from "../../lib/person";
 import type { AuthSession } from "../auth/auth.model";
 import type { ResellersModel } from "./resellers.model";
-import { normalizeReseller, resellerSearchTerms } from "./resellers.rules";
+import { normalizeReseller } from "./resellers.rules";
 
 const columns = {
 	id: resellers.id,
@@ -76,13 +67,7 @@ function listFilter(
 		query.archived
 			? isNotNull(resellers.archivedAt)
 			: isNull(resellers.archivedAt),
-		...resellerSearchTerms(query.search).map((alternatives) =>
-			or(
-				...alternatives.map((term) =>
-					like(resellers.searchText, likePattern(term)),
-				),
-			),
-		),
+		...personSearchFilter(resellers.searchText, query.search),
 	);
 }
 

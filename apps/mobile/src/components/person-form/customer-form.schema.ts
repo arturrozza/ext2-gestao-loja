@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionalPhone, optionalText } from "@/lib/form-fields";
+import { formatPhone } from "@/lib/masks";
 import type { Customer } from "@/queries/customers/customers.types";
 
 /** Customer data (clientes.md): name, phone and note. */
@@ -20,7 +21,7 @@ export const EMPTY_CUSTOMER: CustomerFormValues = {
 export function customerToForm(customer: Customer): CustomerFormValues {
 	return {
 		name: customer.name,
-		phone: customer.phone ?? "",
+		phone: formatPhone(customer.phone) ?? "",
 		note: customer.note ?? "",
 	};
 }

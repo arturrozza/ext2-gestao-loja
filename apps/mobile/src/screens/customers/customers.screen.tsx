@@ -20,7 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useInfiniteList } from "@/components/use-infinite-list";
 import { formatDayHeading } from "@/lib/dates";
+import { plural } from "@/lib/labels";
+import { formatPhone } from "@/lib/masks";
 import { formatMoney } from "@/lib/money";
+import { searchParam } from "@/lib/search";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import type { Customer } from "@/queries/customers/customers.types";
 import { useCustomers } from "@/queries/customers/use-customers";
@@ -37,7 +40,7 @@ function customerLine(customer: Customer) {
 	const last = customer.lastPurchaseAt
 		? `Comprou ${formatDayHeading(customer.lastPurchaseAt).toLowerCase()}`
 		: "Nenhuma compra ainda";
-	return [last, customer.phone].filter(Boolean).join(" · ");
+	return [last, formatPhone(customer.phone)].filter(Boolean).join(" · ");
 }
 
 function CustomerRow({ customer }: { customer: Customer }) {
@@ -52,9 +55,7 @@ function CustomerRow({ customer }: { customer: Customer }) {
 			value={bought ? formatMoney(customer.totalSpent) : undefined}
 			note={
 				bought
-					? customer.purchasesCount === 1
-						? "1 compra"
-						: `${customer.purchasesCount} compras`
+					? plural(customer.purchasesCount, "compra", "compras")
 					: undefined
 			}
 		/>
@@ -103,7 +104,7 @@ export function CustomersScreen() {
 	const list = useInfiniteList(
 		query,
 		<NoCustomers
-			filtered={Boolean(search) || view === "archived"}
+			filtered={searchParam(search) !== undefined || view === "archived"}
 			onCreate={create}
 		/>,
 	);

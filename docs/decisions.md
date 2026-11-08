@@ -60,6 +60,17 @@ update, mas não grava nada (a API recusa o texto que ele manda). Aceito porque 
 mudança assim com o app em uso precisa de release sem ninguém usando, ou de colunas novas no lugar das antigas
 (o server antigo falha em vez de gravar errado).
 
+## 2026-11-08: Cliente segue as regras da revendedora, com lista paginada
+
+**Decisão:** o cliente segue as mesmas regras da revendedora: nome pode se repetir, telefone opcional com DDD guardado
+só com os dígitos, busca por nome ou telefone com ou sem máscara, e cliente arquivado não se edita, só reativa. A
+diferença é que a lista de clientes é paginada. Enquanto Vendas (MUN-16) não existe, o total gasto, o número de compras
+e a última compra vêm zerados e o histórico aparece como "Em construção". A normalização e a busca de pessoa (nome e
+telefone) ficaram num helper só (`lib/person.ts`), usado por clientes e revendedoras.
+**Por quê:** as duas são cadastros de pessoa com os mesmos campos básicos, e regras iguais deixam o app previsível.
+Uma loja pode ter muitos clientes fixos, ao contrário das revendedoras, então a lista precisa paginar. Vendas
+canceladas não contam no total gasto, como na comissão da revendedora.
+
 ## 2026-11-05: Revendedora com nome repetido, sem edição quando arquivada e vendas depois
 
 **Decisão:** o nome da revendedora pode se repetir na loja; a lista e a escolha na venda mostram comissão e telefone

@@ -7,6 +7,7 @@ import {
 } from "@/components/person-form/customer-form.schema";
 import { PersonPicker } from "@/components/person-picker";
 import { PickerTrigger } from "@/components/picker-trigger";
+import { formatPhone } from "@/lib/masks";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useZodForm } from "@/lib/use-zod-form";
 import type { Customer } from "@/queries/customers/customers.types";
@@ -84,7 +85,7 @@ export function CustomerField({
 				people={flattenPages(query.data?.pages).map((customer) => ({
 					id: customer.id,
 					name: customer.name,
-					detail: customer.phone,
+					detail: formatPhone(customer.phone),
 				}))}
 				hasMore={query.hasNextPage}
 				selectedId={value?.id ?? null}

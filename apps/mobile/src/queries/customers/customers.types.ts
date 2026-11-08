@@ -1,21 +1,19 @@
 import type { ISODate } from "@/lib/dates";
 import type { Money } from "@/lib/money";
-import type { Page } from "@/queries/pagination";
 
-/** A regular customer of the store (docs/product/clientes.md). */
+/** A regular customer of the store as the API sends it (docs/product/clientes.md). The name may repeat. */
 export type Customer = {
 	id: string;
 	name: string;
+	/** Digits only ("11999998888"); shown with `formatPhone`. */
 	phone: string | null;
 	note: string | null;
 	archived: boolean;
-	/** Active (not canceled) sales only. */
+	/** Active (not canceled) sales only. Empty until sales exist (MUN-16). */
 	purchasesCount: number;
 	totalSpent: Money;
 	lastPurchaseAt: ISODate | null;
 };
-
-export type CustomerPage = Page<Customer>;
 
 export type CustomerListFilters = { search: string; archived: boolean };
 

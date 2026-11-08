@@ -4,15 +4,11 @@ import {
 	useMutation,
 	useQuery,
 } from "@tanstack/react-query";
+import { api, request } from "@/lib/api";
+import { searchParam } from "@/lib/search";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
-import { underConstruction } from "@/queries/under-construction";
-import type {
-	Customer,
-	CustomerInput,
-	CustomerListFilters,
-	CustomerPage,
-} from "./customers.types";
+import type { CustomerInput, CustomerListFilters } from "./customers.types";
 
 export const customersKeys = {
 	all: ["customers"] as const,
@@ -25,7 +21,17 @@ export const customersKeys = {
 export function useCustomers(filters: CustomerListFilters) {
 	return useInfiniteQuery({
 		queryKey: customersKeys.list(filters),
-		...pagedQuery((cursor) => underConstruction<CustomerPage>(filters, cursor)),
+		...pagedQuery((cursor) =>
+			request(
+				api.customers.get({
+					query: {
+						search: searchParam(filters.search),
+						archived: filters.archived,
+						cursor,
+					},
+				}),
+			),
+		),
 		placeholderData: keepPreviousData,
 	});
 }
@@ -33,14 +39,15 @@ export function useCustomers(filters: CustomerListFilters) {
 export function useCustomer(id: string) {
 	return useQuery({
 		queryKey: customersKeys.detail(id),
-		queryFn: () => underConstruction<Customer>(id),
+		queryFn: () => request(api.customers({ id }).get()),
 	});
 }
 
+/** A customer shows on sales and the home, so all business data is refetched after a change. */
 export function useCreateCustomer() {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: CustomerInput) => underConstruction<Customer>(input),
+		mutationFn: (input: CustomerInput) => request(api.customers.post(input)),
 		onSuccess: invalidate,
 	});
 }
@@ -49,7 +56,7 @@ export function useUpdateCustomer(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
 		mutationFn: (input: CustomerInput) =>
-			underConstruction<Customer>(id, input),
+			request(api.customers({ id }).put(input)),
 		onSuccess: invalidate,
 	});
 }
@@ -57,8 +64,12 @@ export function useUpdateCustomer(id: string) {
 export function useSetCustomerArchived(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (archived: boolean) =>
-			underConstruction<Customer>(id, archived),
+		mutationFn: (archived: boolean) => {
+			const customer = api.customers({ id });
+			return request(
+				archived ? customer.archive.post() : customer.reactivate.post(),
+			);
+		},
 		onSuccess: invalidate,
 	});
 }
