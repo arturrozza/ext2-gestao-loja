@@ -1,7 +1,14 @@
+import { Type } from "@sinclair/typebox";
 import { t, type UnwrapSchema } from "elysia";
-import { moneyField, optionalText } from "../../lib/fields";
+import { stockAdjustmentReason, stockMovementType } from "../../db/schema";
+import {
+	expiryMonthField,
+	moneyField,
+	nonNegativeMoneyTotalField,
+	optionalText,
+} from "../../lib/fields";
 import { cursorQuery, pageOf } from "../../lib/pagination";
-import { STOCK_STATES } from "../stock/stock.rules";
+import { MAX_STOCK_UNITS, STOCK_STATES } from "../stock/stock.rules";
 
 const product = t.Object({
 	id: t.String(),
@@ -26,7 +33,55 @@ const product = t.Object({
 	averageCost: moneyField,
 	/** In cents. */
 	stockValue: moneyField,
-	flags: t.Object({ lowStock: t.Boolean(), outOfStock: t.Boolean() }),
+	flags: t.Object({
+		lowStock: t.Boolean(),
+		outOfStock: t.Boolean(),
+		/** Has units that expire within the store's warning days. */
+		nearExpiry: t.Boolean(),
+		/** Has units past their expiry, still counted until discarded. */
+		expired: t.Boolean(),
+	}),
+});
+
+/** Units with the same expiry ("YYYY-MM", `null`: none). Lots stay hidden from the user (estoque.md). */
+const expiryBalance = t.Object({
+	expiry: t.Union([t.Null(), t.String()]),
+	quantity: t.Integer(),
+	expired: t.Boolean(),
+	nearExpiry: t.Boolean(),
+});
+
+/** One product on its own screen: with its units by expiry, soonest first. */
+const productDetail = t.Object({
+	...product.properties,
+	expiries: t.Array(expiryBalance),
+});
+
+/** One entry of the stock ledger (estoque.md): never changes once written. */
+const movement = t.Object({
+	id: t.String(),
+	type: t.UnionEnum(stockMovementType.enumValues),
+	/** Signed change in units (0 for a cost correction). */
+	quantity: t.Integer(),
+	/** In cents: the cost of an entry, the average cost taken by an exit, the corrected cost. */
+	unitCost: moneyField,
+	averageCostAfter: moneyField,
+	stockAfter: t.Integer(),
+	/** Why, on an adjustment. */
+	reason: t.Union([t.Null(), t.UnionEnum(stockAdjustmentReason.enumValues)]),
+	note: t.Union([t.Null(), t.String()]),
+	/** The purchase it came from, to open from the history. */
+	origin: t.Union([
+		t.Null(),
+		t.Object({
+			kind: t.Literal("purchase"),
+			id: t.String(),
+			number: t.Integer(),
+		}),
+	]),
+	createdAt: t.String(),
+	/** Name of who did it. */
+	author: t.String(),
 });
 
 /** What the product form edits (produtos.md): stock and cost never, they come from purchases. */
@@ -75,9 +130,40 @@ const listQuery = t.Object({
 	cursor: cursorQuery,
 });
 
+/** Stock adjustment (estoque.md, "Ajuste"): the right quantity and why. The rules check what goes with what. */
+const adjustmentBody = t.Object({
+	newQuantity: Type.Integer({ minimum: 0, maximum: MAX_STOCK_UNITS }),
+	reason: t.UnionEnum(stockAdjustmentReason.enumValues),
+	/** Required for "other". */
+	note: optionalText(500),
+	/** Going down with more than one expiry: where the units left from (`null`: those without expiry). */
+	fromExpiry: t.Optional(t.Union([t.Null(), expiryMonthField])),
+	/** Going up on a product with expiry: the expiry of the new units. */
+	expiry: t.Optional(t.Union([t.Null(), expiryMonthField])),
+});
+
+/** Cost correction (estoque.md, "Corrigir custo"): the right average cost, in cents, and why. */
+const costCorrectionBody = t.Object({
+	newCost: moneyField,
+	note: t.String({ minLength: 1, maxLength: 500, pattern: "\\S" }),
+});
+
 export const ProductsModel = {
 	product,
+	productDetail,
 	page: pageOf(product),
+	movement,
+	movementsPage: pageOf(movement),
+	adjustmentBody,
+	costCorrectionBody,
+	/** `cursor`: the `nextCursor` of the page before (a ledger `seq`); left out, the newest page. */
+	movementsQuery: t.Object({
+		cursor: t.Optional(
+			t.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
+		),
+	}),
+	/** In cents: all the store's stock (estoque.md, "valor total em estoque"). */
+	stockValue: t.Object({ value: nonNegativeMoneyTotalField }),
 	body,
 	photoUpload,
 	uploadedPhoto,
@@ -87,7 +173,12 @@ export const ProductsModel = {
 
 export type ProductsModel = {
 	product: UnwrapSchema<typeof ProductsModel.product>;
+	productDetail: UnwrapSchema<typeof ProductsModel.productDetail>;
 	page: UnwrapSchema<typeof ProductsModel.page>;
+	movementsPage: UnwrapSchema<typeof ProductsModel.movementsPage>;
+	stockValue: UnwrapSchema<typeof ProductsModel.stockValue>;
+	adjustmentBody: UnwrapSchema<typeof ProductsModel.adjustmentBody>;
+	costCorrectionBody: UnwrapSchema<typeof ProductsModel.costCorrectionBody>;
 	body: UnwrapSchema<typeof ProductsModel.body>;
 	uploadedPhoto: UnwrapSchema<typeof ProductsModel.uploadedPhoto>;
 	listQuery: UnwrapSchema<typeof ProductsModel.listQuery>;

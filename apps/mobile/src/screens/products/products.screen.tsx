@@ -19,12 +19,17 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useInfiniteList } from "@/components/use-infinite-list";
 import { plural, STOCK_STATE_OPTIONS } from "@/lib/labels";
+import { formatMoney, type Money } from "@/lib/money";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import type {
 	ProductListFilters,
 	StockState,
 } from "@/queries/products/products.types";
-import { useCategories, useProducts } from "@/queries/products/use-products";
+import {
+	useCategories,
+	useProducts,
+	useStockValue,
+} from "@/queries/products/use-products";
 import { ProductRow } from "./partials/product-row";
 
 type Status = "active" | "archived";
@@ -81,19 +86,28 @@ function NoProducts({
 	);
 }
 
-/** The count of the filter. The store's total stock value joins it with the stock screen (MUN-13). */
+/** The count of the filter, and the value of all the store's stock (whatever the filter: estoque.md). */
 function subtitleOf(
 	page: { total: number } | undefined,
 	onlyCategory: string | undefined,
+	stockValue: Money | undefined,
 ) {
 	if (!page) return undefined;
 	const count = plural(page.total, "produto", "produtos");
-	return onlyCategory ? `${onlyCategory} · ${count}` : count;
+	return [
+		onlyCategory,
+		count,
+		stockValue === undefined
+			? null
+			: `${formatMoney(stockValue)} em estoque na loja`,
+	]
+		.filter(Boolean)
+		.join(" · ");
 }
 
 /**
  * Products tab (docs/product/produtos.md): search by name/code/barcode (camera too), stock, category and status filters
- * in a sheet, each row with its stock. The expiry filters and the total stock value come with the stock screen (MUN-13).
+ * in a sheet, each row with its stock, and the store's total stock value on top.
  * New products start at the tab bar's "+". Virtualized and paginated: the catalog can be huge.
  */
 export function ProductsScreen() {
@@ -121,6 +135,7 @@ export function ProductsScreen() {
 		stock,
 	};
 	const query = useProducts(filters);
+	const stockValue = useStockValue();
 	const firstPage = query.data?.pages[0];
 	const list = useInfiniteList(
 		query,
@@ -177,7 +192,7 @@ export function ProductsScreen() {
 		>
 			<PageTitle
 				title="Produtos"
-				subtitle={subtitleOf(firstPage, onlyCategory)}
+				subtitle={subtitleOf(firstPage, onlyCategory, stockValue.data?.value)}
 				subtitleLoading={query.isPending}
 				right={
 					<IconButton

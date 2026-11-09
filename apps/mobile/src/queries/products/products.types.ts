@@ -2,11 +2,15 @@ import type { ExpiryMonth } from "@/lib/dates";
 import type { Money } from "@/lib/money";
 import type { Page } from "@/queries/pagination";
 
-/** The quantity states of a product (estoque.md). The expiry ones come with MUN-13 (`StockFlags`). */
-export type QuantityFlags = {
+/** The stock states of a product (estoque.md). */
+export type StockFlags = {
 	/** Quantity at or below the minimum (and not zero). */
 	lowStock: boolean;
 	outOfStock: boolean;
+	/** Has units within the "expiry warning" days of the settings. */
+	nearExpiry: boolean;
+	/** Has units past their expiry, still counted until discarded. */
+	expired: boolean;
 };
 
 /**
@@ -34,11 +38,11 @@ export type Product = {
 	/** stock value ÷ units, rounded to the cent. */
 	averageCost: Money;
 	stockValue: Money;
-	flags: QuantityFlags;
+	flags: StockFlags;
 };
 
-/** Stock states the product list filters by: any of them (estoque.md). The expiry ones come with MUN-13. */
-export type StockState = "in_stock" | "low" | "out";
+/** Stock states the product list filters by: any of them (estoque.md). */
+export type StockState = "in_stock" | "low" | "out" | "near_expiry" | "expired";
 
 export type ProductListFilters = {
 	/** Name, internal code or barcode. */
@@ -91,20 +95,7 @@ export type ItemPreview = {
 	photoUrl: string | null;
 };
 
-/*
- * Stock screen contract (estoque.md, MUN-13): expiry states, quantity by expiry, ledger, adjustment and cost
- * correction. Not in the API yet: the screens that use these are under construction.
- */
-
-/** Stock filters of the stock screen (docs/product/estoque.md). */
-export type StockFilter = StockState | "near_expiry" | "expired";
-
-export type StockFlags = QuantityFlags & {
-	/** Has units within the "expiry warning" days of the settings. */
-	nearExpiry: boolean;
-	/** Has units past their expiry. */
-	expired: boolean;
-};
+/* Stock (estoque.md): quantity by expiry, the ledger, adjustments and cost corrections. */
 
 /** Units in stock with the same expiry (`null`: no expiry). Lots stay hidden from the user. */
 export type ExpiryBalance = {
@@ -144,14 +135,14 @@ export type Movement = {
 	stockAfter: number;
 	reason: AdjustmentReason | null;
 	note: string | null;
-	/** Purchase or sale that caused it, to open from the history. */
-	origin: { kind: "purchase" | "sale"; id: string; number: number } | null;
+	/** The purchase that caused it, to open from the history (sales join when they exist). */
+	origin: { kind: "purchase"; id: string; number: number } | null;
 	createdAt: string;
 	author: string;
 };
 
+/** A product on its own screen: with its units by expiry, soonest first. */
 export type ProductDetail = Product & {
-	flags: StockFlags;
 	expiries: ExpiryBalance[];
 };
 
@@ -161,7 +152,7 @@ export type StockAdjustmentInput = {
 	note: string | null;
 	/** Reducing with more than one expiry: where the units left from (`null`: units without expiry). */
 	fromExpiry?: ExpiryMonth | null;
-	/** Increasing a product with expiry: expiry of the new units. */
+	/** Increasing a product with expiry: expiry of the new units (a past month too: found expired). */
 	expiry: ExpiryMonth | null;
 };
 

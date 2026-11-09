@@ -620,7 +620,12 @@ describe("product stock", () => {
 			stockValue: 192_000,
 			flags: { lowStock: true, outOfStock: false },
 		});
-		expect(listed).toEqual(read);
+		// The list has no breakdown by expiry: only the product screen does.
+		const { expiries, ...withoutExpiries } = read;
+		expect(listed).toEqual(withoutExpiries);
+		expect(expiries).toEqual([
+			{ expiry: null, quantity: 20, expired: false, nearExpiry: false },
+		]);
 	});
 
 	it("rounds the average cost only for showing", async () => {

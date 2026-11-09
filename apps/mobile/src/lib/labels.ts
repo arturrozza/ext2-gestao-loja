@@ -2,7 +2,6 @@
 import type {
 	AdjustmentReason,
 	MovementType,
-	StockFilter,
 	StockState,
 } from "@/queries/products/products.types";
 import type {
@@ -31,7 +30,7 @@ export const MOVEMENT_TYPES: Record<MovementType, string> = {
 	cost_correction: "Custo corrigido",
 };
 
-export const STOCK_FILTERS: Record<StockFilter, string> = {
+export const STOCK_FILTERS: Record<StockState, string> = {
 	in_stock: "Com estoque",
 	low: "Estoque baixo",
 	out: "Sem estoque",
@@ -39,9 +38,15 @@ export const STOCK_FILTERS: Record<StockFilter, string> = {
 	expired: "Vencidos",
 };
 
-/** The stock filter of the product list and the picker (estoque.md). The expiry ones join with MUN-13. */
+/** The stock filter of the product list and the picker (estoque.md). */
 export const STOCK_STATE_OPTIONS = (
-	["in_stock", "low", "out"] as const satisfies readonly StockState[]
+	[
+		"in_stock",
+		"low",
+		"out",
+		"near_expiry",
+		"expired",
+	] as const satisfies readonly StockState[]
 ).map((value) => ({ value, label: STOCK_FILTERS[value] }));
 
 export const SALE_CHANNELS: Record<SaleChannel, string> = {

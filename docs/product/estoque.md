@@ -23,7 +23,12 @@ própria: fica na lista e na tela de [Produtos](produtos.md).
   centavo.
 - Estoque baixo: quantidade igual ou abaixo do mínimo, com alguma unidade. Sem nenhuma, é "sem estoque". Sem mínimo
   definido, o produto nunca fica com estoque baixo.
-- As unidades vencidas contam na quantidade até serem descartadas, mas não no que está disponível para venda.
+- As unidades vencidas contam na quantidade e no valor até serem descartadas, mas não no que está disponível para
+  venda.
+- Perto de vencer: unidades ainda não vencidas cujo mês de validade termina dentro da antecedência de vencimento das
+  configurações da loja (30 dias por padrão).
+- O valor total em estoque é o da loja inteira, sem depender da busca ou do filtro, e inclui os produtos arquivados que
+  ainda têm unidades.
 - Saída na venda: primeiro a validade mais próxima; sem validade, o lote mais antigo.
 - Unidades vencidas não entram na venda. Saem por ajuste, com o motivo "vencido descartado".
 
@@ -33,29 +38,28 @@ Corrige a quantidade quando o app não bate com a prateleira. A pessoa informa a
 avaria, perda, vencido descartado, brinde ou uso interno, ou outro.
 
 - Antes de confirmar, o app mostra o efeito, como **"10 → 8 (−2) · −R$ 184 em estoque. Motivo: perda."**
-- Reduzindo, com mais de uma validade, a pessoa escolhe de qual saiu.
-- Aumentando, as unidades entram com o custo médio atual, sem alterá-lo. Se o produto tem validade, o app pede a data.
+- "Outro" exige explicar o motivo. Só "contagem" e "outro" aumentam a quantidade; os demais só tiram unidades.
+- Reduzindo, com mais de uma validade, a pessoa escolhe de qual saiu, e a redução não passa do que essa validade tem.
+  Para tirar de duas validades, faz dois ajustes. Zerando o estoque, não precisa escolher.
+- "Vencido descartado" só tira unidades vencidas. Para zerar um produto que ainda tem unidades boas, escolha outro
+  motivo ou descarte só a validade vencida.
+- Aumentando, as unidades entram com o custo médio atual, sem alterá-lo. Se o produto tem validade, o app pede a data,
+  que pode ser de um mês que já passou: as unidades entram já vencidas.
+- Sem estoque não há ajuste: as unidades entram por uma compra, que traz o custo.
+- Um ajuste soma até 100.000 unidades de uma vez.
 - O estoque não fica negativo.
+- Produtos arquivados também podem ser ajustados: as unidades deles continuam na loja.
 
 ## Corrigir custo
 
 Serve para quando o custo foi lançado errado e já houve venda, o que impede cancelar a compra.
 
-- A pessoa informa o custo certo e o motivo, e isso fica registrado.
+- A pessoa informa o custo médio certo e o motivo, e isso fica registrado. Vale para todas as unidades em estoque.
+- Antes de confirmar, o app mostra o efeito, como **"R$ 92,00 → R$ 88,00 · −R$ 40,00 em estoque"**.
+- Sem estoque não há custo para corrigir. O custo pode ser corrigido para zero.
 - As vendas seguintes usam o custo corrigido.
 - As vendas antigas não mudam. Para corrigir uma, cancela e lança de novo.
-
-## Ainda não disponível no app
-
-Já aparecem a quantidade, o custo médio e o valor em estoque de cada produto, e os filtros com estoque, estoque baixo e
-sem estoque. Os filtros perto de vencer e vencido, o valor total do estoque, a quantidade por validade, o histórico de
-movimentações, o ajuste e a correção de custo chegam com a tarefa de estoque; até lá, "Ajustar estoque" e "Corrigir
-custo" aparecem marcados "Em construção".
 
 ## Fora do escopo
 
 Inventário completo de uma vez e transferência entre depósitos.
-
-## Em aberto
-
-- Unidades vencidas continuam contando no valor em estoque até serem descartadas?

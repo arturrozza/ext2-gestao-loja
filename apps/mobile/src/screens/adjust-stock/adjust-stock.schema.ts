@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { parseExpiryInput } from "@/lib/dates";
 import { ADJUSTMENT_REASONS } from "@/lib/labels";
+import { MAX_ADJUST_UNITS } from "@/lib/stock-math";
 import {
 	type AdjustmentReason,
 	INCREASE_REASONS,
@@ -40,9 +41,29 @@ export function allowedReasons(
 ): AdjustmentReason[] {
 	if (quantity !== null && quantity > product.stock)
 		return [...INCREASE_REASONS];
-	const hasExpired = product.expiries.some((balance) => balance.expired);
+	// Going to zero takes every expiry: a discard as expired only fits when all of them are expired.
+	const discardable =
+		quantity === 0
+			? product.expiries.every((balance) => balance.expired)
+			: product.expiries.some((balance) => balance.expired);
 	return (Object.keys(ADJUSTMENT_REASONS) as AdjustmentReason[]).filter(
-		(reason) => reason !== "expired_discarded" || hasExpired,
+		(reason) => reason !== "expired_discarded" || discardable,
+	);
+}
+
+/**
+ * Going down with more than one expiry, the person says where the units left from; going to zero takes them all
+ * (estoque.md, "Ajuste").
+ */
+export function needsFromExpiry(
+	product: ProductDetail,
+	quantity: number | null,
+): boolean {
+	return (
+		quantity !== null &&
+		quantity > 0 &&
+		quantity < product.stock &&
+		product.expiries.length > 1
 	);
 }
 
@@ -77,10 +98,15 @@ function firstIssue(
 		};
 	if (quantity === product.stock)
 		return { path: "newQuantity", message: "É a mesma quantidade de agora." };
+	if (quantity - product.stock > MAX_ADJUST_UNITS)
+		return {
+			path: "newQuantity",
+			message: "Um ajuste soma até 100.000 unidades.",
+		};
 	const issue = reasonIssue(values, product, quantity);
 	if (issue) return issue;
 	const reducing = quantity < product.stock;
-	if (reducing && product.expiries.length > 1 && !values.fromExpiry)
+	if (needsFromExpiry(product, quantity) && !values.fromExpiry)
 		return { path: "fromExpiry", message: "Escolha de qual validade saiu." };
 	if (!reducing && product.hasExpiry && !parseExpiryInput(values.expiry))
 		return { path: "expiry", message: "Informe a validade (mês/ano)." };

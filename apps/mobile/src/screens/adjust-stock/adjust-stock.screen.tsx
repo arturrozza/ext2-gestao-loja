@@ -16,15 +16,13 @@ import type {
 	AdjustmentReason,
 	ProductDetail,
 } from "@/queries/products/products.types";
-import {
-	useAdjustStock,
-	useStockProduct,
-} from "@/queries/products/use-products";
+import { useAdjustStock, useProduct } from "@/queries/products/use-products";
 import {
 	type AdjustFormValues,
 	adjustSchema,
 	allowedReasons,
 	NO_EXPIRY,
+	needsFromExpiry,
 	parseQuantity,
 } from "./adjust-stock.schema";
 import { AdjustPreview } from "./partials/adjust-preview";
@@ -59,7 +57,7 @@ function ExpirySection({
 	const { values, errors, set } = form;
 	if (quantity === null || quantity === product.stock) return null;
 	if (quantity < product.stock) {
-		if (product.expiries.length <= 1) return null;
+		if (!needsFromExpiry(product, quantity)) return null;
 		return (
 			<FormSection>
 				<SelectField
@@ -91,30 +89,17 @@ function ExpirySection({
 	);
 }
 
-function ZeroCostHint({
-	product,
-	quantity,
-}: {
-	product: ProductDetail;
-	quantity: number | null;
-}) {
-	const increasing = quantity !== null && quantity > product.stock;
-	if (!increasing || product.averageCost !== 0) return null;
-	return (
-		<Text className="px-1 text-muted-foreground text-xs">
-			Este produto ainda não tem custo: as unidades entram valendo R$ 0,00. Se
-			elas foram compradas, lance uma compra em vez de ajustar.
-		</Text>
-	);
-}
-
 function AdjustForm({ product }: { product: ProductDetail }) {
 	const adjust = useAdjustStock(product.id);
 	// "Descartar" on an expired-product alert arrives with the reason chosen.
-	const params = useLocalSearchParams<{ reason?: AdjustmentReason }>();
+	const params = useLocalSearchParams<{ reason?: string }>();
+	const reason =
+		params.reason && Object.hasOwn(ADJUSTMENT_REASONS, params.reason)
+			? (params.reason as AdjustmentReason)
+			: undefined;
 	const form = useZodForm(adjustSchema(product), {
 		newQuantity: String(product.stock),
-		reason: params.reason,
+		reason,
 		note: "",
 		fromExpiry: undefined,
 		expiry: "",
@@ -169,14 +154,16 @@ function AdjustForm({ product }: { product: ProductDetail }) {
 						label: ADJUSTMENT_REASONS[value],
 					}))}
 					value={values.reason}
-					onChange={(reason) =>
+					onChange={(reason) => {
 						// The offered expiries depend on the reason: choose again.
 						form.setValues((current) => ({
 							...current,
 							reason,
 							fromExpiry: undefined,
-						}))
-					}
+						}));
+						form.clearServerErrors("reason");
+						form.clearServerErrors("fromExpiry");
+					}}
 				/>
 				<FormField
 					label={
@@ -193,7 +180,6 @@ function AdjustForm({ product }: { product: ProductDetail }) {
 				/>
 			</FormSection>
 			<ExpirySection product={product} quantity={quantity} form={form} />
-			<ZeroCostHint product={product} quantity={quantity} />
 			<AdjustPreview
 				product={product}
 				newQuantity={quantity}
@@ -206,7 +192,7 @@ function AdjustForm({ product }: { product: ProductDetail }) {
 /** Fix the quantity when the app doesn't match the shelf (estoque.md, "Ajuste"), with the effect shown first. */
 export function AdjustStockScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const query = useStockProduct(id);
+	const query = useProduct(id);
 	return (
 		<ScreenQuery
 			title="Ajustar estoque"

@@ -11,10 +11,7 @@ import { units } from "@/lib/labels";
 import { formatMoney, formatSignedMoney, parseMoneyInput } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
 import type { ProductDetail } from "@/queries/products/products.types";
-import {
-	useCorrectCost,
-	useStockProduct,
-} from "@/queries/products/use-products";
+import { useCorrectCost, useProduct } from "@/queries/products/use-products";
 import { correctCostSchema } from "./correct-cost.schema";
 
 function CostPreview({
@@ -25,13 +22,16 @@ function CostPreview({
 	newCostCents: number | null;
 }) {
 	const current = product.averageCost;
-	if (newCostCents === null || newCostCents === current) return null;
+	// Without stock there's no cost to correct (the API refuses it): no effect to show.
+	if (newCostCents === null || newCostCents === current || !product.stock)
+		return null;
 	return (
 		<View className="gap-1 rounded-2xl bg-background p-4">
 			<Text className="text-muted-foreground text-xs">Como fica</Text>
 			<Text className="font-sans-semibold text-base">
 				{formatMoney(current)} → {formatMoney(newCostCents)} ·{" "}
-				{formatSignedMoney((newCostCents - current) * product.stock)} em estoque
+				{formatSignedMoney(newCostCents * product.stock - product.stockValue)}{" "}
+				em estoque
 			</Text>
 			<Text className="text-muted-foreground text-sm">
 				{units(product.stock)} passam a valer {formatMoney(newCostCents)} cada.
@@ -102,7 +102,7 @@ function CostForm({ product }: { product: ProductDetail }) {
 /** Fix a wrong average cost (estoque.md, "Corrigir custo"), with the reason recorded. */
 export function CorrectCostScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const query = useStockProduct(id);
+	const query = useProduct(id);
 	return (
 		<ScreenQuery
 			title="Corrigir custo"

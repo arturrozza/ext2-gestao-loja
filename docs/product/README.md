@@ -93,4 +93,5 @@ confirma ao testar. Se algo mudar, atualize o módulo e registre o porquê em [`
 | Conta do lucro real | Como em [Vendas](vendas.md#lucro-real) |
 | Fiado e parcelas | Fora do MVP; a condição de pagamento é só informativa |
 | Clientes | Cadastro opcional na venda |
+| Unidades vencidas | Contam na quantidade e no valor em estoque até serem descartadas por ajuste |
 | Pedido OK | Ele compara ao usar; o mantenedor lembra, sem certeza, de reclamações sobre estoque editado na mão e custo calculado manualmente |

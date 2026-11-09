@@ -59,9 +59,10 @@ src/
     <module>.model.ts             `t` schemas for request/response + derived types (`<Module>Model`)
     <module>.service.test.ts      unit tests next to the code
   modules/stock/                  no routes: the stock ledger (`stock.ledger.ts`, the only writer of lots and
-                                  movements), its SQL reads (`stock.queries.ts`) and pure math (`stock.rules.ts`).
-                                  Stock writers lock products first (`products/products.lock.ts`); see
-                                  docs/architecture.md ("Estoque")
+                                  movements), its SQL reads (`stock.queries.ts`), pure math (`stock.rules.ts`) and
+                                  the adjustment and cost correction rules (`stock.adjustment.ts`). The stock routes
+                                  live in `products/products.stock.ts`. Stock writers lock products first
+                                  (`products/products.lock.ts`); see docs/architecture.md ("Estoque")
 test/
   support/            test helpers (database reset, factories, `thrown()` for rules that throw `status()`)
   integration/        services against the real test DB (<module>.integration.test.ts)

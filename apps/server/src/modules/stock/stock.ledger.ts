@@ -1,8 +1,15 @@
+import { eq, sql } from "drizzle-orm";
 import type { Transaction } from "../../db/audit";
+import { insertedRow } from "../../db/rows";
 import { stockLots, stockMovements } from "../../db/schema";
-import type { ISODate } from "../../lib/dates";
+import { expiryToDate, type ISODate } from "../../lib/dates";
 import { stockBalances } from "./stock.queries";
-import { type PlannedEntry, planEntries } from "./stock.rules";
+import {
+	type AdjustmentPlan,
+	type CostCorrectionPlan,
+	type PlannedEntry,
+	planEntries,
+} from "./stock.rules";
 
 /*
  * The stock ledger (docs/product/estoque.md): the one place that writes lots and movements. The caller locks the
@@ -71,4 +78,63 @@ export async function recordEntries(
 			purchaseItemId: movement.purchaseItemId,
 		})),
 	);
+}
+
+/**
+ * Records an adjustment (`planAdjustment`): units leave their lots, or come in as a new lot without a purchase, and
+ * one `adjustment` movement keeps the reason. It points at the new lot going up; going down the units may leave more
+ * than one lot, which the audit log of `stock_lots` keeps.
+ */
+export async function recordAdjustment(
+	tx: Transaction,
+	{ storeId, userId }: LedgerScope,
+	productId: string,
+	{ movement, reason, note, takes, newLot }: AdjustmentPlan,
+): Promise<void> {
+	for (const take of takes) {
+		await tx
+			.update(stockLots)
+			.set({ quantity: sql`${stockLots.quantity} - ${take.units}` })
+			.where(eq(stockLots.id, take.lotId));
+	}
+	const added =
+		newLot &&
+		insertedRow(
+			await tx
+				.insert(stockLots)
+				.values({
+					storeId,
+					productId,
+					expiry: newLot.expiry && expiryToDate(newLot.expiry),
+					quantity: newLot.quantity,
+				})
+				.returning({ id: stockLots.id }),
+		);
+	await tx.insert(stockMovements).values({
+		storeId,
+		userId,
+		productId,
+		type: "adjustment",
+		...movement,
+		reason,
+		note,
+		lotId: added?.id ?? null,
+	});
+}
+
+/** Records a cost correction (`planCostCorrection`): no unit moves, only the value of the stock. */
+export async function recordCostCorrection(
+	tx: Transaction,
+	{ storeId, userId }: LedgerScope,
+	productId: string,
+	{ movement, note }: CostCorrectionPlan,
+): Promise<void> {
+	await tx.insert(stockMovements).values({
+		storeId,
+		userId,
+		productId,
+		type: "cost_correction",
+		...movement,
+		note,
+	});
 }

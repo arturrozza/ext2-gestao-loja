@@ -7,6 +7,7 @@ import {
 	integer,
 	pgEnum,
 	snakeCase,
+	text,
 	uniqueIndex,
 	uuid,
 } from "drizzle-orm/pg-core";
@@ -62,6 +63,16 @@ export const stockMovementType = pgEnum("stock_movement_type", [
 	"cost_correction",
 ]);
 
+/** Why an adjustment changed the quantity (estoque.md, "Ajuste"). The app shows the same names (`AdjustmentReason`). */
+export const stockAdjustmentReason = pgEnum("stock_adjustment_reason", [
+	"count",
+	"damage",
+	"loss",
+	"expired_discarded",
+	"gift_internal_use",
+	"other",
+]);
+
 /**
  * The stock ledger: one row per change of quantity or cost, never updated or deleted (a trigger refuses it). The sum
  * of `valueChange` is the value of the product's stock.
@@ -94,6 +105,10 @@ export const stockMovements = snakeCase.table(
 		/** Average cost right after it, rounded to the cent (only for showing: the balance never uses it). */
 		averageCostAfter: moneyColumn().notNull(),
 		lotId: uuid().references(() => stockLots.id),
+		/** Why, on an adjustment (null on every other type). */
+		reason: stockAdjustmentReason(),
+		/** What the person wrote: the explanation of an adjustment or a cost correction. */
+		note: text(),
 		/** Origin, when it came from a purchase. */
 		purchaseItemId: uuid().references(() => purchaseItems.id),
 		/** Who did it. */
@@ -105,6 +120,11 @@ export const stockMovements = snakeCase.table(
 	(table) => [
 		index().on(table.productId, table.seq),
 		index().on(table.purchaseItemId),
+		// Every adjustment says why, and only adjustments have a reason.
+		check(
+			"stock_movements_reason_on_adjustment",
+			sql`(${table.type} = 'adjustment') = (${table.reason} is not null)`,
+		),
 		check(
 			"stock_movements_stock_after_non_negative",
 			sql`${table.stockAfter} >= 0`,

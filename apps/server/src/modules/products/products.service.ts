@@ -21,12 +21,12 @@ import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
 import { photoStorage, photoUrlOf } from "../../lib/photo-storage";
 import { searchPatterns } from "../../lib/search";
 import type { AuthSession } from "../auth/auth.model";
-import { stockColumns, stockStateFilter } from "../stock/stock.queries";
 import {
-	type StockFigures,
-	type StockSummary,
-	stockSummary,
-} from "../stock/stock.rules";
+	stockByExpiry,
+	stockColumns,
+	stockStateFilter,
+} from "../stock/stock.queries";
+import { stockSummary } from "../stock/stock.rules";
 import type { ProductsModel } from "./products.model";
 import {
 	assertJpeg,
@@ -35,7 +35,11 @@ import {
 	PHOTO_CONTENT_TYPE,
 	photoNotFound,
 } from "./products.photo";
-import { normalizeProduct, type ProductValues } from "./products.rules";
+import {
+	normalizeProduct,
+	notFound,
+	type ProductValues,
+} from "./products.rules";
 
 /** A product with its stock on `today` (the day decides which units are sellable). */
 const columns = (today: ISODate) => ({
@@ -51,31 +55,22 @@ const columns = (today: ISODate) => ({
 	hasExpiry: products.hasExpiry,
 	photoKey: products.photoKey,
 	archivedAt: products.archivedAt,
-	...stockColumns(today),
+	figures: stockColumns(today),
 });
 
-type ProductRow = Omit<
-	ProductsModel["product"],
-	"archived" | "photoUrl" | keyof StockSummary
-> &
-	StockFigures & {
-		photoKey: string | null;
-		archivedAt: Date | null;
-	};
+type ProductRow = Awaited<ReturnType<typeof selectProducts>>[number];
 
 function toProduct({
 	archivedAt,
 	photoKey,
-	stock,
-	sellableStock,
-	stockValue,
+	figures,
 	...row
 }: ProductRow): ProductsModel["product"] {
 	return {
 		...row,
 		photoUrl: photoUrlOf(photoKey),
 		archived: archivedAt !== null,
-		...stockSummary({ stock, sellableStock, stockValue }, row.minStock),
+		...stockSummary(figures, row.minStock),
 	};
 }
 
@@ -95,12 +90,6 @@ async function checkedPhotoColumns(
 	return { photoKey };
 }
 
-const notFound = () =>
-	httpError(404, {
-		code: "product_not_found",
-		message: "Produto não encontrado.",
-	});
-
 function selectProducts(executor: Executor, today: ISODate) {
 	return executor
 		.select(columns(today))
@@ -108,12 +97,21 @@ function selectProducts(executor: Executor, today: ISODate) {
 		.leftJoin(categories, eq(categories.id, products.categoryId));
 }
 
-async function find(executor: Executor, storeId: string, id: string) {
-	const [row] = await selectProducts(executor, storeToday()).where(
+/** One product of the store with its units by expiry, or a 404. */
+async function find(
+	executor: Executor,
+	storeId: string,
+	id: string,
+): Promise<ProductsModel["productDetail"]> {
+	const today = storeToday();
+	const [row] = await selectProducts(executor, today).where(
 		and(eq(products.id, id), eq(products.storeId, storeId)),
 	);
 	if (!row) throw notFound();
-	return toProduct(row);
+	return {
+		...toProduct(row),
+		expiries: await stockByExpiry(executor, id, today),
+	};
 }
 
 /**
@@ -277,7 +275,7 @@ export const ProductsService = {
 		};
 	},
 
-	get(storeId: string, id: string): Promise<ProductsModel["product"]> {
+	get(storeId: string, id: string): Promise<ProductsModel["productDetail"]> {
 		return find(db, storeId, id);
 	},
 
@@ -303,7 +301,7 @@ export const ProductsService = {
 	async create(
 		session: AuthSession,
 		input: ProductsModel["body"],
-	): Promise<ProductsModel["product"]> {
+	): Promise<ProductsModel["productDetail"]> {
 		const storeId = session.store.id;
 		const values = normalizeProduct(input);
 		const photo = await checkedPhotoColumns(storeId, input.photoKey);
@@ -327,7 +325,7 @@ export const ProductsService = {
 		session: AuthSession,
 		id: string,
 		input: ProductsModel["body"],
-	): Promise<ProductsModel["product"]> {
+	): Promise<ProductsModel["productDetail"]> {
 		const storeId = session.store.id;
 		const values = normalizeProduct(input);
 		if (typeof input.photoKey === "string") {
@@ -360,7 +358,7 @@ export const ProductsService = {
 		session: AuthSession,
 		id: string,
 		archived: boolean,
-	): Promise<ProductsModel["product"]> {
+	): Promise<ProductsModel["productDetail"]> {
 		const storeId = session.store.id;
 		return audited(session.user.id, async (tx) => {
 			await tx

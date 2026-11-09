@@ -11,12 +11,10 @@ import { api, request, uploadFile } from "@/lib/api";
 import { isApiError } from "@/lib/api-error";
 import { searchParam } from "@/lib/search";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
-import { type Page, pagedQuery } from "@/queries/pagination";
-import { underConstruction } from "@/queries/under-construction";
+import { pagedQuery } from "@/queries/pagination";
 import type {
 	Category,
 	CostCorrectionInput,
-	Movement,
 	PhotoChange,
 	ProductDetail,
 	ProductInput,
@@ -32,7 +30,8 @@ export const productsKeys = {
 		[...productsKeys.lists(), filters] as const,
 	detail: (id: string) => [...productsKeys.all, "detail", id] as const,
 	categories: () => [...productsKeys.all, "categories"] as const,
-	stock: () => [...productsKeys.all, "stock"] as const,
+	movements: (id: string) => [...productsKeys.detail(id), "movements"] as const,
+	stockValue: () => [...productsKeys.all, "stock-value"] as const,
 };
 
 /** The API's list query: only the filters that narrow something. */
@@ -62,11 +61,14 @@ export function useProducts(filters: ProductListFilters, enabled = true) {
 	});
 }
 
+/** One product with its units by expiry (`useProduct` and `useStockProductsById` share its cache). */
+const fetchProduct = (id: string) => request(api.products({ id }).get());
+
 /** `id` undefined: nothing to load (e.g. an optional `?productId=`). */
 export function useProduct(id: string | undefined) {
 	return useQuery({
 		queryKey: productsKeys.detail(id ?? ""),
-		queryFn: id ? () => request(api.products({ id }).get()) : skipToken,
+		queryFn: id ? () => fetchProduct(id) : skipToken,
 	});
 }
 
@@ -200,25 +202,16 @@ export function useSetCategoryArchived() {
 }
 
 /*
- * Stock screen (MUN-13) and sales (MUN-16): under construction. The screens of sales and stock corrections use these
- * and aren't reachable yet.
+ * Stock (docs/product/estoque.md): the product detail already has its units by expiry, so the stock screens read it
+ * from `useProduct` and changes refetch every business query.
  */
-
-/** A product with its quantity by expiry. `id` undefined: nothing to load. */
-export function useStockProduct(id: string | undefined) {
-	return useQuery({
-		queryKey: [...productsKeys.stock(), "detail", id ?? ""],
-		queryFn: () => underConstruction<ProductDetail>(id),
-		enabled: Boolean(id),
-	});
-}
 
 /** Live stock of several products (e.g. the lines of a sale), keyed by id. */
 export function useStockProductsById(ids: string[]) {
 	const results = useQueries({
 		queries: ids.map((id) => ({
-			queryKey: [...productsKeys.stock(), "detail", id],
-			queryFn: () => underConstruction<ProductDetail>(id),
+			queryKey: productsKeys.detail(id),
+			queryFn: () => fetchProduct(id),
 		})),
 	});
 	const products = new Map<string, ProductDetail>();
@@ -228,11 +221,21 @@ export function useStockProductsById(ids: string[]) {
 	return products;
 }
 
+/** The store's total stock value, archived products included (estoque.md, "Na lista"). */
+export function useStockValue() {
+	return useQuery({
+		queryKey: productsKeys.stockValue(),
+		queryFn: () => request(api.products["stock-value"].get()),
+	});
+}
+
 /** Ledger of a product, newest first, paginated (it only grows). */
 export function useProductMovements(id: string) {
 	return useInfiniteQuery({
-		queryKey: [...productsKeys.stock(), "movements", id],
-		...pagedQuery((cursor) => underConstruction<Page<Movement>>(id, cursor)),
+		queryKey: productsKeys.movements(id),
+		...pagedQuery((cursor) =>
+			request(api.products({ id }).movements.get({ query: { cursor } })),
+		),
 	});
 }
 
@@ -240,7 +243,7 @@ export function useAdjustStock(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
 		mutationFn: (input: StockAdjustmentInput) =>
-			underConstruction<ProductDetail>(id, input),
+			request(api.products({ id }).adjustments.post(input)),
 		onSuccess: invalidate,
 	});
 }
@@ -249,7 +252,7 @@ export function useCorrectCost(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
 		mutationFn: (input: CostCorrectionInput) =>
-			underConstruction<ProductDetail>(id, input),
+			request(api.products({ id })["cost-corrections"].post(input)),
 		onSuccess: invalidate,
 	});
 }

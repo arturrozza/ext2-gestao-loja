@@ -177,6 +177,8 @@ describe("schema checks", () => {
 			stock_lots_quantity_non_negative: "CHECK ((quantity >= 0))",
 			stock_movements_average_cost_after_non_negative:
 				"CHECK ((average_cost_after >= 0))",
+			stock_movements_reason_on_adjustment:
+				"CHECK (((type = 'adjustment'::stock_movement_type) = (reason IS NOT NULL)))",
 			stock_movements_stock_after_non_negative: "CHECK ((stock_after >= 0))",
 			stores_default_tax_percent_range:
 				"CHECK (((default_tax_percent >= 0) AND (default_tax_percent <= 10000)))",

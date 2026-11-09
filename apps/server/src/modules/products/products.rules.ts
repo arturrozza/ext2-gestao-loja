@@ -3,6 +3,12 @@ import { normalizeSearch } from "../../lib/search";
 import { blankToNull } from "../../lib/text";
 import type { ProductsModel } from "./products.model";
 
+export const notFound = () =>
+	httpError(404, {
+		code: "product_not_found",
+		message: "Produto não encontrado.",
+	});
+
 /**
  * A product as it's saved: trimmed, blanks as null, base price above zero (produtos.md), and the text the search
  * matches (name and codes).

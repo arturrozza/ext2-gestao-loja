@@ -3,9 +3,10 @@ import { ErrorModel } from "../../lib/http-error";
 import { authMacro, tokenBeforeBody } from "../auth/auth.macro";
 import { ProductsModel } from "./products.model";
 import { ProductsService } from "./products.service";
+import { ProductStockService } from "./products.stock";
 
 const byId = {
-	200: ProductsModel.product,
+	200: ProductsModel.productDetail,
 	401: ErrorModel,
 	404: ErrorModel,
 	422: ErrorModel,
@@ -23,11 +24,19 @@ export const productsController = new Elysia({ prefix: "/products" })
 			response: { 200: ProductsModel.page, 401: ErrorModel, 422: ErrorModel },
 		},
 	)
+	.get(
+		"/stock-value",
+		({ session }) => ProductStockService.storeValue(session.store.id),
+		{
+			auth: true,
+			response: { 200: ProductsModel.stockValue, 401: ErrorModel },
+		},
+	)
 	.post("/", ({ session, body }) => ProductsService.create(session, body), {
 		auth: true,
 		body: ProductsModel.body,
 		response: {
-			200: ProductsModel.product,
+			200: ProductsModel.productDetail,
 			401: ErrorModel,
 			409: ErrorModel,
 			422: ErrorModel,
@@ -52,6 +61,44 @@ export const productsController = new Elysia({ prefix: "/products" })
 		"/:id",
 		({ session, params }) => ProductsService.get(session.store.id, params.id),
 		{ auth: true, params: ProductsModel.params, response: byId },
+	)
+	.get(
+		"/:id/movements",
+		({ session, params, query }) =>
+			ProductStockService.movements(session.store.id, params.id, query.cursor),
+		{
+			auth: true,
+			params: ProductsModel.params,
+			query: ProductsModel.movementsQuery,
+			response: {
+				200: ProductsModel.movementsPage,
+				401: ErrorModel,
+				404: ErrorModel,
+				422: ErrorModel,
+			},
+		},
+	)
+	.post(
+		"/:id/adjustments",
+		({ session, params, body }) =>
+			ProductStockService.adjust(session, params.id, body),
+		{
+			auth: true,
+			params: ProductsModel.params,
+			body: ProductsModel.adjustmentBody,
+			response: byId,
+		},
+	)
+	.post(
+		"/:id/cost-corrections",
+		({ session, params, body }) =>
+			ProductStockService.correctCost(session, params.id, body),
+		{
+			auth: true,
+			params: ProductsModel.params,
+			body: ProductsModel.costCorrectionBody,
+			response: byId,
+		},
 	)
 	.put(
 		"/:id",

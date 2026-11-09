@@ -155,5 +155,7 @@ export function parseExpiryInput(text: string): ExpiryMonth | null {
 	const [, month, year] = match;
 	const monthNumber = Number(month);
 	if (monthNumber < 1 || monthNumber > 12) return null;
+	// The API takes years from 1000 (the database has no year 0).
+	if (Number(year) < 1000) return null;
 	return `${year}-${month}`;
 }

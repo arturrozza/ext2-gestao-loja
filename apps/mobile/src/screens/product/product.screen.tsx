@@ -6,16 +6,16 @@ import { ListCard } from "@/components/list-card";
 import { ScreenHeader } from "@/components/screen-header";
 import { ScreenLayout } from "@/components/screen-layout";
 import { ScreenQuery } from "@/components/screen-query";
-import { UnderConstructionCard } from "@/components/under-construction";
 import { useProduct } from "@/queries/products/use-products";
 import { ArchiveSection } from "./partials/archive-section";
+import { ExpiryList } from "./partials/expiry-list";
+import { MovementHistory } from "./partials/movement-history";
 import { ProductSummary } from "./partials/product-summary";
 import { StockCard } from "./partials/stock-card";
 
 /**
- * Product screen (produtos.md, estoque.md): its data, stock and average cost, the stock actions and the archive
- * control. Quantity by expiry and the ledger come with the stock screen (MUN-13); until then they're under
- * construction. An archived product isn't edited, only reactivated.
+ * Product screen (produtos.md, estoque.md): its data, stock and average cost, quantity by expiry, the stock actions, the
+ * ledger and the archive control. An archived product isn't edited, only reactivated.
  */
 export function ProductScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,10 +42,7 @@ export function ProductScreen() {
 					contentClassName="gap-7"
 				>
 					<ProductSummary product={product} />
-					<UnderConstructionCard
-						title="Validades e movimentações"
-						description="A quantidade por validade e o histórico do estoque chegam com a tela de estoque."
-					/>
+					<ExpiryList expiries={product.expiries} />
 					<StockCard product={product} />
 					<ListCard title="Códigos">
 						<InfoRow label="Código interno" value={product.internalCode} />
@@ -55,6 +52,7 @@ export function ProductScreen() {
 							value={product.hasExpiry ? "Sim" : "Não"}
 						/>
 					</ListCard>
+					<MovementHistory productId={product.id} />
 					<ArchiveSection product={product} />
 				</ScreenLayout>
 			)}

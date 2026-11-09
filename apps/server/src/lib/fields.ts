@@ -36,7 +36,7 @@ export const unitsField = Type.Integer({ minimum: 1, maximum: MAX_LINE_UNITS });
  */
 export const dayField = t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" });
 
-/** Expiry month, "YYYY-MM" (docs/product/compras.md). */
+/** Expiry month, "YYYY-MM" (docs/product/compras.md). The year starts at 1000: Postgres has no year 0. */
 export const expiryMonthField = t.String({
-	pattern: "^\\d{4}-(0[1-9]|1[0-2])$",
+	pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])$",
 });

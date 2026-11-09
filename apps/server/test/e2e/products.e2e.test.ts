@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { treaty } from "@elysia/eden";
 import { app } from "../../src/app";
+import { MAX_CENTS } from "../../src/lib/money";
+import type { ProductsModel } from "../../src/modules/products/products.model";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
 import {
@@ -9,6 +11,7 @@ import {
 	productBody,
 } from "../support/factories/catalog";
 import { createPurchase, purchaseItem } from "../support/factories/purchases";
+import { monthFrom, setLotsExpiry } from "../support/factories/stock";
 import { jpegFile, useFakePhotoStorage } from "../support/photo-storage";
 
 useTestDatabase();
@@ -209,6 +212,244 @@ describe("products routes", () => {
 		expect(either.data?.total).toBe(2);
 	});
 
+	it("filters by expiry and shows the units by expiry", async () => {
+		const { headers, session } = await signedIn();
+		const storeId = session.store.id;
+		const near = await createProduct(storeId, {
+			name: "Perto",
+			hasExpiry: true,
+		});
+		const expired = await createProduct(storeId, {
+			name: "Vencido",
+			hasExpiry: true,
+		});
+		await createPurchase(session, [
+			purchaseItem(near.id, { quantity: 3, expiry: monthFrom(0) }),
+			purchaseItem(expired.id, { quantity: 1, expiry: monthFrom(0) }),
+		]);
+		await setLotsExpiry(expired.id, monthFrom(-1));
+
+		const nearList = await api.products.get({
+			query: { stock: ["near_expiry"] },
+			headers,
+		});
+		const expiredList = await api.products.get({
+			query: { stock: ["expired"] },
+			headers,
+		});
+		const read = await api.products({ id: near.id }).get({ headers });
+
+		expect(nearList.data?.items.map((product) => product.name)).toEqual([
+			"Perto",
+		]);
+		expect(expiredList.data?.items.map((product) => product.name)).toEqual([
+			"Vencido",
+		]);
+		expect(read.data?.expiries).toEqual([
+			{ expiry: monthFrom(0), quantity: 3, expired: false, nearExpiry: true },
+		]);
+	});
+
+	it("gives the store's stock value and a product's movements", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const purchase = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 9200 }),
+		]);
+
+		const value = await api.products["stock-value"].get({ headers });
+		const movements = await api
+			.products({ id: product.id })
+			.movements.get({ query: {}, headers });
+
+		expect(value.data).toEqual({ value: 92_000 });
+		expect(movements.data).toMatchObject({
+			total: 1,
+			nextCursor: null,
+			items: [
+				{
+					type: "purchase",
+					quantity: 10,
+					stockAfter: 10,
+					origin: { kind: "purchase", id: purchase.id },
+				},
+			],
+		});
+	});
+
+	it("answers on movements: 404 for an unknown product, 422 for a bad cursor", async () => {
+		const { headers } = await signedIn();
+		const product = api.products({ id: crypto.randomUUID() });
+
+		const unknown = await product.movements.get({ query: {}, headers });
+		const cursor = await product.movements.get({
+			query: { cursor: -1 },
+			headers,
+		});
+
+		expect(unknown.error?.status).toBe(404);
+		expect(cursor.error?.status).toBe(422);
+	});
+
+	it("adjusts the stock and corrects the cost", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 9200 }),
+		]);
+		const routes = api.products({ id: product.id });
+
+		const adjusted = await routes.adjustments.post(
+			{ newQuantity: 8, reason: "loss", note: null, expiry: null },
+			{ headers },
+		);
+		const corrected = await routes["cost-corrections"].post(
+			{ newCost: 8800, note: "nota errada" },
+			{ headers },
+		);
+
+		expect(adjusted.data).toMatchObject({ stock: 8, stockValue: 73_600 });
+		expect(corrected.data).toMatchObject({
+			stock: 8,
+			averageCost: 8800,
+			stockValue: 70_400,
+		});
+	});
+
+	it("answers on stock corrections: 404 unknown, 422 for a bad body and each refused change", async () => {
+		const { headers, session } = await signedIn();
+		const empty = await createProduct(session.store.id);
+		const unknown = api.products({ id: crypto.randomUUID() });
+		const routes = api.products({ id: empty.id });
+		const body = {
+			newQuantity: 2,
+			reason: "count" as const,
+			note: null,
+			expiry: null,
+		};
+
+		// All at once: every one of them is refused, so none changes what the others see.
+		const results = await Promise.all([
+			unknown.adjustments.post(body, { headers }),
+			unknown["cost-corrections"].post({ newCost: 1, note: "x" }, { headers }),
+			routes.adjustments.post({ ...body, newQuantity: -1 }, { headers }),
+			routes["cost-corrections"].post({ newCost: 1, note: " " }, { headers }),
+			routes.adjustments.post(body, { headers }),
+			routes.adjustments.post({ ...body, newQuantity: 0 }, { headers }),
+			routes["cost-corrections"].post({ newCost: 1, note: "x" }, { headers }),
+		]);
+
+		expect(results.map((result) => result.error?.status)).toEqual([
+			404, 404, 422, 422, 422, 422, 422,
+		]);
+		expect(results.slice(4).map((result) => result.error?.value)).toMatchObject(
+			[
+				{ code: "no_stock_cost", field: "newQuantity" },
+				{ code: "validation", field: "newQuantity" },
+				{ code: "no_stock", field: "newCost" },
+			],
+		);
+	});
+
+	it("refuses each change the stock rules don't take, on its field", async () => {
+		const { headers, session } = await signedIn();
+		const storeId = session.store.id;
+		const plain = await createProduct(storeId);
+		const dated = await createProduct(storeId, { hasExpiry: true });
+		await createPurchase(session, [
+			purchaseItem(plain.id, { quantity: 10, unitCost: 9200 }),
+			purchaseItem(dated.id, { quantity: 3, expiry: monthFrom(3) }),
+			purchaseItem(dated.id, { quantity: 7, expiry: monthFrom(8) }),
+		]);
+		type Body = ProductsModel["adjustmentBody"];
+		const adjust = (id: string, body: Partial<Body>) =>
+			api
+				.products({ id })
+				.adjustments.post(
+					{ newQuantity: 8, reason: "loss", note: null, expiry: null, ...body },
+					{ headers },
+				);
+		const cases = [
+			[adjust(plain.id, { newQuantity: 12 }), "validation", "reason"],
+			[adjust(plain.id, { reason: "other" }), "validation", "note"],
+			[adjust(dated.id, {}), "validation", "fromExpiry"],
+			[
+				adjust(dated.id, { newQuantity: 2, fromExpiry: monthFrom(3) }),
+				"validation",
+				"fromExpiry",
+			],
+			[
+				adjust(plain.id, { reason: "expired_discarded" }),
+				"validation",
+				"reason",
+			],
+			[
+				adjust(dated.id, { newQuantity: 12, reason: "count" }),
+				"validation",
+				"expiry",
+			],
+			[
+				adjust(plain.id, {
+					newQuantity: 12,
+					reason: "count",
+					expiry: "2027-01",
+				}),
+				"validation",
+				"expiry",
+			],
+			[
+				adjust(plain.id, { newQuantity: 100_011, reason: "count" }),
+				"validation",
+				"newQuantity",
+			],
+			[
+				api
+					.products({ id: plain.id })
+					["cost-corrections"].post({ newCost: 9200, note: "x" }, { headers }),
+				"validation",
+				"newCost",
+			],
+			[
+				api
+					.products({ id: plain.id })
+					["cost-corrections"].post(
+						{ newCost: MAX_CENTS, note: "x" },
+						{ headers },
+					),
+				"stock_limit",
+				"newCost",
+			],
+		] as const;
+
+		// Every one is refused, so none changes what the others see.
+		const results = await Promise.all(cases.map(([request]) => request));
+
+		expect(
+			results.map((result) => [
+				result.error?.status,
+				result.error?.value.code,
+				result.error?.value.field,
+			]),
+		).toEqual(cases.map(([, code, field]) => [422, code, field]));
+	});
+
+	it("refuses an expiry before the year 1000 (Postgres has no year 0)", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id, { hasExpiry: true });
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 1, expiry: monthFrom(3) }),
+		]);
+
+		const result = await api
+			.products({ id: product.id })
+			.adjustments.post(
+				{ newQuantity: 2, reason: "count", note: null, expiry: "0999-12" },
+				{ headers },
+			);
+
+		expect(result.error?.status).toBe(422);
+	});
+
 	it("answers 422 for a bad list query and a bad id", async () => {
 		const { headers } = await signedIn();
 
@@ -222,7 +463,7 @@ describe("products routes", () => {
 		});
 		const stock = await api.products.get({
 			// What the typed client wouldn't let through.
-			query: { stock: ["expired" as "out"] },
+			query: { stock: ["bogus" as "out"] },
 			headers,
 		});
 
@@ -281,10 +522,19 @@ describe("products routes", () => {
 			product.put(productBody()),
 			product.archive.post(),
 			product.reactivate.post(),
+			api.products["stock-value"].get(),
+			product.movements.get({ query: {} }),
+			product.adjustments.post({
+				newQuantity: 1,
+				reason: "count",
+				note: null,
+				expiry: null,
+			}),
+			product["cost-corrections"].post({ newCost: 1, note: "x" }),
 		]);
 
 		expect(statuses.map((result) => result.error?.status)).toEqual([
-			401, 401, 401, 401, 401, 401,
+			401, 401, 401, 401, 401, 401, 401, 401, 401, 401,
 		]);
 	});
 

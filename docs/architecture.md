@@ -125,13 +125,18 @@ ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem g
 ### Estoque (livro de movimentações)
 
 O estoque não tem coluna de saldo: o livro é a fonte da verdade (ver `docs/decisions.md`, MUN-12). O módulo
-`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras agora; vendas, ajustes e cancelamentos
-depois):
+`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras, ajustes e correções de custo agora;
+vendas e cancelamentos depois). As rotas do estoque ficam em `products` (`products.stock.ts`): o histórico
+(`GET /products/:id/movements`), o valor total (`GET /products/stock-value`), o ajuste
+(`POST /products/:id/adjustments`) e a correção de custo (`POST /products/:id/cost-corrections`).
 
-- `stock.rules.ts`: as contas puras (custo médio, entrada, limites, estados baixo/sem estoque), testadas sem banco.
-- `stock.queries.ts`: a quantidade (soma de `stock_lots`), a quantidade vendável (lotes sem validade ou dentro dela) e o
-  valor (soma de `stock_movements.value_change`) como SQL correlacionado a `products`, usado na lista de produtos e no
-  saldo antes de gravar.
+- `stock.rules.ts`: as contas puras (custo médio, entrada, saída, limites, estados baixo/sem estoque), testadas sem
+  banco.
+- `stock.adjustment.ts`: as regras puras do ajuste e da correção de custo (de quais lotes sai, com que valor, o que é
+  recusado).
+- `stock.queries.ts`: a quantidade (soma de `stock_lots`), a quantidade vendável (lotes sem validade ou dentro dela), o
+  valor (soma de `stock_movements.value_change`) e os estados perto de vencer e vencido como SQL correlacionado a
+  `products`, usado na lista de produtos e no saldo antes de gravar; e a quantidade por validade e os lotes abertos.
 - `stock.ledger.ts`: o único lugar que grava lotes e movimentações.
 
 Quem grava no estoque trava antes os produtos (`lockProducts`, em `products/products.lock.ts`, `FOR UPDATE` em ordem

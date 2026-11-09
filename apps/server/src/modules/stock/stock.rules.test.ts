@@ -131,20 +131,37 @@ describe("stockFlags", () => {
 	});
 
 	it("is never low without a minimum", () => {
-		expect(stockFlags(1, null)).toEqual({ lowStock: false, outOfStock: false });
+		expect(stockFlags(1, null)).toEqual({
+			lowStock: false,
+			outOfStock: false,
+		});
 	});
 });
 
 describe("stockSummary", () => {
 	it("adds the average cost and the states to the figures", () => {
 		expect(
-			stockSummary({ stock: 3, sellableStock: 2, stockValue: 1000 }, 3),
+			stockSummary(
+				{
+					stock: 3,
+					sellableStock: 2,
+					stockValue: 1000,
+					nearExpiry: true,
+					expired: true,
+				},
+				3,
+			),
 		).toEqual({
 			stock: 3,
 			sellableStock: 2,
 			stockValue: 1000,
 			averageCost: 333,
-			flags: { lowStock: true, outOfStock: false },
+			flags: {
+				lowStock: true,
+				outOfStock: false,
+				nearExpiry: true,
+				expired: true,
+			},
 		});
 	});
 });

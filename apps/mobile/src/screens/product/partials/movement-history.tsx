@@ -7,7 +7,7 @@ import { flattenPages } from "@/queries/pagination";
 import { useProductMovements } from "@/queries/products/use-products";
 import { MovementRow } from "./movement-row";
 
-/** Ledger of the product, newest first (estoque.md). Paginated: it only grows. Back on the product screen with MUN-13. */
+/** Ledger of the product, newest first (estoque.md). Paginated: it only grows. */
 export function MovementHistory({ productId }: { productId: string }) {
 	const query = useProductMovements(productId);
 

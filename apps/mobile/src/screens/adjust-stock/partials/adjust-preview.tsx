@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { ADJUSTMENT_REASONS, signed } from "@/lib/labels";
 import { formatSignedMoney } from "@/lib/money";
+import { adjustmentValueChange } from "@/lib/stock-math";
 import type {
 	AdjustmentReason,
 	ProductDetail,
@@ -22,7 +23,12 @@ export function AdjustPreview({
 }) {
 	if (newQuantity === null || newQuantity === product.stock) return null;
 	const delta = newQuantity - product.stock;
-	const value = delta * product.averageCost;
+	const value = adjustmentValueChange(
+		{ quantity: product.stock, value: product.stockValue },
+		delta,
+	);
+	// A change the API refuses for its size (no stock, too many units): the form says why, no effect to show.
+	if (value === null) return null;
 
 	return (
 		<View className="gap-1 rounded-2xl bg-background p-4">

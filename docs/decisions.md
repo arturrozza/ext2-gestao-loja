@@ -12,6 +12,32 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Ajuste de estoque e correção de custo pelo livro de estoque (MUN-13)
+
+**Decisão:** o ajuste e a correção de custo são movimentações do livro, como a compra; nada é reescrito.
+- **Ajuste para baixo:** as unidades saem pelo custo médio arredondado × unidades. Zerando o estoque, sai o valor
+  inteiro, e a saída nunca passa do valor que resta. Com mais de uma validade, a pessoa escolhe uma só, e a redução não
+  passa do que ela tem. Para tirar de duas, faz dois ajustes. Dentro da validade, sai primeiro o lote mais antigo.
+- **Ajuste para cima:** as unidades entram num lote novo, sem compra, pelo valor exato que mantém o custo médio
+  (`valor × unidades ÷ quantidade`). Sem estoque, é recusado: não há custo para dar a elas, então entra uma compra. A
+  validade pode ser de um mês passado (unidades achadas já vencidas). Um ajuste soma até 100.000 unidades.
+- **Correção de custo:** vale para todas as unidades em estoque. A movimentação tem quantidade zero e muda o valor
+  para custo certo × quantidade. É recusada sem estoque e com o mesmo custo arredondado de agora.
+- **O que fica gravado:** a movimentação guarda o motivo (só no ajuste, garantido por um CHECK) e a observação. Ela
+  aponta para o lote só quando um lote novo entra; na saída, a auditoria de `stock_lots` mostra de quais lotes saiu.
+  Como entrada e saída arredondam de jeitos diferentes, `quantidade × custo unitário` de uma movimentação pode
+  diferir 1 centavo do `value_change`, e o `value_change` é a fonte da verdade.
+- **Unidades vencidas:** contam na quantidade e no valor até o ajuste "vencido descartado", que só tira unidades
+  vencidas. Isso fecha a pergunta que estava em aberto no `estoque.md`.
+- **Valor total e histórico:** o valor total no topo da lista é o da loja inteira, arquivados incluídos. O histórico
+  pagina por `seq` (o cursor é o `seq` de onde continuar), e uma movimentação nova não desloca as páginas já lidas.
+- **Por enquanto:** a tela do produto abre só a compra de origem; a venda entra com as vendas.
+
+**Por quê:** é o mais simples que mantém o livro como fonte da verdade (ver a MUN-12). Escolher uma validade por
+ajuste deixa o histórico claro sobre de onde saiu cada unidade. Aumentar sem estoque pediria um custo inventado, e
+foi o mantenedor quem escolheu mandar lançar uma compra. Contar os vencidos no valor até o descarte segue a regra de
+quantidade que já existia: o prejuízo aparece quando eles são descartados.
+
 ## 2026-11-09: Compras alimentam um livro de estoque, e o custo médio segue a ordem de lançamento (MUN-12)
 
 **Decisão:** o estoque não guarda saldo em coluna nenhuma. Cada item de compra gera um lote (`stock_lots`, com as
