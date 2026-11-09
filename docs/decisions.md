@@ -12,6 +12,37 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Vendas com lucro real gravado e baixa pela validade mais próxima (MUN-16)
+
+**Decisão:** a venda é registrada de uma vez, tudo ou nada, e o server calcula e grava receita, custo dos produtos,
+custos da venda e lucro real. Nada disso é recalculado depois.
+- **Custo do item:** o custo médio na hora do lançamento, arredondado ao centavo e gravado no item. O custo dos
+  produtos é o valor que saiu do estoque, pela mesma regra do ajuste: zerando o estoque, sai o valor inteiro, então a
+  última unidade pode custar 1 centavo a mais. Venda com data passada usa o custo de agora; a data vale para a lista e
+  os relatórios (confirmado com o mantenedor, deixou de ser provisório).
+- **Baixa:** sai primeiro a validade mais próxima, depois os lotes sem validade, e o mais antigo dentro da mesma
+  validade. Lote vencido nunca entra. Faltando unidade vendável em qualquer item, a venda inteira é recusada com o
+  disponível ("Estoque insuficiente: disponível 2."). Cada item vira uma movimentação `sale` no livro, que aponta para
+  o item, e `sale_item_lots` guarda de quais lotes ele saiu, para o cancelamento (MUN-17) devolver nos mesmos lotes.
+  Uma movimentação tem no máximo uma origem (compra ou venda), garantido por um CHECK.
+- **Regras da venda:** um produto entra uma vez só por venda. Preço zero vale (brinde que sai com a venda) e receita
+  zero também (desconto do valor inteiro). Custo em percentual incide sobre a receita, arredondado ao centavo um por
+  um. Só produtos, clientes e revendedoras ativos; revendedora só no canal Revendedora, e obrigatória nele. Uma venda
+  guarda até R$ 21 milhões de receita; os totais de custo e lucro são `bigint`, porque podem passar disso.
+- **Lista:** do dia mais recente para o mais antigo, com filtros de período (hoje, 7 dias com hoje, mês atual, tudo,
+  pela data da venda), canal e resultado. Lucro zero não entra em "com lucro" nem em "com prejuízo". Canceladas
+  aparecem, mas ficam fora dos totais.
+- **Clientes e revendedoras:** os totais saem das vendas não canceladas. A revendedora tem período na tela dela (mês
+  atual por padrão), que vale para os números e a lista; na lista de revendedoras, os totais são de tudo.
+- **App:** a prévia do lucro na tela de nova venda usa a mesma conta do server, conferida por um teste de paridade. O
+  cancelamento continua "Em construção" até a MUN-17, como o da compra.
+
+**Por quê:** gravar os números na hora é o que garante que uma compra depois não mude o lucro de uma venda já vista.
+Validade mais próxima primeiro evita perder produto vencendo na prateleira. Guardar os lotes de cada item deixa o
+cancelamento exato sem depender do log de auditoria. Um produto por venda deixa a baixa e o estoque insuficiente
+simples de explicar ("disponível 2" vale para a linha toda). O mês atual como padrão da revendedora é o período de
+acerto mais comum.
+
 ## 2026-11-09: Ajuste de estoque e correção de custo pelo livro de estoque (MUN-13)
 
 **Decisão:** o ajuste e a correção de custo são movimentações do livro, como a compra; nada é reescrito.
@@ -31,7 +62,7 @@ Formato:
   vencidas. Isso fecha a pergunta que estava em aberto no `estoque.md`.
 - **Valor total e histórico:** o valor total no topo da lista é o da loja inteira, arquivados incluídos. O histórico
   pagina por `seq` (o cursor é o `seq` de onde continuar), e uma movimentação nova não desloca as páginas já lidas.
-- **Por enquanto:** a tela do produto abre só a compra de origem; a venda entra com as vendas.
+- **Origem no histórico:** a tela do produto abre a compra ou a venda de origem (a venda entrou na MUN-16).
 
 **Por quê:** é o mais simples que mantém o livro como fonte da verdade (ver a MUN-12). Escolher uma validade por
 ajuste deixa o histórico claro sobre de onde saiu cada unidade. Aumentar sem estoque pediria um custo inventado, e
@@ -115,8 +146,8 @@ mudança assim com o app em uso precisa de release sem ninguém usando, ou de co
 
 **Decisão:** o cliente segue as mesmas regras da revendedora: nome pode se repetir, telefone opcional com DDD guardado
 só com os dígitos, busca por nome ou telefone com ou sem máscara, e cliente arquivado não se edita, só reativa. A
-diferença é que a lista de clientes é paginada. Enquanto Vendas (MUN-16) não existe, o total gasto, o número de compras
-e a última compra vêm zerados e o histórico aparece como "Em construção". A normalização e a busca de pessoa (nome e
+diferença é que a lista de clientes é paginada. O total gasto, o número de compras e a última compra saem das vendas
+não canceladas (vieram zerados até a MUN-16). A normalização e a busca de pessoa (nome e
 telefone) ficaram num helper só (`lib/person.ts`), usado por clientes e revendedoras.
 **Por quê:** as duas são cadastros de pessoa com os mesmos campos básicos, e regras iguais deixam o app previsível.
 Uma loja pode ter muitos clientes fixos, ao contrário das revendedoras, então a lista precisa paginar. Vendas
@@ -127,8 +158,8 @@ canceladas não contam no total gasto, como na comissão da revendedora.
 **Decisão:** o nome da revendedora pode se repetir na loja; a lista e a escolha na venda mostram comissão e telefone
 embaixo do nome. O telefone é opcional, com DDD, e fica guardado só com os dígitos; a busca acha com ou sem a máscara.
 A comissão padrão vai de 0% a 100%. Revendedora arquivada não se edita, só reativa, como produto. A lista não é
-paginada. Enquanto Vendas (MUN-16) não existe, os totais dela vêm zerados e as vendas e a comissão por período
-aparecem como "Em construção"; o filtro por período entra com as vendas.
+paginada. Os totais e a comissão por período saem das vendas não canceladas (vieram zerados até a MUN-16, que trouxe o
+período).
 **Por quê:** pessoas diferentes podem ter o mesmo nome, e barrar o cadastro obrigaria a inventar apelido; o telefone
 resolve a dúvida na hora de escolher. Guardar só os dígitos deixa a busca igual para qualquer jeito de digitar. Uma
 loja tem poucas revendedoras, então paginar não compensa. Sem vendas, um filtro por período não teria o que mostrar
@@ -153,7 +184,8 @@ se edita, só reativa. O app para de usar dados falsos de uma vez (a MUN-20 vai 
 ainda não existem mostram "Em construção" e escondem as ações, e estoque e custo aparecem como "—" até Compras e
 Estoque. A sugestão de "Cadastrar primeira entrada" passou para Compras (MUN-12), e o campo de foto some do cadastro
 até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva. (Mudou na MUN-12: compras, estoque,
-custo e a primeira entrada já estão no app; seguem em construção o cancelamento, a tela de estoque e vendas.)
+custo e a primeira entrada já estão no app. Mudou de novo na MUN-13 e na MUN-16: estoque e vendas também. Seguem em
+construção os cancelamentos, os relatórios, os alertas e o resumo da tela inicial.)
 **Por quê:** excluir uma categoria tiraria os produtos dela e mudaria os relatórios por categoria do passado; arquivar
 esconde sem perder nada. Editar arquivado não tem uso e abre espaço para mexer no que já é histórico. Ligar só
 produtos à API deixaria compras, vendas e estoque falsos apontando para produtos que não existem mais; mostrar "Em

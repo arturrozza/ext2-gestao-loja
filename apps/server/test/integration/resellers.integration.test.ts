@@ -6,7 +6,14 @@ import { resellers } from "../../src/db/schema";
 import { ResellersService } from "../../src/modules/resellers/resellers.service";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
+import { storeDayFrom } from "../support/factories/purchases";
 import { createReseller, resellerBody } from "../support/factories/resellers";
+import {
+	createSale,
+	markCanceled,
+	saleItem,
+	stockedProduct,
+} from "../support/factories/sales";
 
 useTestDatabase();
 
@@ -224,5 +231,44 @@ describe("ResellersService", () => {
 				response: { code: "reseller_not_found" },
 			});
 		}
+	});
+
+	it("sums her active sales and commissions, all of them in the list and by period on her page", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await stockedProduct(session);
+		const ana = await createReseller(storeId, { name: "Ana" });
+		const other = await createReseller(storeId, { name: "Bia" });
+		const sell = (resellerId: string, date = storeDayFrom(0)) =>
+			createSale(session, [saleItem(product.id)], {
+				channel: "reseller",
+				resellerId,
+				date,
+				costs: [
+					{ kind: "commission", mode: "percent", value: 1000, label: null },
+					{ kind: "freight", mode: "amount", value: 500, label: null },
+				],
+			});
+		await sell(ana.id);
+		await sell(ana.id, storeDayFrom(-40));
+		await markCanceled((await sell(ana.id)).id);
+		await sell(other.id);
+
+		const [listed] = await ResellersService.list(storeId, {});
+		const recent = await ResellersService.get(storeId, ana.id, "7d");
+		const all = await ResellersService.get(storeId, ana.id);
+
+		expect(listed).toMatchObject({
+			name: "Ana",
+			salesCount: 2,
+			salesTotal: 20_000,
+			commissionTotal: 2000,
+		});
+		expect(all).toMatchObject({ salesCount: 2, commissionTotal: 2000 });
+		expect(recent).toMatchObject({
+			salesCount: 1,
+			salesTotal: 10_000,
+			commissionTotal: 1000,
+		});
 	});
 });

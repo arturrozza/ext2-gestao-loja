@@ -1,5 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { expiryToDate, isRealDay, monthOf, storeToday } from "./dates";
+import {
+	addDays,
+	dayProblem,
+	expiryToDate,
+	isRealDay,
+	monthOf,
+	storeToday,
+} from "./dates";
 
 describe("storeToday", () => {
 	it("is the day in São Paulo, not in UTC", () => {
@@ -35,5 +42,32 @@ describe("isRealDay", () => {
 		]) {
 			expect(isRealDay(day)).toBe(false);
 		}
+	});
+});
+
+describe("dayProblem", () => {
+	const today = "2026-11-09";
+
+	it("takes today and any real day from 2000 on", () => {
+		expect(dayProblem(today, today)).toBe(null);
+		expect(dayProblem("2000-01-01", today)).toBe(null);
+	});
+
+	it("refuses a day that doesn't exist or comes before 2000", () => {
+		expect(dayProblem("2026-02-30", today)).toBe("invalid");
+		expect(dayProblem("1999-12-31", today)).toBe("invalid");
+		expect(dayProblem("0000-01-01", today)).toBe("invalid");
+	});
+
+	it("refuses a day after today", () => {
+		expect(dayProblem("2026-11-10", today)).toBe("future");
+	});
+});
+
+describe("addDays", () => {
+	it("moves across months, years and leap days", () => {
+		expect(addDays("2026-03-02", -6)).toBe("2026-02-24");
+		expect(addDays("2026-12-28", 6)).toBe("2027-01-03");
+		expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
 	});
 });

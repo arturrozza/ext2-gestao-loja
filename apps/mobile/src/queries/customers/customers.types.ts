@@ -9,7 +9,7 @@ export type Customer = {
 	phone: string | null;
 	note: string | null;
 	archived: boolean;
-	/** Active (not canceled) sales only. Empty until sales exist (MUN-16). */
+	/** Active (not canceled) sales only. */
 	purchasesCount: number;
 	totalSpent: Money;
 	lastPurchaseAt: ISODate | null;

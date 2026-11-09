@@ -17,7 +17,10 @@ function title(movement: Movement) {
 }
 
 function originHref(origin: Movement["origin"]): Href | undefined {
-	return origin ? `/purchases/${origin.id}` : undefined;
+	if (!origin) return undefined;
+	return origin.kind === "sale"
+		? `/sales/${origin.id}`
+		: `/purchases/${origin.id}`;
 }
 
 /** Right side: the change in units, or the new cost for a cost correction. */

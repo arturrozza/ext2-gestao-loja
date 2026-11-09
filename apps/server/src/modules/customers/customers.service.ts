@@ -7,6 +7,7 @@ import { httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
 import { normalizePerson, personSearchFilter } from "../../lib/person";
 import type { AuthSession } from "../auth/auth.model";
+import { customerSalesColumns } from "../sales/sales.totals";
 import type { CustomersModel } from "./customers.model";
 
 const columns = {
@@ -15,22 +16,19 @@ const columns = {
 	phone: customers.phone,
 	note: customers.note,
 	archivedAt: customers.archivedAt,
+	// What they bought: canceled sales never count (clientes.md).
+	...customerSalesColumns(),
 };
 
-type CustomerRow = Pick<
-	CustomersModel["customer"],
-	"id" | "name" | "phone" | "note"
-> & { archivedAt: Date | null };
+type CustomerRow = Omit<CustomersModel["customer"], "archived"> & {
+	archivedAt: Date | null;
+};
 
-/**
- * Purchase totals are empty until sales exist (MUN-16), which will sum the customer's active sales here (canceled ones
- * never count).
- */
-const NO_PURCHASES = { purchasesCount: 0, totalSpent: 0, lastPurchaseAt: null };
-
-function toCustomer(row: CustomerRow): CustomersModel["customer"] {
-	const { archivedAt, ...rest } = row;
-	return { ...rest, archived: archivedAt !== null, ...NO_PURCHASES };
+function toCustomer({
+	archivedAt,
+	...row
+}: CustomerRow): CustomersModel["customer"] {
+	return { ...row, archived: archivedAt !== null };
 }
 
 /** The customer `id`, only if it belongs to the store. */

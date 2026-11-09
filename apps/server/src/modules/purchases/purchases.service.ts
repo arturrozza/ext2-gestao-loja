@@ -7,18 +7,12 @@ import {
 	isNotNull,
 	isNull,
 	type SQL,
-	sql,
 } from "drizzle-orm";
 import { db } from "../../db";
 import { audited, type Executor, type Transaction } from "../../db/audit";
+import { nextNumber } from "../../db/numbering";
 import { insertedRow } from "../../db/rows";
-import {
-	products,
-	purchaseItems,
-	purchases,
-	stores,
-	users,
-} from "../../db/schema";
+import { products, purchaseItems, purchases, users } from "../../db/schema";
 import { expiryToDate, monthOf, storeToday } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
@@ -149,26 +143,6 @@ function listFilter(
 	);
 }
 
-/**
- * The next number of the store's purchases. The store row is locked first (after the products, the stock write's lock
- * order), so two purchases entered at once get different numbers; the unique index is the last guard. `NO KEY UPDATE`
- * doesn't block the inserts that only reference the store (products, customers...).
- */
-async function nextNumber(tx: Transaction, storeId: string): Promise<number> {
-	await tx
-		.select({ id: stores.id })
-		.from(stores)
-		.where(eq(stores.id, storeId))
-		.for("no key update");
-	const [row] = await tx
-		.select({
-			last: sql`coalesce(max(${purchases.number}), 0)`.mapWith(Number),
-		})
-		.from(purchases)
-		.where(eq(purchases.storeId, storeId));
-	return (row?.last ?? 0) + 1;
-}
-
 type ItemInput = PurchasesModel["body"]["items"][number];
 
 /** The lines of a new purchase, as ledger entries in the order entered. */
@@ -266,27 +240,26 @@ export const PurchasesService = {
 		const userId = session.user.id;
 		const today = storeToday();
 		assertPurchaseDate(input.date, today);
-		// The uuid format takes upper case too; the database gives ids back in lower case.
-		const items = input.items.map((item) => ({
-			...item,
-			productId: item.productId.toLowerCase(),
-		}));
 		return audited(userId, async (tx) => {
-			const ids = [...new Set(items.map((item) => item.productId))];
-			assertItems(items, await lockProducts(tx, storeId, ids), monthOf(today));
+			const ids = [...new Set(input.items.map((item) => item.productId))];
+			assertItems(
+				input.items,
+				await lockProducts(tx, storeId, ids),
+				monthOf(today),
+			);
 			const purchase = insertedRow(
 				await tx
 					.insert(purchases)
 					.values({
 						storeId,
 						userId,
-						number: await nextNumber(tx, storeId),
+						number: await nextNumber(tx, purchases, storeId),
 						date: input.date,
 						note: blankToNull(input.note),
 					})
 					.returning({ id: purchases.id }),
 			);
-			const entries = await insertLines(tx, storeId, purchase.id, items);
+			const entries = await insertLines(tx, storeId, purchase.id, input.items);
 			await recordEntries(tx, { storeId, userId }, entries, stockLimit);
 			return find(tx, storeId, purchase.id);
 		});

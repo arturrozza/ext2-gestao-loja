@@ -33,8 +33,14 @@ export const resellersController = new Elysia({ prefix: "/resellers" })
 	})
 	.get(
 		"/:id",
-		({ session, params }) => ResellersService.get(session.store.id, params.id),
-		{ auth: true, params: ResellersModel.params, response: byId },
+		({ session, params, query }) =>
+			ResellersService.get(session.store.id, params.id, query.period),
+		{
+			auth: true,
+			params: ResellersModel.params,
+			query: ResellersModel.getQuery,
+			response: byId,
+		},
 	)
 	.put(
 		"/:id",

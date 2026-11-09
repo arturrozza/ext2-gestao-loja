@@ -1,27 +1,30 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { PencilSimpleIcon } from "phosphor-react-native/src/icons/PencilSimple";
+import { useState } from "react";
 import { View } from "react-native";
 import { ArchiveControl } from "@/components/archive-control";
+import { ChoiceChips } from "@/components/choice-chips";
 import { Figure, FigurePair } from "@/components/figure-pair";
 import { IconButton } from "@/components/icon-button";
 import { InfoRow } from "@/components/info-row";
-import { ScreenHeader } from "@/components/screen-header";
-import { ScreenLayout } from "@/components/screen-layout";
+import { PersonSales } from "@/components/person-sales";
 import { ScreenQuery } from "@/components/screen-query";
-import { UnderConstructionCard } from "@/components/under-construction";
-import { plural } from "@/lib/labels";
+import { plural, SALE_PERIODS, toOptions } from "@/lib/labels";
 import { formatPhone } from "@/lib/masks";
 import { formatMoney, formatPercent } from "@/lib/money";
+import { cn } from "@/lib/utils";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 import {
 	useReseller,
 	useSetResellerArchived,
 } from "@/queries/resellers/use-resellers";
+import type { SalePeriod } from "@/queries/sales/sales.types";
 
-function Numbers({ reseller }: { reseller: Reseller }) {
+/** Her numbers; `stale` while those of the period just picked load (the previous ones stay, dimmed). */
+function Numbers({ reseller, stale }: { reseller: Reseller; stale: boolean }) {
 	return (
 		<View className="overflow-hidden rounded-2xl bg-background">
-			<View className="p-5">
+			<View className={cn("p-5", stale && "opacity-40")}>
 				<FigurePair>
 					<Figure
 						label="Comissão total"
@@ -45,54 +48,75 @@ function Numbers({ reseller }: { reseller: Reseller }) {
 	);
 }
 
-function ResellerPage({ reseller }: { reseller: Reseller }) {
+const PERIODS = toOptions(SALE_PERIODS);
+
+function ResellerPage({
+	reseller,
+	stale,
+	period,
+	onPeriod,
+}: {
+	reseller: Reseller;
+	stale: boolean;
+	period: SalePeriod;
+	onPeriod: (period: SalePeriod) => void;
+}) {
 	const archive = useSetResellerArchived(reseller.id);
 	return (
-		<ScreenLayout
-			header={
-				<ScreenHeader
-					title={reseller.name}
-					right={
-						reseller.archived ? undefined : (
-							<IconButton
-								icon={PencilSimpleIcon}
-								label="Editar revendedora"
-								onPress={() => router.push(`/resellers/${reseller.id}/edit`)}
-							/>
-						)
-					}
+		<PersonSales
+			title={reseller.name}
+			headerRight={
+				reseller.archived ? undefined : (
+					<IconButton
+						icon={PencilSimpleIcon}
+						label="Editar revendedora"
+						onPress={() => router.push(`/resellers/${reseller.id}/edit`)}
+					/>
+				)
+			}
+			filter={{ resellerId: reseller.id }}
+			period={period}
+			emptyDescription="As vendas dela no canal Revendedora, no período escolhido, aparecem aqui."
+			bottom={
+				<ArchiveControl
+					noun="revendedora"
+					archived={reseller.archived}
+					archivedText="Revendedora arquivada: não entra em novas vendas, mas continua no histórico e nos relatórios. Para editar, reative."
+					confirmText={`${reseller.name} sai das novas vendas. O histórico e os relatórios continuam com ela, e dá para reativar depois.`}
+					mutation={archive}
 				/>
 			}
-			contentClassName="gap-7"
 		>
-			<Numbers reseller={reseller} />
-			{/* Becomes the list of her sales (`PersonSales`) with the sales module (MUN-16). */}
-			<UnderConstructionCard
-				title="Vendas"
-				description="As vendas dela no canal Revendedora e a comissão por período chegam com as vendas."
+			{/* The period of the numbers and of the sales under them: "Mês" to settle the month with her. */}
+			<ChoiceChips
+				options={PERIODS}
+				value={period}
+				onChange={onPeriod}
+				surface="page"
 			/>
-			<ArchiveControl
-				noun="revendedora"
-				archived={reseller.archived}
-				archivedText="Revendedora arquivada: não entra em novas vendas, mas continua no histórico e nos relatórios. Para editar, reative."
-				confirmText={`${reseller.name} sai das novas vendas. O histórico e os relatórios continuam com ela, e dá para reativar depois.`}
-				mutation={archive}
-			/>
-		</ScreenLayout>
+			<Numbers reseller={reseller} stale={stale} />
+		</PersonSales>
 	);
 }
 
 /**
- * A reseller (revendedoras.md): her numbers, data and the archive control. Her sales and the commission by period come
- * with the sales module (MUN-16); until then that block is under construction. Archived ones aren't edited, only
- * reactivated.
+ * A reseller (revendedoras.md): her sales and commission in a period (this month by default), her data, her sales and
+ * the archive control. Archived ones aren't edited, only reactivated.
  */
 export function ResellerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const query = useReseller(id);
+	const [period, setPeriod] = useState<SalePeriod>("month");
+	const query = useReseller(id, period);
 	return (
 		<ScreenQuery title="Revendedora" query={query}>
-			{(reseller) => <ResellerPage reseller={reseller} />}
+			{(reseller) => (
+				<ResellerPage
+					reseller={reseller}
+					stale={query.isPlaceholderData}
+					period={period}
+					onPeriod={setPeriod}
+				/>
+			)}
 		</ScreenQuery>
 	);
 }

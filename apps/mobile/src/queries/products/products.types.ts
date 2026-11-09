@@ -135,8 +135,8 @@ export type Movement = {
 	stockAfter: number;
 	reason: AdjustmentReason | null;
 	note: string | null;
-	/** The purchase that caused it, to open from the history (sales join when they exist). */
-	origin: { kind: "purchase"; id: string; number: number } | null;
+	/** The purchase or sale that caused it, to open from the history. */
+	origin: { kind: "purchase" | "sale"; id: string; number: number } | null;
 	createdAt: string;
 	author: string;
 };

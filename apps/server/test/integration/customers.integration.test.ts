@@ -7,6 +7,13 @@ import { CustomersService } from "../../src/modules/customers/customers.service"
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
 import { createCustomer, customerBody } from "../support/factories/customers";
+import { storeDayFrom } from "../support/factories/purchases";
+import {
+	createSale,
+	markCanceled,
+	saleItem,
+	stockedProduct,
+} from "../support/factories/sales";
 
 useTestDatabase();
 
@@ -229,5 +236,30 @@ describe("CustomersService", () => {
 				response: { code: "customer_not_found" },
 			});
 		}
+	});
+
+	it("sums what they bought in active sales, with the day of the last one", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await stockedProduct(session);
+		const customer = await createCustomer(storeId);
+		expect(await CustomersService.get(storeId, customer.id)).toMatchObject(
+			NO_PURCHASES,
+		);
+		const sell = (date: string) =>
+			createSale(session, [saleItem(product.id)], {
+				customerId: customer.id,
+				date,
+			});
+		await sell(storeDayFrom(-10));
+		await sell(storeDayFrom(-3));
+		// The latest is canceled: it counts neither in the total nor as the last purchase.
+		await markCanceled((await sell(storeDayFrom(0))).id);
+
+		expect(await CustomersService.get(storeId, customer.id)).toMatchObject({
+			purchasesCount: 2,
+			totalSpent: 20_000,
+			lastPurchaseAt: storeDayFrom(-3),
+		});
 	});
 });

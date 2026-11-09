@@ -2,27 +2,19 @@ import { t, type UnwrapSchema } from "elysia";
 import {
 	dayField,
 	expiryMonthField,
+	idField,
 	moneyField,
 	nonNegativeMoneyTotalField,
 	optionalText,
 	unitsField,
 } from "../../lib/fields";
 import { cursorQuery, pageOf } from "../../lib/pagination";
+import { previewField } from "../../lib/preview";
 
 /** Most lines one purchase takes. */
 export const MAX_PURCHASE_ITEMS = 100;
 
-/** How many products the history row shows as thumbs. */
-export const PREVIEW_SIZE = 3;
-
 const status = t.Union([t.Literal("active"), t.Literal("canceled")]);
-
-/** A product shown as a thumb in the history row. */
-const preview = t.Object({
-	productId: t.String(),
-	name: t.String(),
-	photoUrl: t.Union([t.Null(), t.String()]),
-});
 
 /** A purchase in the history. */
 const summary = t.Object({
@@ -41,7 +33,7 @@ const summary = t.Object({
 	/** Distinct products in it. */
 	productCount: t.Integer(),
 	/** The first products, in the order they were entered. */
-	preview: t.Array(preview),
+	preview: t.Array(previewField),
 });
 
 const item = t.Object({
@@ -75,7 +67,7 @@ const body = t.Object({
 	note: optionalText(500),
 	items: t.Array(
 		t.Object({
-			productId: t.String({ format: "uuid" }),
+			productId: idField,
 			quantity: unitsField,
 			/** In cents; zero is allowed. */
 			unitCost: moneyField,
@@ -102,7 +94,6 @@ export const PurchasesModel = {
 
 export type PurchasesModel = {
 	summary: UnwrapSchema<typeof summary>;
-	preview: UnwrapSchema<typeof preview>;
 	item: UnwrapSchema<typeof item>;
 	page: UnwrapSchema<typeof PurchasesModel.page>;
 	listQuery: UnwrapSchema<typeof PurchasesModel.listQuery>;

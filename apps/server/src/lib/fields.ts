@@ -24,6 +24,17 @@ export const percentField = Type.Integer({ minimum: 0, maximum: FULL_PERCENT });
  */
 export const nonNegativeMoneyTotalField = Type.Integer({ minimum: 0 });
 
+/**
+ * A total of cents that can be negative (a profit, which a loss takes below zero), with no `integer` column limit.
+ */
+export const signedMoneyTotalField = Type.Integer();
+
+/**
+ * The id of a row sent in a body, in lower case only: the database gives ids back in lower case, so an id the app
+ * sends matches the rows read back (the `uuid` format alone takes upper case too).
+ */
+export const idField = t.String({ format: "uuid", pattern: "^[0-9a-f-]+$" });
+
 /** Most units one line of a purchase (or sale) takes. */
 export const MAX_LINE_UNITS = 100_000;
 

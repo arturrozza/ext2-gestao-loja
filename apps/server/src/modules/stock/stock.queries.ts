@@ -7,7 +7,12 @@ import {
 	type ISODate,
 	monthOf,
 } from "../../lib/dates";
-import type { OpenLot, StockBalance, StockState } from "./stock.rules";
+import type {
+	OpenLot,
+	SellableLot,
+	StockBalance,
+	StockState,
+} from "./stock.rules";
 
 /*
  * A product's stock, read from the ledger (docs/decisions.md): its quantity is the sum of its lots and its value the
@@ -32,6 +37,10 @@ const warningDays = (): SQL =>
 const lotNearExpiry = (today: ISODate): SQL =>
 	sql`(not ${lotExpired(today)} and ${stockLots.expiry} + interval '1 month' <= ${today}::date + ${warningDays()} + 1)`;
 
+/** A lot that can be sold on `today`: one without expiry or within it (the app's `sellableStock` and what a sale takes). */
+const lotSellable = (today: ISODate): SQL =>
+	sql`not coalesce(${lotExpired(today)}, false)`;
+
 /** The product has units in a lot that meets `condition`. */
 const hasLot = (condition: SQL): SQL<boolean> =>
 	sql`exists (select 1 from ${stockLots} where ${stockLots.productId} = ${products.id} and ${stockLots.quantity} > 0 and ${condition})`.mapWith(
@@ -46,7 +55,7 @@ const stockQuantity = (): SQL<number> =>
 
 /** Units that can be sold on `today`: those without expiry or within it. */
 const sellableQuantity = (today: ISODate): SQL<number> =>
-	sql`(select coalesce(sum(${stockLots.quantity}), 0) from ${stockLots} where ${stockLots.productId} = ${products.id} and not coalesce(${lotExpired(today)}, false))`.mapWith(
+	sql`(select coalesce(sum(${stockLots.quantity}), 0) from ${stockLots} where ${stockLots.productId} = ${products.id} and ${lotSellable(today)})`.mapWith(
 		Number,
 	);
 
@@ -140,6 +149,41 @@ export async function openLots(
 		...row,
 		expiry: row.expiry && monthOf(row.expiry),
 	}));
+}
+
+/**
+ * The lots of these products a sale can take from on `today`, by product, in the order it takes them (estoque.md,
+ * "Saída na venda"): soonest expiry first, those without expiry last, and the oldest first within the same expiry.
+ * Expired lots never sell.
+ */
+export async function sellableLots(
+	executor: Executor,
+	storeId: string,
+	productIds: string[],
+	today: ISODate,
+): Promise<Map<string, (SellableLot & { productId: string })[]>> {
+	const rows = await executor
+		.select({
+			productId: stockLots.productId,
+			id: stockLots.id,
+			quantity: stockLots.quantity,
+		})
+		.from(stockLots)
+		.where(
+			and(
+				eq(stockLots.storeId, storeId),
+				inArray(stockLots.productId, productIds),
+				gt(stockLots.quantity, 0),
+				lotSellable(today),
+			),
+		)
+		// Postgres puts nulls last going up: lots without expiry come after every dated one.
+		.orderBy(
+			asc(stockLots.expiry),
+			asc(stockLots.createdAt),
+			asc(stockLots.id),
+		);
+	return Map.groupBy(rows, (row) => row.productId);
 }
 
 /** Value in cents of all the store's stock: archived products included, their units are still there (estoque.md). */

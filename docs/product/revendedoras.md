@@ -28,13 +28,11 @@ acessa o app.
   histórico e nos relatórios, e dá para reativar.
 - Revendedora arquivada não se edita: para mudar algo, primeiro reativa.
 - Vendas canceladas não entram no total de comissões.
+- Na tela dela, os números (vendido, número de vendas e comissão) e a lista de vendas seguem um período: hoje, últimos
+  7 dias, mês atual ou tudo. Começa no mês atual, para acertar o mês com ela. Na lista de revendedoras, os totais são
+  de todas as vendas.
 
 Exemplo: venda de R$ 200 com comissão de 10% = R$ 20 de custo.
-
-## Ainda não disponível no app
-
-As vendas de cada revendedora e a comissão por período chegam junto com [Vendas](vendas.md). Até lá, a tela dela mostra
-os totais zerados e as vendas como "Em construção".
 
 ## Fora do escopo
 

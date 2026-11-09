@@ -13,6 +13,7 @@ import { useCustomers } from "@/queries/customers/use-customers";
 import { useProducts } from "@/queries/products/use-products";
 import { usePurchases } from "@/queries/purchases/use-purchases";
 import { useResellers } from "@/queries/resellers/use-resellers";
+import { useSales } from "@/queries/sales/use-sales";
 import { useUsers } from "@/queries/users/use-users";
 
 export type Shortcut = {
@@ -46,6 +47,7 @@ const building = (title: string, icon: IconType, href: Href): Shortcut => ({
  * "Em construção".
  */
 function homeSections(counts: {
+	sales: number | undefined;
 	products: number | undefined;
 	purchases: number | undefined;
 	activeCustomers: number | undefined;
@@ -56,7 +58,12 @@ function homeSections(counts: {
 		{
 			title: "Dia a dia",
 			items: [
-				building("Vendas", ReceiptIcon, "/sales"),
+				{
+					title: "Vendas",
+					subtitle: count(counts.sales, "este mês", "Nenhuma este mês"),
+					icon: ReceiptIcon,
+					href: "/sales",
+				},
 				{
 					title: "Compras",
 					subtitle: count(counts.purchases, "lançadas", "Nenhuma ainda"),
@@ -111,9 +118,9 @@ function homeSections(counts: {
 }
 
 /**
- * The home's shortcut sections, with the counts that already come from the API (active products, purchases, customers,
- * resellers and users). `failed`: a number behind the subtitles failed to load, so the cards show nothing instead of
- * a loading line forever.
+ * The home's shortcut sections, with the counts that already come from the API (this month's sales, products,
+ * purchases, customers, resellers and users). `failed`: a number behind the subtitles failed to load, so the cards show
+ * nothing instead of a loading line forever.
  */
 export function useHomeShortcuts() {
 	// The same filters as the products tab opens with: one query for both.
@@ -124,12 +131,15 @@ export function useHomeShortcuts() {
 		stock: [],
 	});
 	const purchases = usePurchases({ status: "active" });
+	// The same filters as the sales tab opens with: one query for both. Its count leaves the canceled ones out.
+	const sales = useSales({ period: "month", channels: [], result: null });
 	const customers = useCustomers({ search: "", archived: false });
 	const resellers = useResellers({ search: "", archived: false });
 	const users = useUsers();
-	const queries = [products, purchases, customers, resellers, users];
+	const queries = [sales, products, purchases, customers, resellers, users];
 	return {
 		sections: homeSections({
+			sales: sales.data?.pages[0]?.totals.count,
 			products: products.data?.pages[0]?.total,
 			purchases: purchases.data?.pages[0]?.total,
 			activeCustomers: customers.data?.pages[0]?.total,

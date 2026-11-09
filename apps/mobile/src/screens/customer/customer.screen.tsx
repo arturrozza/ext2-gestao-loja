@@ -5,10 +5,8 @@ import { ArchiveControl } from "@/components/archive-control";
 import { Figure, FigurePair } from "@/components/figure-pair";
 import { IconButton } from "@/components/icon-button";
 import { InfoRow } from "@/components/info-row";
-import { ScreenHeader } from "@/components/screen-header";
-import { ScreenLayout } from "@/components/screen-layout";
+import { PersonSales } from "@/components/person-sales";
 import { ScreenQuery } from "@/components/screen-query";
-import { UnderConstructionCard } from "@/components/under-construction";
 import { formatDayHeading } from "@/lib/dates";
 import { formatPhone } from "@/lib/masks";
 import { formatMoney } from "@/lib/money";
@@ -52,43 +50,38 @@ function Numbers({ customer }: { customer: Customer }) {
 function CustomerContent({ customer }: { customer: Customer }) {
 	const archive = useSetCustomerArchived(customer.id);
 	return (
-		<ScreenLayout
-			header={
-				<ScreenHeader
-					title={customer.name}
-					right={
-						customer.archived ? undefined : (
-							<IconButton
-								icon={PencilSimpleIcon}
-								label="Editar cliente"
-								onPress={() => router.push(`/customers/${customer.id}/edit`)}
-							/>
-						)
-					}
+		<PersonSales
+			title={customer.name}
+			headerRight={
+				customer.archived ? undefined : (
+					<IconButton
+						icon={PencilSimpleIcon}
+						label="Editar cliente"
+						onPress={() => router.push(`/customers/${customer.id}/edit`)}
+					/>
+				)
+			}
+			filter={{ customerId: customer.id }}
+			period="all"
+			emptyDescription="As vendas com este cliente aparecem aqui."
+			bottom={
+				<ArchiveControl
+					noun="cliente"
+					archived={customer.archived}
+					archivedText="Cliente arquivado: não aparece nas novas vendas, mas continua no histórico. Para editar, reative."
+					confirmText={`${customer.name} sai das novas vendas. O histórico continua, e dá para reativar depois.`}
+					mutation={archive}
 				/>
 			}
-			contentClassName="gap-7"
 		>
 			<Numbers customer={customer} />
-			{/* Becomes the list of their sales (`PersonSales`) with the sales module (MUN-16). */}
-			<UnderConstructionCard
-				title="Compras"
-				description="O histórico de compras, o total gasto e a última compra chegam com as vendas."
-			/>
-			<ArchiveControl
-				noun="cliente"
-				archived={customer.archived}
-				archivedText="Cliente arquivado: não aparece nas novas vendas, mas continua no histórico. Para editar, reative."
-				confirmText={`${customer.name} sai das novas vendas. O histórico continua, e dá para reativar depois.`}
-				mutation={archive}
-			/>
-		</ScreenLayout>
+		</PersonSales>
 	);
 }
 
 /**
- * A customer (clientes.md): their numbers, data and the archive control. What they bought comes with the sales module
- * (MUN-16); until then that block is under construction. Archived ones aren't edited, only reactivated.
+ * A customer (clientes.md): their numbers and data, what they bought (canceled sales marked, out of the totals) and the
+ * archive control. Archived ones aren't edited, only reactivated.
  */
 export function CustomerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();

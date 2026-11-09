@@ -4,6 +4,7 @@ import {
 	optionalText,
 	percentField,
 } from "../../lib/fields";
+import { salePeriodField } from "../sales/sales.model";
 
 const reseller = t.Object({
 	id: t.String(),
@@ -14,10 +15,11 @@ const reseller = t.Object({
 	defaultCommission: percentField,
 	note: t.Union([t.Null(), t.String()]),
 	archived: t.Boolean(),
-	/** Active (not canceled) sales on the reseller channel. */
+	/** Active (not canceled) sales on the reseller channel, of all time; `GET /resellers/:id` takes a `period`. */
 	salesCount: t.Integer(),
-	/** In cents. */
+	/** In cents: their revenue. */
 	salesTotal: nonNegativeMoneyTotalField,
+	/** In cents: the commission costs of those sales. */
 	commissionTotal: nonNegativeMoneyTotalField,
 });
 
@@ -37,7 +39,11 @@ const listQuery = t.Object({
 	archived: t.Optional(t.Boolean()),
 });
 
+/** The period of her numbers (revendedoras.md): the same ones the sales list has. Left out, every sale. */
+const getQuery = t.Object({ period: t.Optional(salePeriodField) });
+
 export const ResellersModel = {
+	getQuery,
 	reseller,
 	list: t.Array(reseller),
 	body,
@@ -49,4 +55,5 @@ export type ResellersModel = {
 	reseller: UnwrapSchema<typeof ResellersModel.reseller>;
 	body: UnwrapSchema<typeof ResellersModel.body>;
 	listQuery: UnwrapSchema<typeof ResellersModel.listQuery>;
+	getQuery: UnwrapSchema<typeof ResellersModel.getQuery>;
 };

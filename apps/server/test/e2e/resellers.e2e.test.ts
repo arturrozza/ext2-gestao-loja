@@ -176,4 +176,20 @@ describe("resellers routes", () => {
 			401, 401, 401, 401, 401, 401,
 		]);
 	});
+
+	it("takes the period of her numbers in the query", async () => {
+		const { headers, session } = await signedIn();
+		const reseller = await createReseller(session.store.id);
+
+		const month = await api
+			.resellers({ id: reseller.id })
+			.get({ headers, query: { period: "month" } });
+		const bad = await api
+			.resellers({ id: reseller.id })
+			// What the typed client wouldn't let through.
+			.get({ headers, query: { period: "year" as "month" } });
+
+		expect(month.data).toMatchObject({ id: reseller.id, salesCount: 0 });
+		expect(bad.error?.status).toBe(422);
+	});
 });

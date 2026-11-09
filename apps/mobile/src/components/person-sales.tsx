@@ -7,6 +7,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { ScreenLayout } from "@/components/screen-layout";
 import { useInfiniteList } from "@/components/use-infinite-list";
 import { formatDayHeading } from "@/lib/dates";
+import type { SalePeriod } from "@/queries/sales/sales.types";
 import { useSales } from "@/queries/sales/use-sales";
 
 /**
@@ -17,6 +18,7 @@ export function PersonSales({
 	title,
 	headerRight,
 	filter,
+	period,
 	emptyDescription,
 	children,
 	bottom,
@@ -24,17 +26,21 @@ export function PersonSales({
 	title: string;
 	headerRight: ReactNode;
 	filter: { resellerId: string } | { customerId: string };
+	/** Only the sales of this period (`all` for every sale). */
+	period: SalePeriod;
 	emptyDescription: string;
 	children: ReactNode;
 	/** Under all the sales (archive). */
 	bottom?: ReactNode;
 }) {
-	const query = useSales({ period: "all", channels: [], ...filter });
+	const query = useSales({ period, channels: [], ...filter });
 	const list = useInfiniteList(
 		query,
 		<EmptyState
 			icon={ReceiptIcon}
-			title="Nenhuma venda ainda"
+			title={
+				period === "all" ? "Nenhuma venda ainda" : "Nenhuma venda neste período"
+			}
 			description={emptyDescription}
 		/>,
 		{ leading: "stack" },

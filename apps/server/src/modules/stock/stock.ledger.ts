@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import type { Transaction } from "../../db/audit";
 import { insertedRow } from "../../db/rows";
-import { stockLots, stockMovements } from "../../db/schema";
+import { saleItemLots, stockLots, stockMovements } from "../../db/schema";
 import { expiryToDate, type ISODate } from "../../lib/dates";
 import { stockBalances } from "./stock.queries";
 import {
@@ -9,6 +9,7 @@ import {
 	type CostCorrectionPlan,
 	type PlannedEntry,
 	planEntries,
+	type SaleExitPlan,
 } from "./stock.rules";
 
 /*
@@ -80,6 +81,19 @@ export async function recordEntries(
 	);
 }
 
+/** Units leaving their lots (an adjustment going down, or a sale). The lot's check keeps it from going below zero. */
+async function takeFromLots(
+	tx: Transaction,
+	takes: { lotId: string; units: number }[],
+): Promise<void> {
+	for (const take of takes) {
+		await tx
+			.update(stockLots)
+			.set({ quantity: sql`${stockLots.quantity} - ${take.units}` })
+			.where(eq(stockLots.id, take.lotId));
+	}
+}
+
 /**
  * Records an adjustment (`planAdjustment`): units leave their lots, or come in as a new lot without a purchase, and
  * one `adjustment` movement keeps the reason. It points at the new lot going up; going down the units may leave more
@@ -91,12 +105,7 @@ export async function recordAdjustment(
 	productId: string,
 	{ movement, reason, note, takes, newLot }: AdjustmentPlan,
 ): Promise<void> {
-	for (const take of takes) {
-		await tx
-			.update(stockLots)
-			.set({ quantity: sql`${stockLots.quantity} - ${take.units}` })
-			.where(eq(stockLots.id, take.lotId));
-	}
+	await takeFromLots(tx, takes);
 	const added =
 		newLot &&
 		insertedRow(
@@ -137,4 +146,45 @@ export async function recordCostCorrection(
 		...movement,
 		note,
 	});
+}
+
+/** Units leaving with a sale line (`planSaleExit`). */
+export type SaleExit = {
+	productId: string;
+	saleItemId: string;
+	plan: SaleExitPlan;
+};
+
+/**
+ * Records the exits of a sale: the units leave their lots, `sale_item_lots` keeps where each line took them from (the
+ * cancellation gives them back there), and one `sale` movement per line points at its line.
+ */
+export async function recordSaleExits(
+	tx: Transaction,
+	{ storeId, userId }: LedgerScope,
+	exits: SaleExit[],
+): Promise<void> {
+	const takes = exits.flatMap(({ saleItemId, plan }) =>
+		plan.takes.map((take) => ({ saleItemId, ...take })),
+	);
+	await takeFromLots(tx, takes);
+	await tx.insert(saleItemLots).values(
+		takes.map(({ saleItemId, lotId, units }) => ({
+			storeId,
+			saleItemId,
+			lotId,
+			quantity: units,
+		})),
+	);
+	// One statement, rows in the order of the lines: `seq` follows that order.
+	await tx.insert(stockMovements).values(
+		exits.map(({ productId, saleItemId, plan }) => ({
+			storeId,
+			userId,
+			productId,
+			type: "sale" as const,
+			...plan.movement,
+			saleItemId,
+		})),
+	);
 }

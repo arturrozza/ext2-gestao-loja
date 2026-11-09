@@ -15,7 +15,7 @@ import {
  */
 export function EditResellerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const query = useReseller(id);
+	const query = useReseller(id, "all");
 	const update = useUpdateReseller(id);
 	return (
 		<ScreenQuery

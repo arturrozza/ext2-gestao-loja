@@ -27,11 +27,6 @@ Manter os clientes fixos da loja e saber o que cada um compra.
 - O cliente é opcional na venda, para não travar a venda no balcão.
 - Na venda, a pessoa busca um cliente ou cria um ali mesmo, só com o nome.
 
-## Ainda não disponível no app
-
-O histórico de compras, o total gasto e a última compra chegam junto com [Vendas](vendas.md). Até lá, a tela do cliente
-mostra os totais zerados e as compras como "Em construção".
-
 ## Fora do escopo
 
 Fiado, limite de crédito, CPF e endereço.

@@ -37,9 +37,12 @@ src/
   lib/http-error.ts   `ErrorModel` ({ code, message, field? }), `httpError()` and `guardUnique()` (unique violation → 409)
   lib/pagination.ts   `PAGE_SIZE`, `pageOf()` and `cursorQuery` for the long lists (offset cursor, the app's `Page<T>`)
   lib/search.ts       `normalizeSearch()` (lowercase, no accents), `searchPatterns()` and `likePattern()` for `LIKE` searches
-  lib/fields.ts       shared fields (`optionalText`, `moneyField`, `nonNegativeMoneyTotalField`, `percentField`,
-                      `unitsField`, `dayField`, `expiryMonthField`)
-  lib/dates.ts        the store's day (`storeToday()`, America/Sao_Paulo), `isRealDay()` and expiry months
+  lib/fields.ts       shared fields (`optionalText`, `moneyField`, `nonNegativeMoneyTotalField`,
+                      `signedMoneyTotalField`, `percentField`, `unitsField`, `idField` (a lowercase uuid in a body),
+                      `dayField`, `expiryMonthField`)
+  lib/dates.ts        the store's day (`storeToday()`, America/Sao_Paulo), `isRealDay()`, `dayProblem()` (the day of
+                      a purchase or sale), `addDays()` and expiry months
+  lib/preview.ts      `previewOf()`: the product count and first products (thumbs) of a purchase or sale
   lib/money.ts        `MAX_CENTS`, `FULL_PERCENT`, `divideRounded()` and `percentOf()`: the one rounding rule
   lib/text.ts         `blankToNull()` (blank optional text → null) and `onlyDigits()`
   lib/phone.ts        `phoneDigits()`: a phone with area code (10/11 digits) or a 422 on `phone`
@@ -52,6 +55,7 @@ src/
     seed.ts           first account from SEED_* (idempotent)
     audit.ts          `audited()`: the transaction every write runs in, with its author for the audit log
     rows.ts           small row helpers (`insertedRow`, `archivedAtValue`)
+    numbering.ts      `nextNumber()`: the store's next purchase or sale number, under the store row lock
     schema/           tables (one file per domain) + index.ts re-exporting everything
   modules/<module>/               one folder per module, e.g. modules/products/
     <module>.controller.ts        Elysia instance with the module's routes (prefixed), exported as `<module>Controller`
@@ -60,7 +64,8 @@ src/
     <module>.service.test.ts      unit tests next to the code
   modules/stock/                  no routes: the stock ledger (`stock.ledger.ts`, the only writer of lots and
                                   movements), its SQL reads (`stock.queries.ts`), pure math (`stock.rules.ts`) and
-                                  the adjustment and cost correction rules (`stock.adjustment.ts`). The stock routes
+                                  the adjustment and cost correction rules (`stock.adjustment.ts`). Purchases, sales
+                                  and adjustments write through the ledger. The stock routes
                                   live in `products/products.stock.ts`. Stock writers lock products first
                                   (`products/products.lock.ts`); see docs/architecture.md ("Estoque")
 test/
@@ -105,7 +110,8 @@ Dockerfile
 - Changed the schema? Run `bun run db:generate` and **commit the migration** with it. Never `drizzle-kit push` to a
   shared/production DB.
 - **Money is integer cents** (`moneyColumn()`, R$ 92,50 = 9250) and **percentages are integer basis points**
-  (`percentColumn()` + a `percentRange()` check, 12,5% = 1250), from `src/db/schema/helpers.ts`. Never `numeric`,
+  (`percentColumn()` + a `percentRange()` check, 12,5% = 1250), from `src/db/schema/helpers.ts`; a sum that can outgrow
+  an `integer` (a sale's costs or profit) is `moneyTotalColumn()` (`bigint`, still cents). Never `numeric`,
   `real`/`double` or decimal strings. In routes use `moneyField`/`percentField` (`src/lib/fields.ts`), **never Elysia's
   `t.Integer`/`t.Numeric` for money or percentages**: they accept numeric strings and convert them, so an old client
   sending `"10"` (10%) would save 10 basis points (0.1%). Any division that can leave a fraction of a cent goes

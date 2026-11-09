@@ -3,39 +3,36 @@ import { db } from "../../db";
 import { audited, type Executor, type Transaction } from "../../db/audit";
 import { archivedAtValue, insertedRow } from "../../db/rows";
 import { resellers } from "../../db/schema";
+import { type ISODate, storeToday } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { personSearchFilter } from "../../lib/person";
 import type { AuthSession } from "../auth/auth.model";
+import type { SalePeriod } from "../sales/sales.model";
+import { periodStart } from "../sales/sales.rules";
+import { resellerSalesColumns } from "../sales/sales.totals";
 import type { ResellersModel } from "./resellers.model";
 import { normalizeReseller } from "./resellers.rules";
 
-const columns = {
+/** The reseller with her active sales from `since` on (every sale when null): canceled ones never count. */
+const columns = (since: ISODate | null) => ({
 	id: resellers.id,
 	name: resellers.name,
 	phone: resellers.phone,
 	defaultCommission: resellers.defaultCommission,
 	note: resellers.note,
 	archivedAt: resellers.archivedAt,
+	...resellerSalesColumns(since),
+});
+
+type ResellerRow = Omit<ResellersModel["reseller"], "archived"> & {
+	archivedAt: Date | null;
 };
 
-type ResellerRow = Pick<
-	ResellersModel["reseller"],
-	"id" | "name" | "phone" | "defaultCommission" | "note"
-> & { archivedAt: Date | null };
-
-/**
- * Sales totals are zero until sales exist (MUN-16), which will sum the reseller's active sales here (canceled ones
- * never count, revendedoras.md).
- */
-const NO_SALES = { salesCount: 0, salesTotal: 0, commissionTotal: 0 };
-
-function toReseller(row: ResellerRow): ResellersModel["reseller"] {
-	const { archivedAt, ...rest } = row;
-	return {
-		...rest,
-		archived: archivedAt !== null,
-		...NO_SALES,
-	};
+function toReseller({
+	archivedAt,
+	...row
+}: ResellerRow): ResellersModel["reseller"] {
+	return { ...row, archived: archivedAt !== null };
 }
 
 /** The reseller `id`, only if it belongs to the store. */
@@ -48,9 +45,15 @@ const notFound = () =>
 		message: "Revendedora não encontrada.",
 	});
 
-async function find(executor: Executor, storeId: string, id: string) {
+/** A reseller of the store with her totals from `since` on (every sale when null). */
+async function find(
+	executor: Executor,
+	storeId: string,
+	id: string,
+	since: ISODate | null,
+) {
 	const [row] = await executor
-		.select(columns)
+		.select(columns(since))
 		.from(resellers)
 		.where(inStore(storeId, id));
 	if (!row) throw notFound();
@@ -98,15 +101,20 @@ export const ResellersService = {
 		query: ResellersModel["listQuery"],
 	): Promise<ResellersModel["reseller"][]> {
 		const rows = await db
-			.select(columns)
+			.select(columns(null))
 			.from(resellers)
 			.where(listFilter(storeId, query))
 			.orderBy(asc(resellers.name), asc(resellers.id));
 		return rows.map(toReseller);
 	},
 
-	get(storeId: string, id: string): Promise<ResellersModel["reseller"]> {
-		return find(db, storeId, id);
+	/** With her sales and commissions in the period (revendedoras.md); every sale when left out. */
+	get(
+		storeId: string,
+		id: string,
+		period: SalePeriod = "all",
+	): Promise<ResellersModel["reseller"]> {
+		return find(db, storeId, id, periodStart(period, storeToday()));
 	},
 
 	create(
@@ -122,7 +130,7 @@ export const ResellersService = {
 					.values({ storeId, ...values })
 					.returning({ id: resellers.id }),
 			);
-			return find(tx, storeId, id);
+			return find(tx, storeId, id, null);
 		});
 	},
 
@@ -137,7 +145,7 @@ export const ResellersService = {
 		return audited(session.user.id, async (tx) => {
 			await lockEditable(tx, storeId, id);
 			await tx.update(resellers).set(values).where(inStore(storeId, id));
-			return find(tx, storeId, id);
+			return find(tx, storeId, id, null);
 		});
 	},
 
@@ -153,7 +161,7 @@ export const ResellersService = {
 				.update(resellers)
 				.set({ archivedAt: archivedAtValue(resellers.archivedAt, archived) })
 				.where(inStore(storeId, id));
-			return find(tx, storeId, id);
+			return find(tx, storeId, id, null);
 		});
 	},
 };

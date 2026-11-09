@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
 	type AnyPgColumn,
+	bigint,
 	check,
 	integer,
 	timestamp,
@@ -11,6 +12,12 @@ import {
  * holds up to R$ 21.474.836,47 per value; a total that can outgrow that (sums in reports) is computed as `bigint`.
  */
 export const moneyColumn = () => integer();
+
+/**
+ * A sum of cents a row keeps that can outgrow an `integer` (the costs of a sale with 100 lines, or a loss bigger than
+ * its revenue). Still whole cents.
+ */
+export const moneyTotalColumn = () => bigint({ mode: "number" });
 
 /** Percentages in basis points, 0 to 10000 (12,5% = 1250). Each table checks the range with a constraint. */
 export const percentColumn = () => integer();

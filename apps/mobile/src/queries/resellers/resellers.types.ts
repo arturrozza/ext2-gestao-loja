@@ -13,7 +13,7 @@ export type Reseller = {
 	defaultCommission: Percent;
 	note: string | null;
 	archived: boolean;
-	/** Active (not canceled) sales only. Zero until sales exist (MUN-16). */
+	/** Active (not canceled) sales only: of the period asked for on her page, of all time in the list. */
 	salesCount: number;
 	salesTotal: Money;
 	commissionTotal: Money;

@@ -125,8 +125,8 @@ ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem g
 ### Estoque (livro de movimentações)
 
 O estoque não tem coluna de saldo: o livro é a fonte da verdade (ver `docs/decisions.md`, MUN-12). O módulo
-`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras, ajustes e correções de custo agora;
-vendas e cancelamentos depois). As rotas do estoque ficam em `products` (`products.stock.ts`): o histórico
+`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras, vendas, ajustes e correções de custo;
+cancelamentos depois). As rotas do estoque ficam em `products` (`products.stock.ts`): o histórico
 (`GET /products/:id/movements`), o valor total (`GET /products/stock-value`), o ajuste
 (`POST /products/:id/adjustments`) e a correção de custo (`POST /products/:id/cost-corrections`).
 
@@ -136,17 +136,27 @@ vendas e cancelamentos depois). As rotas do estoque ficam em `products` (`produc
   recusado).
 - `stock.queries.ts`: a quantidade (soma de `stock_lots`), a quantidade vendável (lotes sem validade ou dentro dela), o
   valor (soma de `stock_movements.value_change`) e os estados perto de vencer e vencido como SQL correlacionado a
-  `products`, usado na lista de produtos e no saldo antes de gravar; e a quantidade por validade e os lotes abertos.
-- `stock.ledger.ts`: o único lugar que grava lotes e movimentações.
+  `products`, usado na lista de produtos e no saldo antes de gravar; a quantidade por validade, os lotes abertos e os
+  lotes que uma venda pode levar (`sellableLots`, validade mais próxima primeiro, vencidos fora).
+- `stock.ledger.ts`: o único lugar que grava lotes e movimentações, e `sale_item_lots` (de quais lotes cada item de
+  venda saiu).
 
 Quem grava no estoque trava antes os produtos (`lockProducts`, em `products/products.lock.ts`, `FOR UPDATE` em ordem
-de id) e só depois, se precisar, a linha da loja (`FOR NO KEY UPDATE`, para o número sequencial da compra). Essa
+de id), depois o cliente e a revendedora da venda (`FOR SHARE`, para não serem arquivados no meio) e só depois, se
+precisar, a linha da loja (`FOR NO KEY UPDATE`, para o número sequencial da compra ou da venda, `db/numbering.ts`). Essa
 ordem evita deadlock e faz duas escritas no mesmo produto entrarem em fila. `stock_movements` só cresce (trigger
 `stock_movements_append_only`) e segue a ordem da coluna `seq`. As tabelas de compras e estoque também têm a trigger
 de auditoria.
 
 "Hoje" é o dia da loja (`America/Sao_Paulo`, `src/lib/dates.ts`), não o do servidor: decide a data máxima de uma compra
-e o que está vencido.
+ou venda, o que está vencido e os períodos da lista de vendas.
+
+### Vendas
+
+`src/modules/sales` registra e lê as vendas (`POST /sales`, `GET /sales`, `GET /sales/:id`). As regras puras ficam em
+`sales.rules.ts` (estoque de cada item, conta do lucro real, períodos), as leituras em `sales.queries.ts` e os totais de
+clientes e revendedoras em `sales.totals.ts`, como colunas SQL correlacionadas que `customers` e `resellers` usam. A
+venda grava receita, custos e lucro calculados na hora; nada é recalculado depois (ver `docs/decisions.md`, MUN-16).
 
 ### Fotos dos produtos (Cloudflare R2)
 

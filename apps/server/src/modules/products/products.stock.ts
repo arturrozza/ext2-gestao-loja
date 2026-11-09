@@ -5,6 +5,8 @@ import {
 	products,
 	purchaseItems,
 	purchases,
+	saleItems,
+	sales,
 	stockMovements,
 	users,
 } from "../../db/schema";
@@ -35,22 +37,25 @@ async function assertProduct(storeId: string, id: string): Promise<void> {
 
 type Movement = ProductsModel["movementsPage"]["items"][number];
 
-/** A ledger row as the history shows it: the purchase it came from as its origin. */
+type Origin = { id: string; number: number } | null;
+
+/** A ledger row as the history shows it: the purchase or sale it came from as its origin. */
 function toMovement({
 	seq: _seq,
 	purchase,
+	sale,
 	createdAt,
 	...row
 }: Omit<Movement, "origin" | "createdAt"> & {
 	seq: number;
-	purchase: { id: string; number: number } | null;
+	purchase: Origin;
+	sale: Origin;
 	createdAt: Date;
 }): Movement {
-	return {
-		...row,
-		createdAt: createdAt.toISOString(),
-		origin: purchase && { kind: "purchase", ...purchase },
-	};
+	const origin =
+		(purchase && { kind: "purchase" as const, ...purchase }) ??
+		(sale && { kind: "sale" as const, ...sale });
+	return { ...row, createdAt: createdAt.toISOString(), origin };
 }
 
 /** Locks the product for a stock write (products first, docs/decisions.md) and reads its balance under the lock. */
@@ -97,8 +102,9 @@ export const ProductStockService = {
 					note: stockMovements.note,
 					createdAt: stockMovements.createdAt,
 					author: users.name,
-					// Null when it didn't come from a purchase (left join).
+					// Null when it didn't come from a purchase, or a sale (left joins).
 					purchase: { id: purchases.id, number: purchases.number },
+					sale: { id: sales.id, number: sales.number },
 				})
 				.from(stockMovements)
 				.innerJoin(users, eq(users.id, stockMovements.userId))
@@ -107,6 +113,8 @@ export const ProductStockService = {
 					eq(purchaseItems.id, stockMovements.purchaseItemId),
 				)
 				.leftJoin(purchases, eq(purchases.id, purchaseItems.purchaseId))
+				.leftJoin(saleItems, eq(saleItems.id, stockMovements.saleItemId))
+				.leftJoin(sales, eq(sales.id, saleItems.saleId))
 				.where(
 					and(ofProduct, cursor ? lt(stockMovements.seq, cursor) : undefined),
 				)

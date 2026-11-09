@@ -6,6 +6,7 @@ import {
 	EMPTY_STOCK,
 	fitsStock,
 	planEntries,
+	planSaleExit,
 	stockFlags,
 	stockSummary,
 } from "./stock.rules";
@@ -163,5 +164,57 @@ describe("stockSummary", () => {
 				expired: true,
 			},
 		});
+	});
+});
+
+describe("planSaleExit", () => {
+	const lots = [
+		{ id: "soon", quantity: 2 },
+		{ id: "later", quantity: 5 },
+	];
+
+	it("takes the lots in order, at the average cost", () => {
+		const plan = planSaleExit({ quantity: 7, value: 28_000 }, lots, 3);
+
+		expect(plan).toEqual({
+			takes: [
+				{ lotId: "soon", units: 2 },
+				{ lotId: "later", units: 1 },
+			],
+			movement: {
+				quantity: -3,
+				unitCost: 4000,
+				valueChange: -12_000,
+				stockAfter: 4,
+				averageCostAfter: 4000,
+			},
+		});
+	});
+
+	it("takes only the first lot when it has them all", () => {
+		const plan = planSaleExit({ quantity: 7, value: 28_000 }, lots, 2);
+
+		expect(plan?.takes).toEqual([{ lotId: "soon", units: 2 }]);
+	});
+
+	it("takes the whole value with the last unit", () => {
+		// R$ 10 in 3 units: R$ 3,33 each, and the last one takes the cent left.
+		const plan = planSaleExit(
+			{ quantity: 3, value: 1000 },
+			[{ id: "a", quantity: 3 }],
+			3,
+		);
+
+		expect(plan?.movement).toMatchObject({
+			valueChange: -1000,
+			unitCost: 333,
+			stockAfter: 0,
+			averageCostAfter: 0,
+		});
+	});
+
+	it("is null when the sellable lots don't have the units", () => {
+		// 10 units in stock, but only 7 sellable (the rest expired).
+		expect(planSaleExit({ quantity: 10, value: 40_000 }, lots, 8)).toBe(null);
 	});
 });

@@ -76,7 +76,10 @@ A exceção é o `apps/mobile/src/lib/money.ts` (TypeScript puro, sem React Nati
 em `apps/server/src/lib/money.parity.test.ts`, que confere a leitura do que se digita e o arredondamento lado a lado
 com o `money.ts` do server. Mudou a regra de dinheiro de um lado, o teste falha até o outro acompanhar.
 Do mesmo jeito, `apps/mobile/src/lib/stock-math.ts` (o valor que a prévia do ajuste mostra) é testado em
-`apps/server/src/modules/stock/stock.parity.test.ts` contra a regra do ajuste no server.
+`apps/server/src/modules/stock/stock.parity.test.ts` contra a regra do ajuste no server, e
+`apps/mobile/src/lib/sale-math.ts` (o lucro que a tela de nova venda mostra) em
+`apps/server/src/modules/sales/sales.parity.test.ts` contra a conta da venda no server. Esses arquivos do app importam
+uns aos outros por caminho relativo, não por `@/`, para a suíte do server conseguir carregá-los.
 Quando forem adotados, seguir a doc oficial: https://docs.expo.dev/develop/unit-testing/
 
 ## Definição de pronto

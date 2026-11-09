@@ -9,7 +9,8 @@
  *
  * The discount counts once, in the revenue. Money in cents, percentages in basis points (lib/money.ts).
  */
-import { percentOf } from "@/lib/money";
+// Relative, not "@/": the server suite imports this file for its parity test (docs/testing.md).
+import { percentOf } from "./money";
 
 export type SaleMathInput = {
 	items: { quantity: number; unitPriceCents: number; unitCostCents: number }[];

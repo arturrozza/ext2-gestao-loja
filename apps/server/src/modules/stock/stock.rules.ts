@@ -177,3 +177,47 @@ export type AdjustmentPlan = {
 
 /** A cost correction as planned (`planCostCorrection`): the movement and why. */
 export type CostCorrectionPlan = { movement: MovementPlan; note: string };
+
+/** A lot a sale can take from: one not expired, in the order sales take them (`sellableLots`). */
+export type SellableLot = { id: string; quantity: number };
+
+/** A sale line's exit as planned (`planSaleExit`): the units each lot gives and the movement that takes them. */
+export type SaleExitPlan = {
+	takes: { lotId: string; units: number }[];
+	movement: MovementPlan;
+};
+
+/**
+ * `units` leaving with a sale (estoque.md, "Saída na venda"): from the lots in the order given (soonest expiry first,
+ * then the oldest), never an expired one, at the average cost (`exitValue`). `null` when the lots don't have them all.
+ */
+export function planSaleExit(
+	balance: StockBalance,
+	lots: SellableLot[],
+	units: number,
+): SaleExitPlan | null {
+	const takes: SaleExitPlan["takes"] = [];
+	let left = units;
+	for (const lot of lots) {
+		if (left === 0) break;
+		const taken = Math.min(lot.quantity, left);
+		takes.push({ lotId: lot.id, units: taken });
+		left -= taken;
+	}
+	if (left > 0) return null;
+	const valueChange = -exitValue(balance, units);
+	const after = {
+		quantity: balance.quantity - units,
+		value: balance.value + valueChange,
+	};
+	return {
+		takes,
+		movement: {
+			quantity: -units,
+			unitCost: averageCost(balance),
+			valueChange,
+			stockAfter: after.quantity,
+			averageCostAfter: averageCost(after),
+		},
+	};
+}

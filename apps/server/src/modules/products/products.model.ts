@@ -70,11 +70,11 @@ const movement = t.Object({
 	/** Why, on an adjustment. */
 	reason: t.Union([t.Null(), t.UnionEnum(stockAdjustmentReason.enumValues)]),
 	note: t.Union([t.Null(), t.String()]),
-	/** The purchase it came from, to open from the history. */
+	/** The purchase or sale it came from, to open from the history. */
 	origin: t.Union([
 		t.Null(),
 		t.Object({
-			kind: t.Literal("purchase"),
+			kind: t.Union([t.Literal("purchase"), t.Literal("sale")]),
 			id: t.String(),
 			number: t.Integer(),
 		}),

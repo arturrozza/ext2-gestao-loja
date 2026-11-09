@@ -15,15 +15,12 @@ export type SaleCostKind =
 	| "other";
 export type SaleStatus = "active" | "canceled";
 
-/** A sale cost (vendas.md): in reais or a percentage of the revenue. */
+/** A sale cost (vendas.md): in reais (cents) or a percentage of the revenue (basis points, lib/money.ts). */
 export type SaleCostInput = {
 	kind: SaleCostKind;
-	mode: "amount" | "percent";
-	/** Cents when `amount`, basis points when `percent` (lib/money.ts). */
-	value: Money | Percent;
 	/** Free description for "outros". */
 	label: string | null;
-};
+} & ({ mode: "amount"; value: Money } | { mode: "percent"; value: Percent });
 
 export type SaleInput = {
 	date: ISODate;
@@ -61,7 +58,6 @@ export type SaleSummary = {
 	createdAt: string;
 	channel: SaleChannel;
 	status: SaleStatus;
-	description: string;
 	customerName: string | null;
 	resellerName: string | null;
 	revenue: Money;

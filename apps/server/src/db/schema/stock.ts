@@ -14,6 +14,7 @@ import {
 import { moneyColumn, timestamps } from "./helpers";
 import { products } from "./products";
 import { purchaseItems } from "./purchases";
+import { saleItems } from "./sales";
 import { stores } from "./stores";
 import { users } from "./users";
 
@@ -111,6 +112,8 @@ export const stockMovements = snakeCase.table(
 		note: text(),
 		/** Origin, when it came from a purchase. */
 		purchaseItemId: uuid().references(() => purchaseItems.id),
+		/** Origin, when it came from a sale: the line whose units left (the lots they left are in `sale_item_lots`). */
+		saleItemId: uuid().references(() => saleItems.id),
 		/** Who did it. */
 		userId: uuid()
 			.notNull()
@@ -120,10 +123,16 @@ export const stockMovements = snakeCase.table(
 	(table) => [
 		index().on(table.productId, table.seq),
 		index().on(table.purchaseItemId),
+		index().on(table.saleItemId),
 		// Every adjustment says why, and only adjustments have a reason.
 		check(
 			"stock_movements_reason_on_adjustment",
 			sql`(${table.type} = 'adjustment') = (${table.reason} is not null)`,
+		),
+		// A movement comes from one purchase line, one sale line, or neither.
+		check(
+			"stock_movements_one_origin",
+			sql`num_nonnulls(${table.purchaseItemId}, ${table.saleItemId}) <= 1`,
 		),
 		check(
 			"stock_movements_stock_after_non_negative",

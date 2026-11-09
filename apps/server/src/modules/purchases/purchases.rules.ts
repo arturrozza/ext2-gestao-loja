@@ -1,27 +1,21 @@
-import { type ExpiryMonth, type ISODate, isRealDay } from "../../lib/dates";
+import { dayProblem, type ExpiryMonth, type ISODate } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
+import { previewOf } from "../../lib/preview";
 import type { LockedProduct } from "../products/products.lock";
-import { PREVIEW_SIZE, type PurchasesModel } from "./purchases.model";
+import type { PurchasesModel } from "./purchases.model";
 
 type ItemInput = PurchasesModel["body"]["items"][number];
 
 const invalid = (field: string, message: string, code = "validation") =>
 	httpError(422, { code, message, field });
 
-/** Earliest day a purchase takes: anything before is a typo (and the year 0 the date format lets through). */
-const EARLIEST_DATE = "2000-01-01";
-
 /** The day of a purchase can be any day up to today (the store's day). */
 export function assertPurchaseDate(date: ISODate, today: ISODate): void {
-	if (!isRealDay(date)) {
-		throw invalid("date", "Confira a data da compra.");
-	}
-	if (date > today) {
+	const problem = dayProblem(date, today);
+	if (problem === "future") {
 		throw invalid("date", "A data da compra não pode ser no futuro.");
 	}
-	if (date < EARLIEST_DATE) {
-		throw invalid("date", "Confira a data da compra.");
-	}
+	if (problem) throw invalid("date", "Confira a data da compra.");
 }
 
 /** Only an active product of the store goes into a purchase (produtos.md). */
@@ -82,21 +76,10 @@ export function summarizeLines(
 	PurchasesModel["summary"],
 	"itemCount" | "unitCount" | "total" | "productCount" | "preview"
 > {
-	const previewById = new Map<string, PurchasesModel["preview"]>();
-	for (const line of lines) {
-		if (!previewById.has(line.productId)) {
-			previewById.set(line.productId, {
-				productId: line.productId,
-				name: line.productName,
-				photoUrl: line.photoUrl,
-			});
-		}
-	}
 	return {
 		itemCount: lines.length,
 		unitCount: lines.reduce((sum, line) => sum + line.quantity, 0),
 		total: lines.reduce((sum, line) => sum + line.total, 0),
-		productCount: previewById.size,
-		preview: [...previewById.values()].slice(0, PREVIEW_SIZE),
+		...previewOf(lines),
 	};
 }

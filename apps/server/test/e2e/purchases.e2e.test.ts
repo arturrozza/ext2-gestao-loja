@@ -82,7 +82,18 @@ describe("purchases routes", () => {
 			purchaseBody([purchaseItem(product.id)], { date: "2026-02-30" }),
 		);
 
-		for (const response of [noItems, textQuantity, fractionCost, badExpiry]) {
+		// The database gives ids back in lower case: an upper case one wouldn't match its product.
+		const upperId = await post(
+			purchaseBody([purchaseItem(product.id.toUpperCase())]),
+		);
+
+		for (const response of [
+			noItems,
+			textQuantity,
+			fractionCost,
+			badExpiry,
+			upperId,
+		]) {
 			expect(response.error?.value).toMatchObject({
 				code: "validation",
 				field: "items",

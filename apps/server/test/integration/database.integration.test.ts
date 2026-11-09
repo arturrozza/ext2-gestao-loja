@@ -10,6 +10,10 @@ import {
 	purchaseItems,
 	purchases,
 	resellers,
+	saleCosts,
+	saleItemLots,
+	saleItems,
+	sales,
 	sessions,
 	stockLots,
 	stockMovements,
@@ -72,7 +76,11 @@ type Table =
 	| typeof purchases
 	| typeof purchaseItems
 	| typeof stockLots
-	| typeof stockMovements;
+	| typeof stockMovements
+	| typeof sales
+	| typeof saleItems
+	| typeof saleItemLots
+	| typeof saleCosts;
 
 describe("schema indexes", () => {
 	it("indexes the columns every request filters by", () => {
@@ -137,8 +145,22 @@ describe("schema foreign keys", () => {
 			"products",
 			"stock_lots",
 			"purchase_items",
+			"sale_items",
 			"users",
 		]);
+		expect(targets(sales)).toEqual([
+			"stores",
+			"resellers",
+			"customers",
+			"users",
+		]);
+		expect(targets(saleItems)).toEqual(["stores", "sales", "products"]);
+		expect(targets(saleItemLots)).toEqual([
+			"stores",
+			"sale_items",
+			"stock_lots",
+		]);
+		expect(targets(saleCosts)).toEqual(["stores", "sales"]);
 	});
 });
 
@@ -148,6 +170,10 @@ describe("schema checks", () => {
 			products,
 			purchaseItems,
 			resellers,
+			sales,
+			saleItems,
+			saleItemLots,
+			saleCosts,
 			stockLots,
 			stockMovements,
 			stores,
@@ -170,6 +196,21 @@ describe("schema checks", () => {
 				"CHECK ((EXTRACT(day FROM expiry) = (1)::numeric))",
 			purchase_items_quantity_positive: "CHECK ((quantity > 0))",
 			purchase_items_unit_cost_non_negative: "CHECK ((unit_cost >= 0))",
+			sale_costs_amount_non_negative: "CHECK ((amount >= 0))",
+			sale_costs_value_range:
+				"CHECK (((value >= 0) AND ((mode = 'amount'::sale_cost_mode) OR (value <= 10000))))",
+			sale_item_lots_quantity_positive: "CHECK ((quantity > 0))",
+			sale_items_cost_non_negative: "CHECK ((cost >= 0))",
+			sale_items_quantity_positive: "CHECK ((quantity > 0))",
+			sale_items_unit_cost_non_negative: "CHECK ((unit_cost >= 0))",
+			sale_items_unit_price_non_negative: "CHECK ((unit_price >= 0))",
+			sales_discount_non_negative: "CHECK ((discount >= 0))",
+			sales_profit_adds_up:
+				"CHECK ((profit = ((revenue - products_cost) - sale_costs)))",
+			sales_reseller_on_reseller_channel:
+				"CHECK (((channel = 'reseller'::sale_channel) = (reseller_id IS NOT NULL)))",
+			sales_revenue_non_negative: "CHECK ((revenue >= 0))",
+			sales_surcharge_non_negative: "CHECK ((surcharge >= 0))",
 			resellers_default_commission_range:
 				"CHECK (((default_commission >= 0) AND (default_commission <= 10000)))",
 			stock_lots_expiry_first_day:
@@ -177,6 +218,8 @@ describe("schema checks", () => {
 			stock_lots_quantity_non_negative: "CHECK ((quantity >= 0))",
 			stock_movements_average_cost_after_non_negative:
 				"CHECK ((average_cost_after >= 0))",
+			stock_movements_one_origin:
+				"CHECK ((num_nonnulls(purchase_item_id, sale_item_id) <= 1))",
 			stock_movements_reason_on_adjustment:
 				"CHECK (((type = 'adjustment'::stock_movement_type) = (reason IS NOT NULL)))",
 			stock_movements_stock_after_non_negative: "CHECK ((stock_after >= 0))",

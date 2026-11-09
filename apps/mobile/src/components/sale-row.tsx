@@ -1,7 +1,7 @@
 import { ItemRow } from "@/components/item-row";
 import { ThumbStack } from "@/components/thumb-stack";
 import { formatRelativeDate } from "@/lib/dates";
-import { SALE_CHANNELS } from "@/lib/labels";
+import { productsLine, SALE_CHANNELS } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import type { SaleSummary } from "@/queries/sales/sales.types";
 
@@ -32,12 +32,13 @@ export function SaleRow({
 	showDate?: boolean;
 }) {
 	const loss = sale.profit < 0;
+	const products = productsLine(sale.preview, sale.productCount);
 	return (
 		<ItemRow
 			href={`/sales/${sale.id}`}
-			label={`Venda ${sale.number}, ${sale.description}`}
+			label={`Venda ${sale.number}, ${products}`}
 			leading={<ThumbStack items={sale.preview} total={sale.productCount} />}
-			title={sale.description}
+			title={products}
 			subtitle={`#${sale.number} · ${subtitle(sale, hide, showDate)}`}
 			value={formatMoney(sale.revenue)}
 			note={`lucro ${formatMoney(sale.profit)}`}
