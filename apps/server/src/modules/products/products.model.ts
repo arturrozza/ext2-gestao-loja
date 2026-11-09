@@ -1,6 +1,7 @@
 import { t, type UnwrapSchema } from "elysia";
 import { moneyField, optionalText } from "../../lib/fields";
 import { cursorQuery, pageOf } from "../../lib/pagination";
+import { STOCK_STATES } from "../stock/stock.rules";
 
 const product = t.Object({
 	id: t.String(),
@@ -17,6 +18,15 @@ const product = t.Object({
 	/** Public address of the photo; null without one (the app shows its initials). */
 	photoUrl: t.Union([t.Null(), t.String()]),
 	archived: t.Boolean(),
+	/** Units in stock, expired ones included until discarded. Stock and cost only come from the ledger (estoque.md). */
+	stock: t.Integer(),
+	/** Units that can be sold (not expired). */
+	sellableStock: t.Integer(),
+	/** In cents: stock value ÷ units, rounded to the cent; zero without stock. */
+	averageCost: moneyField,
+	/** In cents. */
+	stockValue: moneyField,
+	flags: t.Object({ lowStock: t.Boolean(), outOfStock: t.Boolean() }),
 });
 
 /** What the product form edits (produtos.md): stock and cost never, they come from purchases. */
@@ -58,6 +68,10 @@ const listQuery = t.Object({
 	),
 	/** `true` lists only archived products; otherwise only active ones. */
 	archived: t.Optional(t.Boolean()),
+	/** Any of these states; none means every product. */
+	stock: t.Optional(
+		t.Array(t.UnionEnum(STOCK_STATES), { maxItems: STOCK_STATES.length }),
+	),
 	cursor: cursorQuery,
 });
 

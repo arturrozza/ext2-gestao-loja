@@ -15,8 +15,6 @@ export type PurchaseSummary = {
 	itemCount: number;
 	unitCount: number;
 	total: Money;
-	/** "Perfume Floral, Hidratante e mais 2". */
-	description: string;
 	/** First products, for the thumbs of the row. */
 	preview: ItemPreview[];
 	/** Distinct products in it. */
@@ -42,8 +40,6 @@ export type PurchaseDetail = PurchaseSummary & {
 	createdAt: string;
 	author: string;
 	canceledAt: string | null;
-	/** Why it can't be canceled (units already sold), or `null` when it can. */
-	cancelBlockedReason: string | null;
 };
 
 /** A purchase as the user enters it (compras.md). No edit: a wrong one is canceled and entered again. */

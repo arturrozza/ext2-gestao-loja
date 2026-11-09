@@ -256,7 +256,9 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   (`parseMoneyInput`, `parsePercentInput`), sem passar por float, e só se formata na tela (`formatMoney`,
   `formatPercent`, `moneyToInput`, `percentToInput`).
 - Datas: `timestamptz` (`timestamp({ withTimezone: true })`), gravadas em UTC. A conversão para o horário local
-  (America/Sao_Paulo) acontece no app.
+  (America/Sao_Paulo) acontece no app. Dia do calendário (data da compra) é `date` e trafega como `"YYYY-MM-DD"`;
+  validade trafega como mês, `"YYYY-MM"`, e é guardada como o primeiro dia do mês. Regra que depende de "hoje" usa o
+  dia da loja (`storeToday()`, `apps/server/src/lib/dates.ts`), nunca o do servidor.
 - IDs: definir na primeira feature que criar uma tabela e registrar aqui.
 - Mudança de schema vai junto com a migration gerada (`bun run db:generate`), no mesmo commit. Nunca use
   `drizzle-kit push` em banco compartilhado ou de produção.

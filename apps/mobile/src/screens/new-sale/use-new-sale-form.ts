@@ -6,10 +6,7 @@ import { SALE_COST_KINDS } from "@/lib/labels";
 import { moneyToInput, parseMoneyInput, parsePercentInput } from "@/lib/money";
 import { computeSale } from "@/lib/sale-math";
 import { useZodForm } from "@/lib/use-zod-form";
-import type {
-	ProductDetail,
-	ProductListItem,
-} from "@/queries/products/products.types";
+import type { Product, ProductDetail } from "@/queries/products/products.types";
 import { useStockProductsById } from "@/queries/products/use-products";
 import type { SaleChannel } from "@/queries/sales/sales.types";
 import { useCreateSale } from "@/queries/sales/use-sales";
@@ -24,7 +21,7 @@ import {
 } from "./new-sale.schema";
 import { initialCosts, withChannelCosts } from "./partials/sale-costs";
 
-function draftFor(product: ProductListItem): SaleItemDraft {
+function draftFor(product: Product): SaleItemDraft {
 	return {
 		key: nextDraftKey(),
 		product: {
@@ -151,7 +148,7 @@ export function useNewSaleForm(settings: StoreSettings) {
 		updateItems,
 		updateCosts,
 		setChannel,
-		addProducts: (picked: ProductListItem[]) =>
+		addProducts: (picked: Product[]) =>
 			updateItems((all) => [...all, ...picked.map(draftFor)]),
 		submit,
 	};

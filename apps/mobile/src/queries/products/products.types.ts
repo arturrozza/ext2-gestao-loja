@@ -2,7 +2,17 @@ import type { ExpiryMonth } from "@/lib/dates";
 import type { Money } from "@/lib/money";
 import type { Page } from "@/queries/pagination";
 
-/** A product as the API sends it (docs/product/produtos.md). Stock and cost come with Compras and Estoque (MUN-12/13). */
+/** The quantity states of a product (estoque.md). The expiry ones come with MUN-13 (`StockFlags`). */
+export type QuantityFlags = {
+	/** Quantity at or below the minimum (and not zero). */
+	lowStock: boolean;
+	outOfStock: boolean;
+};
+
+/**
+ * A product as the API sends it (docs/product/produtos.md), with its stock read from the ledger (estoque.md). Stock
+ * and cost are never typed in: they come from purchases.
+ */
 export type Product = {
 	id: string;
 	name: string;
@@ -17,7 +27,18 @@ export type Product = {
 	/** Public address of the photo; null without one (the thumb shows the initials). */
 	photoUrl: string | null;
 	archived: boolean;
+	/** Units in stock, expired included until they're discarded. */
+	stock: number;
+	/** Units that can be sold (not expired). */
+	sellableStock: number;
+	/** stock value ÷ units, rounded to the cent. */
+	averageCost: Money;
+	stockValue: Money;
+	flags: QuantityFlags;
 };
+
+/** Stock states the product list filters by: any of them (estoque.md). The expiry ones come with MUN-13. */
+export type StockState = "in_stock" | "low" | "out";
 
 export type ProductListFilters = {
 	/** Name, internal code or barcode. */
@@ -26,6 +47,8 @@ export type ProductListFilters = {
 	categoryIds: string[];
 	/** `true` lists only archived products; `false` only active ones. */
 	archived: boolean;
+	/** Any of these states; empty means every product. */
+	stock: StockState[];
 };
 
 export type ProductPage = Page<Product>;
@@ -61,19 +84,6 @@ export type Category = {
 	productCount: number;
 };
 
-/*
- * Stock contract (estoque.md), used by the screens of sales, purchases and stock corrections. Those modules are under
- * construction (MUN-12/13/16): nothing below comes from the API yet.
- */
-
-/** Stock filters of the product list (docs/product/estoque.md). */
-export type StockFilter =
-	| "in_stock"
-	| "low"
-	| "out"
-	| "near_expiry"
-	| "expired";
-
 /** A product shown as a thumb in a sale or purchase row. */
 export type ItemPreview = {
 	productId: string;
@@ -81,39 +91,19 @@ export type ItemPreview = {
 	photoUrl: string | null;
 };
 
-/** The product list with stock filters (the picker of sales and purchases). */
-export type StockListFilters = ProductListFilters & {
-	/** Any of these states; empty means every product. */
-	stock: StockFilter[];
-	/** Also a state: products with sellable stock. */
-	inStock?: boolean;
-};
+/*
+ * Stock screen contract (estoque.md, MUN-13): expiry states, quantity by expiry, ledger, adjustment and cost
+ * correction. Not in the API yet: the screens that use these are under construction.
+ */
 
-export type StockFlags = {
-	/** Quantity at or below the minimum (and not zero). */
-	lowStock: boolean;
-	outOfStock: boolean;
+/** Stock filters of the stock screen (docs/product/estoque.md). */
+export type StockFilter = StockState | "near_expiry" | "expired";
+
+export type StockFlags = QuantityFlags & {
 	/** Has units within the "expiry warning" days of the settings. */
 	nearExpiry: boolean;
 	/** Has units past their expiry. */
 	expired: boolean;
-};
-
-/** A product with its stock (MUN-12/13). */
-export type ProductListItem = Product & {
-	/** Units in stock, expired included until they're discarded. */
-	stock: number;
-	/** Units that can be sold (not expired). */
-	sellableStock: number;
-	averageCost: Money;
-	/** stock × average cost. */
-	stockValue: Money;
-	flags: StockFlags;
-};
-
-export type ProductListPage = Page<ProductListItem> & {
-	/** Value of the whole stock of the active products, regardless of the filters. */
-	totalStockValue: Money;
 };
 
 /** Units in stock with the same expiry (`null`: no expiry). Lots stay hidden from the user. */
@@ -160,7 +150,8 @@ export type Movement = {
 	author: string;
 };
 
-export type ProductDetail = ProductListItem & {
+export type ProductDetail = Product & {
+	flags: StockFlags;
 	expiries: ExpiryBalance[];
 };
 

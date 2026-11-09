@@ -18,7 +18,7 @@ function ExpiryPill({ balance }: { balance: ExpiryBalance }) {
 	return null;
 }
 
-/** Stock split by expiry (estoque.md, "quantidade por validade"). Lots stay hidden. Back with MUN-12/13. */
+/** Stock split by expiry (estoque.md, "quantidade por validade"). Lots stay hidden. Back with the stock screen (MUN-13). */
 export function ExpiryList({ expiries }: { expiries: ExpiryBalance[] }) {
 	// Products without expiry have nothing to split.
 	if (!expiries.some((balance) => balance.expiry)) return null;

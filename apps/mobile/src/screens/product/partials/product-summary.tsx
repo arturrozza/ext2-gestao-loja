@@ -5,9 +5,12 @@ import { ProductThumb } from "@/components/product-thumb";
 import { StatusPill } from "@/components/status-pill";
 import { Text } from "@/components/ui/text";
 import { hapticTap, withHaptic } from "@/lib/haptics";
+import { times } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
+import { stockStatus } from "@/lib/stock-status";
 import type { Product } from "@/queries/products/products.types";
 import { PhotoViewer } from "./photo-viewer";
+import { StockActions } from "./stock-actions";
 
 /** The product's thumb; with a photo, a tap opens it over the whole screen. */
 function SummaryThumb({ product }: { product: Product }) {
@@ -34,9 +37,16 @@ function SummaryThumb({ product }: { product: Product }) {
 	);
 }
 
+/** Archived, or the most urgent stock state. */
+function SummaryStatus({ product }: { product: Product }) {
+	if (product.archived) return <StatusPill label="Arquivado" />;
+	const status = stockStatus(product.flags);
+	return status ? <StatusPill label={status.label} tone={status.tone} /> : null;
+}
+
 /**
- * The top card, like the sale's: the product with its category, the price and the stock side by side. The stock shows
- * "—" until purchases exist (MUN-12).
+ * The top card, like the sale's: the product with its category, the price (with the average cost) and the stock (with
+ * its value) side by side, and what changes the stock.
  */
 export function ProductSummary({ product }: { product: Product }) {
 	return (
@@ -50,13 +60,23 @@ export function ProductSummary({ product }: { product: Product }) {
 					<Text className="text-muted-foreground text-sm">
 						{product.categoryName ?? "Sem categoria"}
 					</Text>
-					{product.archived ? <StatusPill label="Arquivado" /> : null}
+					<SummaryStatus product={product} />
 				</View>
 			</View>
 			<FigurePair>
-				<Figure label="Preço de venda" value={formatMoney(product.basePrice)} />
-				<Figure label="Em estoque" value="—" />
+				<Figure
+					label="Preço de venda"
+					value={formatMoney(product.basePrice)}
+					note={`custo médio ${formatMoney(product.averageCost)}`}
+				/>
+				<Figure
+					label="Em estoque"
+					value={times(product.stock)}
+					note={`vale ${formatMoney(product.stockValue)}`}
+					danger={product.stock === 0}
+				/>
 			</FigurePair>
+			<StockActions product={product} />
 		</View>
 	);
 }

@@ -48,7 +48,13 @@ export function PurchaseItemCard({
 	onDuplicate,
 }: {
 	item: PurchaseItemDraft;
-	errors: { quantity?: string; unitCost?: string; expiry?: string };
+	/** `product`: the API refused the product itself (archived or gone since it was picked). */
+	errors: {
+		product?: string;
+		quantity?: string;
+		unitCost?: string;
+		expiry?: string;
+	};
 	onChange: (patch: Partial<PurchaseItemDraft>) => void;
 	onRemove: () => void;
 	onDuplicate: () => void;
@@ -106,9 +112,9 @@ export function PurchaseItemCard({
 					placeholder="Escolher mês e ano"
 				/>
 			) : null}
-			{errors.quantity || errors.unitCost ? (
+			{errors.product || errors.quantity || errors.unitCost ? (
 				<Text className="px-1 text-destructive text-sm">
-					{errors.quantity ?? errors.unitCost}
+					{errors.product ?? errors.quantity ?? errors.unitCost}
 				</Text>
 			) : null}
 			<View className="flex-row justify-between px-1">

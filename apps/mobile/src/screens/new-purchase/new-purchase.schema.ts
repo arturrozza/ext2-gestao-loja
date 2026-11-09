@@ -22,6 +22,10 @@ export type NewPurchaseValues = {
 	items: PurchaseItemDraft[];
 };
 
+/** The API's limits (`MAX_LINE_UNITS`, `MAX_PURCHASE_ITEMS` in the server): checked here to say it on the line. */
+const MAX_LINE_UNITS = 100_000;
+const MAX_PURCHASE_ITEMS = 100;
+
 type Ctx = z.RefinementCtx;
 
 function fail(ctx: Ctx, path: (string | number)[], message: string) {
@@ -35,6 +39,8 @@ function parseItem(item: PurchaseItemDraft, index: number, ctx: Ctx) {
 	const expiry = parseExpiryInput(item.expiry);
 	if (item.quantity < 1)
 		fail(ctx, [...path, "quantity"], "Quantidade maior que zero.");
+	if (item.quantity > MAX_LINE_UNITS)
+		fail(ctx, [...path, "quantity"], "No máximo 100.000 unidades por item.");
 	if (cents === null) fail(ctx, [...path, "unitCost"], "Informe o custo.");
 	if (item.product.hasExpiry && !expiry)
 		fail(ctx, [...path, "expiry"], "Informe a validade (mês/ano).");
@@ -54,6 +60,8 @@ export const newPurchaseSchema = z
 		if (!date) fail(ctx, ["date"], "Data inválida (dd/mm/aaaa).");
 		if (values.items.length === 0)
 			fail(ctx, ["items"], "Adicione pelo menos um produto.");
+		if (values.items.length > MAX_PURCHASE_ITEMS)
+			fail(ctx, ["items"], "No máximo 100 itens por compra.");
 		const items = values.items.map((item, index) =>
 			parseItem(item, index, ctx),
 		);

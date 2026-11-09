@@ -17,40 +17,17 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useInfiniteList } from "@/components/use-infinite-list";
 import { hapticSelect, withHaptic } from "@/lib/haptics";
-import { plural } from "@/lib/labels";
+import { plural, STOCK_STATE_OPTIONS } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { cn } from "@/lib/utils";
-import type {
-	ProductListItem,
-	StockListFilters,
-} from "@/queries/products/products.types";
-import {
-	useCategories,
-	useStockProducts,
-} from "@/queries/products/use-products";
+import type { Product, StockState } from "@/queries/products/products.types";
+import { useCategories, useProducts } from "@/queries/products/use-products";
 
 /** `sale`: shows price and sellable stock. `purchase`: shows stock and cost. */
 export type PickerMode = "sale" | "purchase";
 
-type Availability = "in_stock" | "low" | "out";
-
-const AVAILABILITY: { value: Availability; label: string }[] = [
-	{ value: "in_stock", label: "Com estoque" },
-	{ value: "low", label: "Estoque baixo" },
-	{ value: "out", label: "Sem estoque" },
-];
-
-function availabilityFilter(
-	values: Availability[],
-): Pick<StockListFilters, "stock" | "inStock"> {
-	return {
-		stock: values.filter((value) => value !== "in_stock"),
-		inStock: values.includes("in_stock"),
-	};
-}
-
-function detailLine(product: ProductListItem, mode: PickerMode) {
+function detailLine(product: Product, mode: PickerMode) {
 	const detail =
 		mode === "sale"
 			? `${formatMoney(product.basePrice)} · ${product.sellableStock} disponíveis`
@@ -72,7 +49,7 @@ function PickerRow({
 	added,
 	onToggle,
 }: {
-	product: ProductListItem;
+	product: Product;
 	mode: PickerMode;
 	selected: boolean;
 	added: boolean;
@@ -113,12 +90,10 @@ function RowGap() {
 }
 
 function useSelection() {
-	const [selected, setSelected] = useState<Map<string, ProductListItem>>(
-		new Map(),
-	);
+	const [selected, setSelected] = useState<Map<string, Product>>(new Map());
 	return {
 		selected,
-		toggle(product: ProductListItem) {
+		toggle(product: Product) {
 			setSelected((current) => {
 				const next = new Map(current);
 				if (next.has(product.id)) next.delete(product.id);
@@ -126,7 +101,7 @@ function useSelection() {
 				return next;
 			});
 		},
-		add(product: ProductListItem) {
+		add(product: Product) {
 			setSelected((current) => new Map(current).set(product.id, product));
 		},
 		clear: () => setSelected(new Map()),
@@ -139,9 +114,9 @@ function useSelection() {
  */
 function useBarcodeSelect(
 	search: string,
-	products: ProductListItem[],
+	products: Product[],
 	addedIds: string[],
-	onMatch: (product: ProductListItem | null) => void,
+	onMatch: (product: Product | null) => void,
 ) {
 	// The list and the callback are new objects each render: read them from a ref and run only when the search changes.
 	const latest = useRef({ products, addedIds, onMatch });
@@ -176,22 +151,22 @@ export function ProductPicker({
 	/** Products already on the form: listed, but can't be picked again. */
 	addedIds: string[];
 	onClose: () => void;
-	onConfirm: (products: ProductListItem[]) => void;
+	onConfirm: (products: Product[]) => void;
 }) {
 	const insets = useSafeAreaInsets();
 	const [search, setSearch] = useState("");
 	const [categoryIds, setCategoryIds] = useState<string[]>([]);
-	const [availability, setAvailability] = useState<Availability[]>([]);
+	const [availability, setAvailability] = useState<StockState[]>([]);
 	const selection = useSelection();
 	const categories = useCategories();
 	const debouncedSearch = useDebouncedValue(search);
 	// Only fetches while open: every form that hosts the picker keeps it mounted.
-	const query = useStockProducts(
+	const query = useProducts(
 		{
 			search: debouncedSearch,
 			categoryIds,
 			archived: false,
-			...availabilityFilter(availability),
+			stock: availability,
 		},
 		open,
 	);
@@ -216,7 +191,7 @@ export function ProductPicker({
 		multiFilterGroup({
 			key: "availability",
 			title: "Estoque",
-			options: AVAILABILITY,
+			options: STOCK_STATE_OPTIONS,
 			values: availability,
 			onChange: setAvailability,
 		}),

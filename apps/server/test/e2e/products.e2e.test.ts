@@ -8,6 +8,7 @@ import {
 	createProduct,
 	productBody,
 } from "../support/factories/catalog";
+import { createPurchase, purchaseItem } from "../support/factories/purchases";
 import { jpegFile, useFakePhotoStorage } from "../support/photo-storage";
 
 useTestDatabase();
@@ -179,6 +180,35 @@ describe("products routes", () => {
 		expect(error?.value).toMatchObject({ code: "product_not_found" });
 	});
 
+	it("shows the stock purchases left and filters by stock state", async () => {
+		const { headers, session } = await signedIn();
+		const storeId = session.store.id;
+		const stocked = await createProduct(storeId, { name: "Com estoque" });
+		await createProduct(storeId, { name: "Sem estoque" });
+		await createPurchase(session, [
+			purchaseItem(stocked.id, { quantity: 10, unitCost: 9200 }),
+		]);
+
+		const read = await api.products({ id: stocked.id }).get({ headers });
+		const out = await api.products.get({ query: { stock: ["out"] }, headers });
+		const either = await api.products.get({
+			query: { stock: ["in_stock", "out"] },
+			headers,
+		});
+
+		expect(read.data).toMatchObject({
+			stock: 10,
+			sellableStock: 10,
+			averageCost: 9200,
+			stockValue: 92_000,
+			flags: { lowStock: false, outOfStock: false },
+		});
+		expect(out.data?.items.map((product) => product.name)).toEqual([
+			"Sem estoque",
+		]);
+		expect(either.data?.total).toBe(2);
+	});
+
 	it("answers 422 for a bad list query and a bad id", async () => {
 		const { headers } = await signedIn();
 
@@ -190,9 +220,15 @@ describe("products routes", () => {
 		const id = await api.products({ id: "x" }).archive.post(undefined, {
 			headers,
 		});
+		const stock = await api.products.get({
+			// What the typed client wouldn't let through.
+			query: { stock: ["expired" as "out"] },
+			headers,
+		});
 
 		expect(cursor.error?.status).toBe(422);
 		expect(category.error?.status).toBe(422);
+		expect(stock.error?.status).toBe(422);
 		expect(id.error?.status).toBe(422);
 	});
 

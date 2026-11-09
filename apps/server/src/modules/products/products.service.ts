@@ -7,6 +7,7 @@ import {
 	isNull,
 	like,
 	ne,
+	or,
 	type SQL,
 	sql,
 } from "drizzle-orm";
@@ -14,11 +15,18 @@ import { db } from "../../db";
 import { audited, type Executor, type Transaction } from "../../db/audit";
 import { archivedAtValue, insertedRow } from "../../db/rows";
 import { categories, products } from "../../db/schema";
+import { type ISODate, storeToday } from "../../lib/dates";
 import { guardUnique, httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
-import { photoStorage } from "../../lib/photo-storage";
+import { photoStorage, photoUrlOf } from "../../lib/photo-storage";
 import { searchPatterns } from "../../lib/search";
 import type { AuthSession } from "../auth/auth.model";
+import { stockColumns, stockStateFilter } from "../stock/stock.queries";
+import {
+	type StockFigures,
+	type StockSummary,
+	stockSummary,
+} from "../stock/stock.rules";
 import type { ProductsModel } from "./products.model";
 import {
 	assertJpeg,
@@ -29,7 +37,8 @@ import {
 } from "./products.photo";
 import { normalizeProduct, type ProductValues } from "./products.rules";
 
-const columns = {
+/** A product with its stock on `today` (the day decides which units are sellable). */
+const columns = (today: ISODate) => ({
 	id: products.id,
 	name: products.name,
 	basePrice: products.basePrice,
@@ -42,23 +51,31 @@ const columns = {
 	hasExpiry: products.hasExpiry,
 	photoKey: products.photoKey,
 	archivedAt: products.archivedAt,
-};
+	...stockColumns(today),
+});
 
-type ProductRow = Omit<ProductsModel["product"], "archived" | "photoUrl"> & {
-	photoKey: string | null;
-	archivedAt: Date | null;
-};
+type ProductRow = Omit<
+	ProductsModel["product"],
+	"archived" | "photoUrl" | keyof StockSummary
+> &
+	StockFigures & {
+		photoKey: string | null;
+		archivedAt: Date | null;
+	};
 
 function toProduct({
 	archivedAt,
 	photoKey,
+	stock,
+	sellableStock,
+	stockValue,
 	...row
 }: ProductRow): ProductsModel["product"] {
 	return {
 		...row,
-		// While photos are off the storage gives no address, so the app shows the initials instead of a broken image.
-		photoUrl: photoKey ? photoStorage().publicUrl(photoKey) : null,
+		photoUrl: photoUrlOf(photoKey),
 		archived: archivedAt !== null,
+		...stockSummary({ stock, sellableStock, stockValue }, row.minStock),
 	};
 }
 
@@ -84,27 +101,31 @@ const notFound = () =>
 		message: "Produto não encontrado.",
 	});
 
-function selectProducts(executor: Executor = db) {
+function selectProducts(executor: Executor, today: ISODate) {
 	return executor
-		.select(columns)
+		.select(columns(today))
 		.from(products)
 		.leftJoin(categories, eq(categories.id, products.categoryId));
 }
 
 async function find(executor: Executor, storeId: string, id: string) {
-	const [row] = await selectProducts(executor).where(
+	const [row] = await selectProducts(executor, storeToday()).where(
 		and(eq(products.id, id), eq(products.storeId, storeId)),
 	);
 	if (!row) throw notFound();
 	return toProduct(row);
 }
 
-/** Where clause of the list: active or archived, any of the categories, and every search word somewhere. */
+/**
+ * Where clause of the list: active or archived, any of the categories, any of the stock states, and every search word
+ * somewhere.
+ */
 function listFilter(
 	storeId: string,
 	query: ProductsModel["listQuery"],
+	today: ISODate,
 ): SQL | undefined {
-	const filters = [
+	const filters: (SQL | undefined)[] = [
 		eq(products.storeId, storeId),
 		query.archived
 			? isNotNull(products.archivedAt)
@@ -115,6 +136,11 @@ function listFilter(
 	];
 	if (query.categoryIds?.length) {
 		filters.push(inArray(products.categoryId, query.categoryIds));
+	}
+	if (query.stock?.length) {
+		filters.push(
+			or(...query.stock.map((state) => stockStateFilter(state, today))),
+		);
 	}
 	return and(...filters);
 }
@@ -234,9 +260,10 @@ export const ProductsService = {
 		query: ProductsModel["listQuery"],
 	): Promise<ProductsModel["page"]> {
 		const cursor = query.cursor ?? 0;
-		const filter = listFilter(storeId, query);
+		const today = storeToday();
+		const filter = listFilter(storeId, query, today);
 		const [rows, total] = await Promise.all([
-			selectProducts()
+			selectProducts(db, today)
 				.where(filter)
 				.orderBy(asc(products.name), asc(products.id))
 				.limit(PAGE_SIZE)

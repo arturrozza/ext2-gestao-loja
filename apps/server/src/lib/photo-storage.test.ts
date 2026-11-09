@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from "bun:test";
 import {
 	disabledPhotoStorage,
 	photoStorage,
+	photoUrlOf,
 	r2Storage,
 	setPhotoStorage,
 } from "./photo-storage";
@@ -106,5 +107,15 @@ describe("photoStorage", () => {
 		expect(photoStorage()).toBe(storage);
 		setPhotoStorage(disabledPhotoStorage);
 		expect(photoStorage()).toBe(disabledPhotoStorage);
+	});
+
+	it("gives a photo's address through the current storage, and none without a photo", () => {
+		setPhotoStorage(storage);
+		expect(photoUrlOf("stores/s/products/p.jpg")).toBe(
+			"https://pub-abc.r2.dev/stores/s/products/p.jpg",
+		);
+		expect(photoUrlOf(null)).toBeNull();
+		setPhotoStorage(disabledPhotoStorage);
+		expect(photoUrlOf("stores/s/products/p.jpg")).toBeNull();
 	});
 });

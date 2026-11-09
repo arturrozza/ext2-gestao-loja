@@ -23,3 +23,20 @@ export const percentField = Type.Integer({ minimum: 0, maximum: FULL_PERCENT });
  * totals that can be negative (profit): those need their own field without the minimum.
  */
 export const nonNegativeMoneyTotalField = Type.Integer({ minimum: 0 });
+
+/** Most units one line of a purchase (or sale) takes. */
+export const MAX_LINE_UNITS = 100_000;
+
+/** Units in one line: a whole number above zero (TypeBox's `Integer`, so "10" is refused, not converted). */
+export const unitsField = Type.Integer({ minimum: 1, maximum: MAX_LINE_UNITS });
+
+/**
+ * A calendar day, "YYYY-MM-DD". Only the shape: Elysia's `date` format lets "2026-02-30" through, so whether the day
+ * exists is checked by the rules (`isRealDay`).
+ */
+export const dayField = t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" });
+
+/** Expiry month, "YYYY-MM" (docs/product/compras.md). */
+export const expiryMonthField = t.String({
+	pattern: "^\\d{4}-(0[1-9]|1[0-2])$",
+});

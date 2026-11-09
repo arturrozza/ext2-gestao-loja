@@ -33,7 +33,6 @@ const ACTIONS: QuickAction[] = [
 		subtitle: "Dar entrada em mercadoria",
 		icon: TruckIcon,
 		href: "/purchases/new",
-		underConstruction: true,
 	},
 	{
 		title: "Novo produto",

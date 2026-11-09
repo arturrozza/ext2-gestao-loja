@@ -11,6 +11,7 @@ import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import type { IconType } from "@/components/ui/icon";
 import { useCustomers } from "@/queries/customers/use-customers";
 import { useProducts } from "@/queries/products/use-products";
+import { usePurchases } from "@/queries/purchases/use-purchases";
 import { useResellers } from "@/queries/resellers/use-resellers";
 import { useUsers } from "@/queries/users/use-users";
 
@@ -46,6 +47,7 @@ const building = (title: string, icon: IconType, href: Href): Shortcut => ({
  */
 function homeSections(counts: {
 	products: number | undefined;
+	purchases: number | undefined;
 	activeCustomers: number | undefined;
 	activeResellers: number | undefined;
 	activeUsers: number | undefined;
@@ -55,7 +57,12 @@ function homeSections(counts: {
 			title: "Dia a dia",
 			items: [
 				building("Vendas", ReceiptIcon, "/sales"),
-				building("Compras", TruckIcon, "/purchases"),
+				{
+					title: "Compras",
+					subtitle: count(counts.purchases, "lançadas", "Nenhuma ainda"),
+					icon: TruckIcon,
+					href: "/purchases",
+				},
 				{
 					title: "Produtos",
 					subtitle: count(counts.products, "cadastrados", "Nenhum ainda"),
@@ -104,23 +111,27 @@ function homeSections(counts: {
 }
 
 /**
- * The home's shortcut sections, with the counts that already come from the API (active products, customers,
+ * The home's shortcut sections, with the counts that already come from the API (active products, purchases, customers,
  * resellers and users). `failed`: a number behind the subtitles failed to load, so the cards show nothing instead of
  * a loading line forever.
  */
 export function useHomeShortcuts() {
+	// The same filters as the products tab opens with: one query for both.
 	const products = useProducts({
 		search: "",
 		categoryIds: [],
 		archived: false,
+		stock: [],
 	});
+	const purchases = usePurchases({ status: "active" });
 	const customers = useCustomers({ search: "", archived: false });
 	const resellers = useResellers({ search: "", archived: false });
 	const users = useUsers();
-	const queries = [products, customers, resellers, users];
+	const queries = [products, purchases, customers, resellers, users];
 	return {
 		sections: homeSections({
 			products: products.data?.pages[0]?.total,
+			purchases: purchases.data?.pages[0]?.total,
 			activeCustomers: customers.data?.pages[0]?.total,
 			activeResellers: resellers.data?.length,
 			activeUsers: users.data?.filter((user) => user.active).length,

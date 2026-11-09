@@ -11,6 +11,7 @@ import { categoriesController } from "./modules/categories/categories.controller
 import { customersController } from "./modules/customers/customers.controller";
 import { healthController } from "./modules/health/health.controller";
 import { productsController } from "./modules/products/products.controller";
+import { purchasesController } from "./modules/purchases/purchases.controller";
 import { resellersController } from "./modules/resellers/resellers.controller";
 import { storeController } from "./modules/store/store.controller";
 import { usersController } from "./modules/users/users.controller";
@@ -52,6 +53,7 @@ export const app = new Elysia()
 	.use(categoriesController)
 	.use(productsController)
 	.use(resellersController)
-	.use(customersController);
+	.use(customersController)
+	.use(purchasesController);
 
 export type App = typeof app;

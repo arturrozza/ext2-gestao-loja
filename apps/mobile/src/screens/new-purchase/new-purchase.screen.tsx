@@ -17,8 +17,8 @@ import { nextDraftKey } from "@/lib/draft-key";
 import { units } from "@/lib/labels";
 import { formatMoney, moneyToInput, parseMoneyInput } from "@/lib/money";
 import { useZodForm } from "@/lib/use-zod-form";
-import type { ProductListItem } from "@/queries/products/products.types";
-import { useStockProduct } from "@/queries/products/use-products";
+import type { Product } from "@/queries/products/products.types";
+import { useProduct } from "@/queries/products/use-products";
 import { useCreatePurchase } from "@/queries/purchases/use-purchases";
 import {
 	type NewPurchaseValues,
@@ -30,7 +30,7 @@ import { PurchaseItemList } from "./partials/purchase-item-list";
 /** A new line for a product, with its current average cost as the starting unit cost. */
 function draftFor(
 	product: Pick<
-		ProductListItem,
+		Product,
 		"id" | "name" | "hasExpiry" | "photoUrl" | "averageCost"
 	>,
 	quantity = 1,
@@ -59,6 +59,12 @@ function totals(items: PurchaseItemDraft[]) {
 	return { cents, unitCount };
 }
 
+/** `?quantity=` as a whole number of units, 1 when missing or not a positive number. */
+function prefillQuantity(param: string | undefined): number {
+	const quantity = Number(param);
+	return Number.isSafeInteger(quantity) && quantity >= 1 ? quantity : 1;
+}
+
 /**
  * Prefills the product passed as `?productId=` ("Lançar compra" from a product, "Cadastrar primeira entrada", or the
  * insufficient-stock shortcut of a sale, which also sends the missing `?quantity=`). Runs once, when the product
@@ -69,15 +75,24 @@ function usePrefill(add: (item: PurchaseItemDraft) => void) {
 		productId?: string;
 		quantity?: string;
 	}>();
-	const product = useStockProduct(params.productId);
+	const product = useProduct(params.productId);
 	const done = useRef(false);
 	useEffect(() => {
 		if (done.current || !product.data) return;
 		done.current = true;
-		if (!product.data.archived) {
-			add(draftFor(product.data, Number(params.quantity) || 1));
+		if (product.data.archived) {
+			showToast("Produto arquivado não entra em compra.");
+			return;
 		}
+		add(draftFor(product.data, prefillQuantity(params.quantity)));
 	}, [product.data, params.quantity, add]);
+	// Only when it never loaded: a failed background refetch leaves the line already added.
+	const failed = product.isError && !product.data;
+	useEffect(() => {
+		if (failed) {
+			showToast("Não deu para trazer o produto. Adicione ele pela lista.");
+		}
+	}, [failed]);
 }
 
 /**
@@ -95,8 +110,11 @@ export function NewPurchaseScreen() {
 	const { values, errors, set } = form;
 	const updateItems = (
 		change: (items: PurchaseItemDraft[]) => PurchaseItemDraft[],
-	) =>
+	) => {
 		form.setValues((current) => ({ ...current, items: change(current.items) }));
+		// The API's errors point at lines by index: after a change they may point at the wrong one.
+		form.clearServerErrors("items");
+	};
 	usePrefill((item) => updateItems((all) => [...all, item]));
 	const summary = totals(values.items);
 

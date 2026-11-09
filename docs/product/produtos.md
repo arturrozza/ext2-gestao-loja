@@ -43,11 +43,6 @@ a tela do produto também concentram o [Estoque](estoque.md).
   ele, já preenchido.
 - O preço base é o preço normal de venda, sugerido na venda e editável nela.
 
-## Ainda não disponível no app
-
-O estoque na lista e na tela do produto e a sugestão de "Cadastrar primeira entrada" chegam com Compras e Estoque. Até
-lá, o estoque aparece como "—".
-
 ## Fora do escopo
 
 Embalagem, marca, fornecedor, referência de fábrica, NCM/CEST e peso.

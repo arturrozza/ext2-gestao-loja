@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { useRef } from "react";
 import { View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,11 @@ export function FirstEntrySheet({
 }: {
 	product: { id: string; name: string } | null;
 }) {
+	// One way out: a second tap (or the sheet closing after the first) must not navigate again.
+	const left = useRef(false);
 	const open = (target: "purchase" | "product") => {
-		if (!product) return;
+		if (!product || left.current) return;
+		left.current = true;
 		if (target === "purchase") {
 			router.replace({
 				pathname: "/purchases/new",

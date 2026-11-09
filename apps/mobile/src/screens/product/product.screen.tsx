@@ -13,9 +13,9 @@ import { ProductSummary } from "./partials/product-summary";
 import { StockCard } from "./partials/stock-card";
 
 /**
- * Product screen (produtos.md): its data and the archive control. Stock (quantity by expiry, ledger and the stock
- * actions, estoque.md) comes with purchases and stock corrections (MUN-12/13); until then it's under construction. An
- * archived product isn't edited, only reactivated.
+ * Product screen (produtos.md, estoque.md): its data, stock and average cost, the stock actions and the archive
+ * control. Quantity by expiry and the ledger come with the stock screen (MUN-13); until then they're under
+ * construction. An archived product isn't edited, only reactivated.
  */
 export function ProductScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,8 +43,8 @@ export function ProductScreen() {
 				>
 					<ProductSummary product={product} />
 					<UnderConstructionCard
-						title="Estoque"
-						description="Quantidade, custo, validades e histórico de movimentações chegam com as compras."
+						title="Validades e movimentações"
+						description="A quantidade por validade e o histórico do estoque chegam com a tela de estoque."
 					/>
 					<StockCard product={product} />
 					<ListCard title="Códigos">

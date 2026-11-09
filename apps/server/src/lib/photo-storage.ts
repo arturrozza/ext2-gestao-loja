@@ -72,3 +72,8 @@ export function photoStorage(): PhotoStorage {
 export function setPhotoStorage(storage: PhotoStorage): void {
 	current = storage;
 }
+
+/** Public address of a stored photo, or null without one (or while photos are off): the app shows initials instead. */
+export function photoUrlOf(key: string | null): string | null {
+	return key ? current.publicUrl(key) : null;
+}

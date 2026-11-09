@@ -1,13 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { api, request } from "@/lib/api";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
-import { underConstruction } from "@/queries/under-construction";
-import type {
-	PurchaseDetail,
-	PurchaseInput,
-	PurchaseListFilters,
-	PurchasePage,
-} from "./purchases.types";
+import type { PurchaseInput, PurchaseListFilters } from "./purchases.types";
 
 export const purchasesKeys = {
 	all: ["purchases"] as const,
@@ -20,14 +15,20 @@ export const purchasesKeys = {
 export function usePurchases(filters: PurchaseListFilters) {
 	return useInfiniteQuery({
 		queryKey: purchasesKeys.list(filters),
-		...pagedQuery((cursor) => underConstruction<PurchasePage>(filters, cursor)),
+		...pagedQuery((cursor) =>
+			request(
+				api.purchases.get({
+					query: { status: filters.status ?? undefined, cursor },
+				}),
+			),
+		),
 	});
 }
 
 export function usePurchase(id: string) {
 	return useQuery({
 		queryKey: purchasesKeys.detail(id),
-		queryFn: () => underConstruction<PurchaseDetail>(id),
+		queryFn: () => request(api.purchases({ id }).get()),
 	});
 }
 
@@ -35,16 +36,7 @@ export function usePurchase(id: string) {
 export function useCreatePurchase() {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({
-		mutationFn: (input: PurchaseInput) =>
-			underConstruction<PurchaseDetail>(input),
-		onSuccess: invalidate,
-	});
-}
-
-export function useCancelPurchase(id: string) {
-	const invalidate = useInvalidateBusinessData();
-	return useMutation({
-		mutationFn: () => underConstruction<PurchaseDetail>(id),
+		mutationFn: (input: PurchaseInput) => request(api.purchases.post(input)),
 		onSuccess: invalidate,
 	});
 }

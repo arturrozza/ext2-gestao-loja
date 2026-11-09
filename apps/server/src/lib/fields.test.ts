@@ -1,6 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import { Value } from "@sinclair/typebox/value";
-import { moneyField, optionalText, percentField } from "./fields";
+import {
+	dayField,
+	expiryMonthField,
+	MAX_LINE_UNITS,
+	moneyField,
+	optionalText,
+	percentField,
+	unitsField,
+} from "./fields";
 import { MAX_CENTS } from "./money";
 
 /** What a client could send that isn't a whole number: floats, strings, decimals as text, nothing. */
@@ -52,5 +60,42 @@ describe("optionalText", () => {
 		expect(Value.Check(field, null)).toBe(true);
 		expect(Value.Check(field, "abc")).toBe(true);
 		expect(Value.Check(field, "abcd")).toBe(false);
+	});
+});
+
+describe("unitsField", () => {
+	it("accepts whole units from 1 to the line limit", () => {
+		for (const value of [1, 10, MAX_LINE_UNITS]) {
+			expect(Value.Check(unitsField, value)).toBe(true);
+		}
+	});
+
+	it("refuses zero, negatives, too many and anything that isn't an integer", () => {
+		for (const value of [0, -1, MAX_LINE_UNITS + 1, ...notIntegers]) {
+			expect(Value.Check(unitsField, value)).toBe(false);
+		}
+	});
+});
+
+describe("expiryMonthField", () => {
+	it("accepts a year and a month", () => {
+		for (const value of ["2027-01", "2027-12"]) {
+			expect(Value.Check(expiryMonthField, value)).toBe(true);
+		}
+	});
+
+	it("refuses a day, a month out of range and other shapes", () => {
+		for (const value of ["2027-03-01", "2027-00", "2027-13", "03/2027", ""]) {
+			expect(Value.Check(expiryMonthField, value)).toBe(false);
+		}
+	});
+});
+
+describe("dayField", () => {
+	it("takes the YYYY-MM-DD shape only (whether the day exists is a rule)", () => {
+		expect(Value.Check(dayField, "2026-11-09")).toBe(true);
+		for (const value of ["2026-11-9", "09/11/2026", "2026-11-09T10:00:00Z"]) {
+			expect(Value.Check(dayField, value)).toBe(false);
+		}
 	});
 });

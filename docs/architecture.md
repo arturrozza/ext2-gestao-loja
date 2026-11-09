@@ -122,6 +122,27 @@ ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem g
   `public` ficar sem ela (exceções: `sessions`, o próprio `audit_log` e tabelas de rascunho dos testes).
 - Ainda não há tela para consultar o registro.
 
+### Estoque (livro de movimentações)
+
+O estoque não tem coluna de saldo: o livro é a fonte da verdade (ver `docs/decisions.md`, MUN-12). O módulo
+`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras agora; vendas, ajustes e cancelamentos
+depois):
+
+- `stock.rules.ts`: as contas puras (custo médio, entrada, limites, estados baixo/sem estoque), testadas sem banco.
+- `stock.queries.ts`: a quantidade (soma de `stock_lots`), a quantidade vendável (lotes sem validade ou dentro dela) e o
+  valor (soma de `stock_movements.value_change`) como SQL correlacionado a `products`, usado na lista de produtos e no
+  saldo antes de gravar.
+- `stock.ledger.ts`: o único lugar que grava lotes e movimentações.
+
+Quem grava no estoque trava antes os produtos (`lockProducts`, em `products/products.lock.ts`, `FOR UPDATE` em ordem
+de id) e só depois, se precisar, a linha da loja (`FOR NO KEY UPDATE`, para o número sequencial da compra). Essa
+ordem evita deadlock e faz duas escritas no mesmo produto entrarem em fila. `stock_movements` só cresce (trigger
+`stock_movements_append_only`) e segue a ordem da coluna `seq`. As tabelas de compras e estoque também têm a trigger
+de auditoria.
+
+"Hoje" é o dia da loja (`America/Sao_Paulo`, `src/lib/dates.ts`), não o do servidor: decide a data máxima de uma compra
+e o que está vencido.
+
 ### Fotos dos produtos (Cloudflare R2)
 
 - **Fluxo:** o app reduz a foto (JPEG, 1080 px) e manda para `POST /products/photos` (multipart, campo `photo`). A API

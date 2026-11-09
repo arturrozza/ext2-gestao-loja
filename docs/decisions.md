@@ -12,6 +12,31 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Compras alimentam um livro de estoque, e o custo médio segue a ordem de lançamento (MUN-12)
+
+**Decisão:** o estoque não guarda saldo em coluna nenhuma. Cada item de compra gera um lote (`stock_lots`, com as
+unidades que restam e a validade) e uma movimentação (`stock_movements`), e o livro de movimentações é a fonte da
+verdade: a quantidade do produto é a soma dos lotes, o valor é a soma das movimentações, e o custo médio é
+`valor ÷ quantidade`, arredondado só para mostrar. As movimentações nunca mudam (uma trigger recusa `UPDATE` e
+`DELETE`) e seguem a ordem de uma coluna `seq`, tomada na hora da gravação. Cada uma guarda também a quantidade e o custo
+médio logo depois dela, só para o histórico (MUN-13); o saldo nunca é lido delas.
+O custo médio segue a **ordem de lançamento**, não a data da compra: uma compra lançada hoje com data passada entra no
+custo médio de agora, e nada que já aconteceu é recalculado.
+Escritas no estoque travam os produtos primeiro (`FOR UPDATE`, em ordem de id) e, quando precisam, a linha da loja
+depois (`FOR NO KEY UPDATE`, para o número sequencial da compra). Vendas, ajustes e cancelamentos seguem essa ordem.
+"Hoje" é o dia da loja (`America/Sao_Paulo`, `lib/dates.ts` no server): define a data máxima da compra e o que está
+vencido. Validade é guardada como o primeiro dia do mês.
+**Por quê:** é como ERPs que levam estoque a sério fazem (o ERPNext com o livro de estoque, o Odoo somando as
+"valuation layers"): um saldo em coluna pode divergir do histórico sem ninguém ver, e somar o livro nunca diverge. Na
+escala de uma loja, somar é instantâneo. Recalcular pela data obrigaria a reescrever o custo de vendas já feitas, e o
+lucro de um relatório já visto mudaria sozinho; o Odoo também aplica o custo médio na hora em que a entrada é
+registrada. A diferença só aparece em compra lançada atrasada com venda no meio, e é custo gerencial, não fiscal. Se o
+cliente preferir pela data, a regra muda aqui e em `compras.md`. Travar sempre na mesma ordem evita deadlock entre
+duas escritas nos mesmos produtos.
+**Pendente:** o `POST /purchases` não tem chave de idempotência. Se a resposta se perder (internet caindo depois de a
+API gravar) e a pessoa tocar de novo, a compra entra duas vezes. Até ter a chave, a correção é cancelar a repetida
+(MUN-17).
+
 ## 2026-11-06: Foto do produto no Cloudflare R2, enviada pela API (MUN-11)
 
 **Decisão:** a foto do produto fica num bucket do Cloudflare R2 (`mundomadam-photos-prod`, e `mundomadam-photos-dev`
@@ -44,8 +69,8 @@ conversão é exata e atômica: se algum valor não coubesse, nada mudaria e o d
 registro pela conversão, e os registros anteriores a ela guardam os valores na escala antiga, também como número
 (`92.50` em vez de `9250`): só a data separa um do outro. Quem ler o histórico compara o `created_at` do registro com
 o `applied_at` da migration `20261105194540_money_in_cents` em `drizzle.__drizzle_migrations`.
-**Custo médio (para Compras, MUN-12):** o estoque guarda o valor total em centavos e a quantidade, e o custo médio é
-`valor ÷ quantidade`, calculado quando precisa. A compra só soma (não arredonda). A saída tira
+**Custo médio (para Compras, MUN-12):** o estoque guarda o valor total em centavos e a quantidade (na MUN-12, como
+somas do livro de estoque, sem coluna de saldo), e o custo médio é `valor ÷ quantidade`, calculado quando precisa. A compra só soma (não arredonda). A saída tira
 `custo médio × unidades` arredondado ao centavo, e zerar o estoque zera o valor. Assim o erro não acumula.
 **Por quê:** é o padrão para dinheiro (Stripe, Adyen, o padrão Money): contas inteiras são exatas e não dependem de
 converter texto em cada conta, que é onde um arredondamento errado escapa. Pontos-base são a unidade comum para taxas,
@@ -101,7 +126,8 @@ produtos da loja, sem índice; com catálogos grandes, trocar por `pg_trgm`.
 se edita, só reativa. O app para de usar dados falsos de uma vez (a MUN-20 vai junto com a MUN-10): os módulos que
 ainda não existem mostram "Em construção" e escondem as ações, e estoque e custo aparecem como "—" até Compras e
 Estoque. A sugestão de "Cadastrar primeira entrada" passou para Compras (MUN-12), e o campo de foto some do cadastro
-até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva.
+até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva. (Mudou na MUN-12: compras, estoque,
+custo e a primeira entrada já estão no app; seguem em construção o cancelamento, a tela de estoque e vendas.)
 **Por quê:** excluir uma categoria tiraria os produtos dela e mudaria os relatórios por categoria do passado; arquivar
 esconde sem perder nada. Editar arquivado não tem uso e abre espaço para mexer no que já é histórico. Ligar só
 produtos à API deixaria compras, vendas e estoque falsos apontando para produtos que não existem mais; mostrar "Em

@@ -14,7 +14,7 @@ import { moneyColumn, positiveMoney, timestamps } from "./helpers";
 import { stores } from "./stores";
 
 /**
- * Products of a store (docs/product/produtos.md). Stock and cost aren't here: they come from purchases (MUN-12).
+ * Products of a store (docs/product/produtos.md). Stock and cost aren't here: they come from the stock ledger (`stock.ts`).
  * Archived, never deleted: they stay in the history.
  */
 export const products = snakeCase.table(

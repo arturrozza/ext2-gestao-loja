@@ -2,7 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { and, eq } from "drizzle-orm";
 import { db } from "../../src/db";
 import { audited } from "../../src/db/audit";
-import { auditLog, products } from "../../src/db/schema";
+import { auditLog, products, stockLots } from "../../src/db/schema";
+import { expiryToDate, monthOf, storeToday } from "../../src/lib/dates";
 import { MAX_CENTS } from "../../src/lib/money";
 import { PAGE_SIZE } from "../../src/lib/pagination";
 import { CategoriesService } from "../../src/modules/categories/categories.service";
@@ -15,6 +16,7 @@ import {
 	createProduct,
 	productBody,
 } from "../support/factories/catalog";
+import { createPurchase, purchaseItem } from "../support/factories/purchases";
 import {
 	jpegBytes,
 	jpegFile,
@@ -565,5 +567,171 @@ describe("ProductsService photos", () => {
 		const hidden = await ProductsService.get(session.store.id, withPhoto.id);
 		expect(plain.photoUrl).toBeNull();
 		expect(hidden.photoUrl).toBeNull();
+	});
+});
+
+/** A day of the store's previous month. */
+function lastMonthDay() {
+	const [year = 0, month = 0] = storeToday().split("-").map(Number);
+	return new Date(Date.UTC(year, month - 2, 1)).toISOString().slice(0, 10);
+}
+
+describe("product stock", () => {
+	/** Moves a lot's expiry, to have expired units (a purchase never takes them). */
+	async function expireLotsOf(productId: string, expiry: string) {
+		await audited("system", (tx) =>
+			tx
+				.update(stockLots)
+				.set({ expiry })
+				.where(eq(stockLots.productId, productId)),
+		);
+	}
+
+	it("starts at zero, out of stock", async () => {
+		const { session } = await signedIn();
+
+		const product = await ProductsService.create(session, productBody());
+
+		expect(product).toMatchObject({
+			stock: 0,
+			sellableStock: 0,
+			averageCost: 0,
+			stockValue: 0,
+			flags: { lowStock: false, outOfStock: true },
+		});
+	});
+
+	it("shows the stock and the average cost the purchases left, in the list and the product", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId, { minStock: 20 });
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 9200 }),
+			purchaseItem(product.id, { quantity: 10, unitCost: 10_000 }),
+		]);
+
+		const read = await ProductsService.get(storeId, product.id);
+		const [listed] = (await ProductsService.list(storeId, {})).items;
+
+		expect(read).toMatchObject({
+			stock: 20,
+			sellableStock: 20,
+			averageCost: 9600,
+			stockValue: 192_000,
+			flags: { lowStock: true, outOfStock: false },
+		});
+		expect(listed).toEqual(read);
+	});
+
+	it("rounds the average cost only for showing", async () => {
+		const { session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 3, unitCost: 0 }),
+			purchaseItem(product.id, { quantity: 3, unitCost: 667 }),
+		]);
+
+		const read = await ProductsService.get(session.store.id, product.id);
+
+		expect(read).toMatchObject({ stockValue: 2001, averageCost: 334 });
+	});
+
+	it("leaves expired units out of what can be sold, keeping the ones of this month", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const expired = await createProduct(storeId, { hasExpiry: true });
+		const thisMonth = await createProduct(storeId, { hasExpiry: true });
+		const month = monthOf(storeToday());
+		await createPurchase(session, [
+			purchaseItem(expired.id, { quantity: 4, expiry: month }),
+			purchaseItem(thisMonth.id, { quantity: 2, expiry: month }),
+		]);
+		// Last month: expired since the last day of that month.
+		await expireLotsOf(expired.id, expiryToDate(monthOf(lastMonthDay())));
+
+		expect(await ProductsService.get(storeId, expired.id)).toMatchObject({
+			stock: 4,
+			sellableStock: 0,
+		});
+		expect(await ProductsService.get(storeId, thisMonth.id)).toMatchObject({
+			stock: 2,
+			sellableStock: 2,
+		});
+	});
+
+	it("filters by any of the stock states", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const plenty = await createProduct(storeId, { name: "A farto" });
+		const low = await createProduct(storeId, { name: "B baixo", minStock: 5 });
+		await createProduct(storeId, { name: "C zerado", minStock: 5 });
+		const expired = await createProduct(storeId, {
+			name: "D vencido",
+			hasExpiry: true,
+			minStock: 20,
+		});
+		await createPurchase(session, [
+			purchaseItem(plenty.id, { quantity: 50 }),
+			purchaseItem(low.id, { quantity: 5 }),
+			purchaseItem(expired.id, {
+				quantity: 9,
+				expiry: monthOf(storeToday()),
+			}),
+		]);
+		await expireLotsOf(expired.id, "2000-01-01");
+
+		const list = async (stock: ("in_stock" | "low" | "out")[]) =>
+			names(await ProductsService.list(storeId, { stock }));
+
+		expect(await list(["in_stock"])).toEqual(["A farto", "B baixo"]);
+		// Expired units still count until discarded: "D vencido" is low by its minimum, never "in_stock".
+		expect(await list(["low"])).toEqual(["B baixo", "D vencido"]);
+		expect(await list(["out"])).toEqual(["C zerado"]);
+		expect(await list(["low", "out"])).toEqual([
+			"B baixo",
+			"C zerado",
+			"D vencido",
+		]);
+		expect(await list([])).toHaveLength(4);
+	});
+
+	it("filters exactly the products whose flags say so", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const rows: [quantity: number, minStock: number | null][] = [
+			[0, 5],
+			[4, 5],
+			[5, 5],
+			[6, 5],
+			[1, null],
+			[0, null],
+		];
+		for (const [index, [quantity, minStock]] of rows.entries()) {
+			const product = await createProduct(storeId, {
+				name: `P${index}`,
+				minStock,
+			});
+			if (quantity > 0) {
+				await createPurchase(session, [purchaseItem(product.id, { quantity })]);
+			}
+		}
+
+		const all = (await ProductsService.list(storeId, {})).items;
+		expect(all.filter((p) => p.flags.lowStock).map((p) => p.name)).toEqual([
+			"P1",
+			"P2",
+		]);
+		const listed = async (state: "in_stock" | "low" | "out") =>
+			names(await ProductsService.list(storeId, { stock: [state] }));
+
+		expect(await listed("low")).toEqual(
+			all.filter((p) => p.flags.lowStock).map((p) => p.name),
+		);
+		expect(await listed("out")).toEqual(
+			all.filter((p) => p.flags.outOfStock).map((p) => p.name),
+		);
+		expect(await listed("in_stock")).toEqual(
+			all.filter((p) => p.sellableStock > 0).map((p) => p.name),
+		);
 	});
 });

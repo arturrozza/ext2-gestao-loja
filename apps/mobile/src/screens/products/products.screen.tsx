@@ -18,9 +18,12 @@ import { SearchField } from "@/components/search-field";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useInfiniteList } from "@/components/use-infinite-list";
-import { plural } from "@/lib/labels";
+import { plural, STOCK_STATE_OPTIONS } from "@/lib/labels";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
-import type { ProductListFilters } from "@/queries/products/products.types";
+import type {
+	ProductListFilters,
+	StockState,
+} from "@/queries/products/products.types";
 import { useCategories, useProducts } from "@/queries/products/use-products";
 import { ProductRow } from "./partials/product-row";
 
@@ -78,7 +81,7 @@ function NoProducts({
 	);
 }
 
-/** The count of the filter. The store's stock value joins it with purchases (MUN-12). */
+/** The count of the filter. The store's total stock value joins it with the stock screen (MUN-13). */
 function subtitleOf(
 	page: { total: number } | undefined,
 	onlyCategory: string | undefined,
@@ -89,14 +92,15 @@ function subtitleOf(
 }
 
 /**
- * Products tab (docs/product/produtos.md): search by name/code/barcode (camera too), category and status filters in a
- * sheet. Stock, its filters and the total stock value come with purchases and stock corrections (MUN-12/13). New
- * products start at the tab bar's "+". Virtualized and paginated: the catalog can be huge.
+ * Products tab (docs/product/produtos.md): search by name/code/barcode (camera too), stock, category and status filters
+ * in a sheet, each row with its stock. The expiry filters and the total stock value come with the stock screen (MUN-13).
+ * New products start at the tab bar's "+". Virtualized and paginated: the catalog can be huge.
  */
 export function ProductsScreen() {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<Status>("active");
 	const [pickedCategoryIds, setPickedCategoryIds] = useState<string[]>([]);
+	const [stock, setStock] = useState<StockState[]>([]);
 	const categories = useCategories();
 	// Archived categories can't be picked (produtos.md); their products still show without the filter.
 	const activeCategories = (categories.data ?? []).filter((c) => !c.archived);
@@ -114,6 +118,7 @@ export function ProductsScreen() {
 		search: useDebouncedValue(search),
 		categoryIds,
 		archived: status === "archived",
+		stock,
 	};
 	const query = useProducts(filters);
 	const firstPage = query.data?.pages[0];
@@ -122,13 +127,23 @@ export function ProductsScreen() {
 		<NoProducts
 			search={filters.search}
 			filtered={Boolean(
-				filters.search || categoryIds.length > 0 || status !== "active",
+				filters.search ||
+					categoryIds.length > 0 ||
+					stock.length > 0 ||
+					status !== "active",
 			)}
 		/>,
 		{ leading: "thumb" },
 	);
 
 	const filterGroups = [
+		multiFilterGroup({
+			key: "stock",
+			title: "Estoque",
+			options: STOCK_STATE_OPTIONS,
+			values: stock,
+			onChange: setStock,
+		}),
 		multiFilterGroup({
 			key: "category",
 			title: "Categoria",

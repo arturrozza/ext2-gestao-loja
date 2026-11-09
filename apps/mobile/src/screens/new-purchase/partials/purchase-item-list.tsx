@@ -31,6 +31,7 @@ export function PurchaseItemList({
 					key={item.key}
 					item={item}
 					errors={{
+						product: errors[`items.${index}.productId`],
 						quantity: errors[`items.${index}.quantity`],
 						unitCost: errors[`items.${index}.unitCost`],
 						expiry: errors[`items.${index}.expiry`],

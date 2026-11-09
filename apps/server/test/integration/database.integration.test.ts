@@ -7,8 +7,12 @@ import {
 	categories,
 	customers,
 	products,
+	purchaseItems,
+	purchases,
 	resellers,
 	sessions,
+	stockLots,
+	stockMovements,
 	stores,
 	users,
 } from "../../src/db/schema";
@@ -63,7 +67,12 @@ type Table =
 	| typeof products
 	| typeof resellers
 	| typeof customers
-	| typeof auditLog;
+	| typeof auditLog
+	| typeof stores
+	| typeof purchases
+	| typeof purchaseItems
+	| typeof stockLots
+	| typeof stockMovements;
 
 describe("schema indexes", () => {
 	it("indexes the columns every request filters by", () => {
@@ -116,12 +125,33 @@ describe("schema foreign keys", () => {
 		expect(targets(products)).toEqual(["stores", "categories"]);
 		expect(targets(resellers)).toEqual(["stores"]);
 		expect(targets(customers)).toEqual(["stores"]);
+		expect(targets(purchases)).toEqual(["stores", "users"]);
+		expect(targets(purchaseItems)).toEqual(["stores", "purchases", "products"]);
+		expect(targets(stockLots)).toEqual([
+			"stores",
+			"products",
+			"purchase_items",
+		]);
+		expect(targets(stockMovements)).toEqual([
+			"stores",
+			"products",
+			"stock_lots",
+			"purchase_items",
+			"users",
+		]);
 	});
 });
 
 describe("schema checks", () => {
-	it("keep prices above zero and percentages within 0–10000 basis points, in the schema and in the database", async () => {
-		const tables = [products, resellers, stores];
+	it("keep prices above zero, percentages within 0–10000 basis points and stock non-negative, in the schema and in the database", async () => {
+		const tables: Table[] = [
+			products,
+			purchaseItems,
+			resellers,
+			stockLots,
+			stockMovements,
+			stores,
+		];
 		const names = tables.flatMap((table) =>
 			getTableConfig(table).checks.map((check) => check.name),
 		);
@@ -136,8 +166,18 @@ describe("schema checks", () => {
 			Object.fromEntries(rows.map((row) => [row.name, row.definition])),
 		).toEqual({
 			products_base_price_positive: "CHECK ((base_price > 0))",
+			purchase_items_expiry_first_day:
+				"CHECK ((EXTRACT(day FROM expiry) = (1)::numeric))",
+			purchase_items_quantity_positive: "CHECK ((quantity > 0))",
+			purchase_items_unit_cost_non_negative: "CHECK ((unit_cost >= 0))",
 			resellers_default_commission_range:
 				"CHECK (((default_commission >= 0) AND (default_commission <= 10000)))",
+			stock_lots_expiry_first_day:
+				"CHECK ((EXTRACT(day FROM expiry) = (1)::numeric))",
+			stock_lots_quantity_non_negative: "CHECK ((quantity >= 0))",
+			stock_movements_average_cost_after_non_negative:
+				"CHECK ((average_cost_after >= 0))",
+			stock_movements_stock_after_non_negative: "CHECK ((stock_after >= 0))",
 			stores_default_tax_percent_range:
 				"CHECK (((default_tax_percent >= 0) AND (default_tax_percent <= 10000)))",
 			stores_low_margin_percent_range:

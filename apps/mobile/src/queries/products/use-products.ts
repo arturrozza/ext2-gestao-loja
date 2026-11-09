@@ -1,5 +1,6 @@
 import {
 	keepPreviousData,
+	skipToken,
 	useInfiniteQuery,
 	useMutation,
 	useQueries,
@@ -20,10 +21,8 @@ import type {
 	ProductDetail,
 	ProductInput,
 	ProductListFilters,
-	ProductListPage,
 	ProductSave,
 	StockAdjustmentInput,
-	StockListFilters,
 } from "./products.types";
 
 export const productsKeys = {
@@ -42,28 +41,32 @@ function listQuery(filters: ProductListFilters, cursor: number) {
 		search: searchParam(filters.search),
 		categoryIds: filters.categoryIds.length ? filters.categoryIds : undefined,
 		archived: filters.archived,
+		stock: filters.stock.length ? filters.stock : undefined,
 		cursor,
 	};
 }
 
 /**
- * Paginated product list (the catalog can be huge): next pages load as the list scrolls. Keeps the previous result
- * while a new search or filter loads, so the list doesn't flash.
+ * Paginated product list with stock (the catalog can be huge): next pages load as the list scrolls. Keeps the previous
+ * result while a new search or filter loads, so the list doesn't flash. Only fetches while `enabled` (the picker of
+ * sales and purchases stays mounted closed).
  */
-export function useProducts(filters: ProductListFilters) {
+export function useProducts(filters: ProductListFilters, enabled = true) {
 	return useInfiniteQuery({
 		queryKey: productsKeys.list(filters),
 		...pagedQuery((cursor) =>
 			request(api.products.get({ query: listQuery(filters, cursor) })),
 		),
 		placeholderData: keepPreviousData,
+		enabled,
 	});
 }
 
-export function useProduct(id: string) {
+/** `id` undefined: nothing to load (e.g. an optional `?productId=`). */
+export function useProduct(id: string | undefined) {
 	return useQuery({
-		queryKey: productsKeys.detail(id),
-		queryFn: () => request(api.products({ id }).get()),
+		queryKey: productsKeys.detail(id ?? ""),
+		queryFn: id ? () => request(api.products({ id }).get()) : skipToken,
 	});
 }
 
@@ -197,23 +200,11 @@ export function useSetCategoryArchived() {
 }
 
 /*
- * Stock (MUN-12/13): under construction. The screens of sales, purchases and stock corrections use these and aren't
- * reachable yet.
+ * Stock screen (MUN-13) and sales (MUN-16): under construction. The screens of sales and stock corrections use these
+ * and aren't reachable yet.
  */
 
-/** Products with their stock, for the picker of sales and purchases. Only fetches while `enabled`. */
-export function useStockProducts(filters: StockListFilters, enabled = true) {
-	return useInfiniteQuery({
-		queryKey: [...productsKeys.stock(), "list", filters],
-		...pagedQuery((cursor) =>
-			underConstruction<ProductListPage>(filters, cursor),
-		),
-		placeholderData: keepPreviousData,
-		enabled,
-	});
-}
-
-/** `id` undefined: nothing to load (e.g. an optional `?productId=`). */
+/** A product with its quantity by expiry. `id` undefined: nothing to load. */
 export function useStockProduct(id: string | undefined) {
 	return useQuery({
 		queryKey: [...productsKeys.stock(), "detail", id ?? ""],

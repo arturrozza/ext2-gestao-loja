@@ -30,9 +30,27 @@ export function useZodForm<
 		});
 	}
 
+	/**
+	 * Drops the API errors under `prefix` ("items" clears "items.0.expiry"...), or all of them. For fields edited
+	 * without `set`, like the lines of a list: an index may now point at another line.
+	 */
+	function clearServerErrors(prefix?: string) {
+		setServerErrors((current) =>
+			prefix === undefined
+				? {}
+				: Object.fromEntries(
+						Object.entries(current).filter(
+							([key]) => key !== prefix && !key.startsWith(`${prefix}.`),
+						),
+					),
+		);
+	}
+
+	/** Each submit starts without the API errors of the last one: the request answers again. */
 	function handleSubmit(onValid: (data: z.output<S>) => void) {
 		return () => {
 			setSubmitted(true);
+			clearServerErrors();
 			if (result.success) onValid(result.data);
 		};
 	}
@@ -70,6 +88,7 @@ export function useZodForm<
 		set,
 		setValues,
 		errors,
+		clearServerErrors,
 		handleSubmit,
 		applyApiError,
 		footerError,

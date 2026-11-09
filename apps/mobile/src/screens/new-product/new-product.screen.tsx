@@ -1,28 +1,30 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import { ProductForm } from "@/components/product-form/product-form";
 import { EMPTY_PRODUCT } from "@/components/product-form/product-form.schema";
-import { showToast } from "@/components/toast";
 import { useCreateProduct } from "@/queries/products/use-products";
+import { FirstEntrySheet } from "./partials/first-entry-sheet";
 
 /**
- * New product (produtos.md): it starts with zero stock and zero cost; the first entry comes from a purchase. Once
- * purchases exist (MUN-12), saving offers the first entry (`partials/first-entry-sheet.tsx`); until then it opens the
- * product. `?barcode=` prefills the code when coming from a search that found nothing.
+ * New product (produtos.md): it starts with zero stock and zero cost; the first entry comes from a purchase, so saving
+ * offers "Cadastrar primeira entrada" with the product already picked (`partials/first-entry-sheet.tsx`). `?barcode=`
+ * prefills the code when coming from a search that found nothing.
  */
 export function NewProductScreen() {
 	const { barcode } = useLocalSearchParams<{ barcode?: string }>();
 	const create = useCreateProduct();
+	const [saved, setSaved] = useState<{ id: string; name: string } | null>(null);
 
 	return (
-		<ProductForm
-			title="Novo produto"
-			submitLabel="Cadastrar produto"
-			initial={{ ...EMPTY_PRODUCT, barcode: barcode ?? "" }}
-			mutation={create}
-			onSaved={(product) => {
-				showToast("Produto cadastrado");
-				router.replace(`/products/${product.id}`);
-			}}
-		/>
+		<>
+			<ProductForm
+				title="Novo produto"
+				submitLabel="Cadastrar produto"
+				initial={{ ...EMPTY_PRODUCT, barcode: barcode ?? "" }}
+				mutation={create}
+				onSaved={({ id, name }) => setSaved({ id, name })}
+			/>
+			<FirstEntrySheet product={saved} />
+		</>
 	);
 }

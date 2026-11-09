@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useInfiniteList } from "@/components/use-infinite-list";
 import { formatDayHeading } from "@/lib/dates";
-import { times } from "@/lib/labels";
+import { productsLine, times } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import type {
 	PurchaseStatus,
@@ -34,14 +34,15 @@ const VIEWS: { value: StatusView; label: string }[] = [
 ];
 
 function PurchaseRow({ purchase }: { purchase: PurchaseSummary }) {
+	const products = productsLine(purchase.preview, purchase.productCount);
 	return (
 		<ItemRow
 			href={`/purchases/${purchase.id}`}
-			label={`Compra ${purchase.number}, ${purchase.description}`}
+			label={`Compra ${purchase.number}, ${products}`}
 			leading={
 				<ThumbStack items={purchase.preview} total={purchase.productCount} />
 			}
-			title={purchase.description}
+			title={products}
 			subtitle={`#${purchase.number} · ${times(purchase.unitCount)}`}
 			value={formatMoney(purchase.total)}
 			struck={purchase.status === "canceled"}
