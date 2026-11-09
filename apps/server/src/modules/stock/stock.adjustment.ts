@@ -3,6 +3,7 @@ import { MAX_LINE_UNITS } from "../../lib/fields";
 import { httpError } from "../../lib/http-error";
 import { divideRounded } from "../../lib/money";
 import { blankToNull } from "../../lib/text";
+import { stockLimit } from "./stock.errors";
 import {
 	type AdjustmentPlan,
 	type AdjustmentReason,
@@ -49,13 +50,7 @@ function movementOf(
 		quantity: balance.quantity + change.quantity,
 		value: balance.value + change.valueChange,
 	};
-	if (!fitsStock(after)) {
-		throw invalid(
-			field,
-			"O estoque desse produto passaria do limite que o sistema guarda.",
-			"stock_limit",
-		);
-	}
+	if (!fitsStock(after)) throw stockLimit(field);
 	return {
 		...change,
 		stockAfter: after.quantity,
@@ -176,7 +171,7 @@ export function planAdjustment(
 	const valueChange =
 		units > 0
 			? divideRounded(balance.value * units, balance.quantity)
-			: -exitValue(balance, -units);
+			: -exitValue(balance, -units, averageCost(balance));
 	const movement = movementOf(
 		balance,
 		{ quantity: units, unitCost: averageCost(balance), valueChange },

@@ -58,3 +58,16 @@ export function useCreateSale() {
 		},
 	});
 }
+
+/**
+ * Canceling gives the units back and takes the sale out of every total: refetch everything, like entering one. Also
+ * after a refusal (already canceled): the screen shows the sale as it is now.
+ */
+export function useCancelSale(id: string) {
+	const invalidate = useInvalidateBusinessData();
+	return useMutation({
+		mutationFn: (reason: string) =>
+			request(api.sales({ id }).cancel.post({ reason })),
+		onSettled: invalidate,
+	});
+}

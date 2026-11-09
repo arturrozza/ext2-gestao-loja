@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
+import { CanceledNote } from "@/components/canceled-note";
 import { Figure, FigurePair } from "@/components/figure-pair";
 import { ItemRow } from "@/components/item-row";
 import { ListCard } from "@/components/list-card";
@@ -58,12 +59,11 @@ function Summary({ purchase }: { purchase: PurchaseDetail }) {
 					struck={canceled}
 				/>
 			</FigurePair>
-			{purchase.canceledAt ? (
-				<Text className="rounded-[8px] bg-destructive/10 px-4 py-3 text-destructive text-sm">
-					Cancelada {formatMoment(purchase.canceledAt).toLowerCase()}. As
-					unidades saíram do estoque.
-				</Text>
-			) : null}
+			<CanceledNote
+				canceledAt={purchase.canceledAt}
+				reason={purchase.cancelReason}
+				consequence="As unidades saíram do estoque."
+			/>
 			{purchase.note ? (
 				<Text className="text-muted-foreground text-sm">“{purchase.note}”</Text>
 			) : null}

@@ -9,8 +9,8 @@ import { signedIn } from "../support/factories/accounts";
 import { storeDayFrom } from "../support/factories/purchases";
 import { createReseller, resellerBody } from "../support/factories/resellers";
 import {
+	cancelSale,
 	createSale,
-	markCanceled,
 	saleItem,
 	stockedProduct,
 } from "../support/factories/sales";
@@ -251,7 +251,7 @@ describe("ResellersService", () => {
 			});
 		await sell(ana.id);
 		await sell(ana.id, storeDayFrom(-40));
-		await markCanceled((await sell(ana.id)).id);
+		await cancelSale(session, (await sell(ana.id)).id);
 		await sell(other.id);
 
 		const [listed] = await ResellersService.list(storeId, {});

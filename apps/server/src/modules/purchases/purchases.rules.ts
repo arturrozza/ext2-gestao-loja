@@ -83,3 +83,22 @@ export function summarizeLines(
 		...previewOf(lines),
 	};
 }
+
+/** A purchase is canceled once (compras.md, "Cancelamento"). */
+export const alreadyCanceled = () =>
+	httpError(409, {
+		code: "purchase_already_canceled",
+		message: "Essa compra já foi cancelada.",
+	});
+
+/**
+ * A purchase with a unit already sold, adjusted or discarded can't be canceled: that unit already moved value at the
+ * average cost, so the correction goes through an adjustment or "Corrigir custo" (compras.md). A canceled sale gives
+ * its units back, which unblocks it again.
+ */
+export const unitsGone = () =>
+	httpError(409, {
+		code: "purchase_units_gone",
+		message:
+			'Não dá para cancelar: unidades desta compra já saíram do estoque. Corrija pelo ajuste ou por "Corrigir custo".',
+	});

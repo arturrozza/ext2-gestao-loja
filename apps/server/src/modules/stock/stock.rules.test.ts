@@ -6,7 +6,9 @@ import {
 	EMPTY_STOCK,
 	fitsStock,
 	planEntries,
+	planPurchaseCancellation,
 	planSaleExit,
+	planSaleReturns,
 	stockFlags,
 	stockSummary,
 } from "./stock.rules";
@@ -216,5 +218,162 @@ describe("planSaleExit", () => {
 	it("is null when the sellable lots don't have the units", () => {
 		// 10 units in stock, but only 7 sellable (the rest expired).
 		expect(planSaleExit({ quantity: 10, value: 40_000 }, lots, 8)).toBe(null);
+	});
+});
+
+describe("planPurchaseCancellation", () => {
+	const line = (
+		purchaseItemId: string,
+		quantity: number,
+		unitCost: number,
+	) => ({
+		productId: "a",
+		purchaseItemId,
+		lotId: `lot-${purchaseItemId}`,
+		quantity,
+		unitCost,
+	});
+	/** Every lot still with all the units its line brought, or as given. */
+	const full = (
+		lines: ReturnType<typeof line>[],
+		left: Record<string, number> = {},
+	) =>
+		new Map(
+			lines.map((entry) => [entry.lotId, left[entry.lotId] ?? entry.quantity]),
+		);
+	const plan = (
+		balance: { quantity: number; value: number },
+		lines: ReturnType<typeof line>[],
+		left?: Record<string, number>,
+	) =>
+		planPurchaseCancellation(
+			new Map([["a", balance]]),
+			full(lines, left),
+			lines,
+		);
+
+	it("takes back exactly what each line brought, chaining lines of the same product", () => {
+		// 10 at R$ 92, then 10 at R$ 100 and 5 at R$ 0 in the purchase canceled.
+		const planned = plan({ quantity: 25, value: 192_000 }, [
+			line("i1", 10, 10_000),
+			line("i2", 5, 0),
+		]);
+
+		expect(planned?.map((entry) => entry.movement)).toEqual([
+			{
+				quantity: -10,
+				unitCost: 10_000,
+				valueChange: -100_000,
+				stockAfter: 15,
+				averageCostAfter: 6133,
+			},
+			{
+				quantity: -5,
+				unitCost: 0,
+				valueChange: 0,
+				stockAfter: 10,
+				averageCostAfter: 9200,
+			},
+		]);
+	});
+
+	it("takes the whole value when no unit is left", () => {
+		const planned = plan({ quantity: 4, value: 3000 }, [line("i1", 4, 1000)]);
+
+		expect(planned?.[0]?.movement).toMatchObject({
+			valueChange: -3000,
+			stockAfter: 0,
+			averageCostAfter: 0,
+		});
+	});
+
+	it("never takes more than the stock is worth", () => {
+		// A gift at R$ 0 sold at the average of R$ 5, then the R$ 10 purchase canceled with units still in stock.
+		const planned = plan({ quantity: 3, value: 500 }, [line("i1", 1, 1000)]);
+
+		expect(planned?.[0]?.movement).toMatchObject({
+			valueChange: -500,
+			stockAfter: 2,
+			averageCostAfter: 0,
+		});
+	});
+
+	it("refuses when a unit of any line already left its lot", () => {
+		const planned = plan(
+			{ quantity: 20, value: 20_000 },
+			[line("i1", 10, 1000), line("i2", 10, 1000)],
+			{ "lot-i2": 9 },
+		);
+
+		expect(planned).toBeNull();
+	});
+});
+
+describe("planSaleReturns", () => {
+	const line = (productId: string, quantity: number, cost: number) => ({
+		productId,
+		quantity,
+		cost,
+	});
+	const movementsOf = (
+		balances: [string, { quantity: number; value: number }][],
+		lines: ReturnType<typeof line>[],
+	) =>
+		planSaleReturns(new Map(balances), lines)?.map((entry) => entry.movement) ??
+		null;
+
+	it("brings the units back at their share of the value: the average cost stays", () => {
+		// 5 left at R$ 96 each; 3 sold come back.
+		expect(
+			movementsOf(
+				[["a", { quantity: 5, value: 48_000 }]],
+				[line("a", 3, 28_800)],
+			),
+		).toEqual([
+			{
+				quantity: 3,
+				unitCost: 9600,
+				valueChange: 28_800,
+				stockAfter: 8,
+				averageCostAfter: 9600,
+			},
+		]);
+	});
+
+	it("keeps an average with a fraction of a cent, rounding the value brought back once", () => {
+		// R$ 10 in 3 units: 1 coming back brings 333 cents (1000 × 1 ÷ 3).
+		expect(
+			movementsOf([["a", { quantity: 3, value: 1000 }]], [line("a", 1, 400)]),
+		).toMatchObject([
+			{ valueChange: 333, stockAfter: 4, averageCostAfter: 333 },
+		]);
+	});
+
+	it("brings back what the sale took when there's no stock left, and chains lines of the same product", () => {
+		expect(movementsOf([], [line("a", 2, 9200), line("a", 2, 0)])).toEqual([
+			{
+				quantity: 2,
+				unitCost: 4600,
+				valueChange: 9200,
+				stockAfter: 2,
+				averageCostAfter: 4600,
+			},
+			{
+				quantity: 2,
+				unitCost: 4600,
+				valueChange: 9200,
+				stockAfter: 4,
+				averageCostAfter: 4600,
+			},
+		]);
+	});
+
+	it("refuses units that would take the stock past what a movement holds", () => {
+		expect(
+			movementsOf(
+				[["a", { quantity: 1, value: MAX_CENTS }]],
+				[line("b", 1, 100), line("a", 1, MAX_CENTS)],
+			),
+		).toBeNull();
 	});
 });

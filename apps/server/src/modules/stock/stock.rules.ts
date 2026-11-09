@@ -31,13 +31,39 @@ export function afterEntry(
 }
 
 /**
- * Value that leaves with `units` (docs/decisions.md): the average cost rounded to the cent × units, and the whole
- * value when the stock goes to zero. Never more than the value left (4 units worth 2 cents round to 1 cent each: 3
- * of them can't take 3 cents).
+ * Value that leaves with `units` at `unitCost` each (docs/decisions.md): the average cost rounded to the cent for a
+ * sale or an adjustment, its own cost for a canceled purchase line. The whole value leaves
+ * when the stock goes to zero, and never more than the value left (4 units worth 2 cents round to 1 cent each: 3 of
+ * them can't take 3 cents), so the stock is never worth less than zero.
  */
-export function exitValue(balance: StockBalance, units: number): number {
+export function exitValue(
+	balance: StockBalance,
+	units: number,
+	unitCost: number,
+): number {
 	if (units >= balance.quantity) return balance.value;
-	return Math.min(averageCost(balance) * units, balance.value);
+	return Math.min(unitCost * units, balance.value);
+}
+
+/** The movement of `units` leaving at `unitCost` each (`exitValue`), with the stock right after it. */
+function exitMovement(
+	balance: StockBalance,
+	units: number,
+	unitCost: number,
+): MovementPlan {
+	// `0 -`, not `-`: an exit worth nothing changes the value by 0, not -0.
+	const valueChange = 0 - exitValue(balance, units, unitCost);
+	const after = {
+		quantity: balance.quantity - units,
+		value: balance.value + valueChange,
+	};
+	return {
+		quantity: -units,
+		unitCost,
+		valueChange,
+		stockAfter: after.quantity,
+		averageCostAfter: averageCost(after),
+	};
 }
 
 /** Largest `integer` column: the most units (and cents, `MAX_CENTS`) one movement holds. */
@@ -205,19 +231,102 @@ export function planSaleExit(
 		left -= taken;
 	}
 	if (left > 0) return null;
-	const valueChange = -exitValue(balance, units);
-	const after = {
-		quantity: balance.quantity - units,
-		value: balance.value + valueChange,
-	};
 	return {
 		takes,
-		movement: {
-			quantity: -units,
-			unitCost: averageCost(balance),
-			valueChange,
-			stockAfter: after.quantity,
-			averageCostAfter: averageCost(after),
-		},
+		movement: exitMovement(balance, units, averageCost(balance)),
 	};
+}
+
+/** A purchase line being canceled: the units and cost it brought, and the lot it brought them in. */
+export type CanceledEntry = PlannedEntry & {
+	purchaseItemId: string;
+	lotId: string;
+};
+
+/**
+ * The movements that undo these purchase lines (compras.md, "Cancelamento"), applied in order over the current
+ * balances; two lines of the same product chain. Each takes back exactly the value it brought, so a purchase with only
+ * other purchases after it leaves the stock as if it never existed; a sale or a cost correction in between already
+ * moved value at the average cost, so `exitValue` keeps the stock from going below zero (docs/decisions.md). `null`
+ * when a unit of some line already left its lot (`lotUnits`: the units in each lot now), sold, adjusted or discarded:
+ * it can't be canceled then.
+ */
+export function planPurchaseCancellation<T extends CanceledEntry>(
+	balances: ReadonlyMap<string, StockBalance>,
+	lotUnits: ReadonlyMap<string, number>,
+	entries: T[],
+): (T & { movement: MovementPlan })[] | null {
+	const gone = entries.some(
+		(entry) => (lotUnits.get(entry.lotId) ?? 0) < entry.quantity,
+	);
+	if (gone) return null;
+	const running = new Map(balances);
+	return entries.map((entry) => {
+		const balance = running.get(entry.productId) ?? EMPTY_STOCK;
+		const movement = exitMovement(balance, entry.quantity, entry.unitCost);
+		running.set(entry.productId, {
+			quantity: movement.stockAfter,
+			value: balance.value + movement.valueChange,
+		});
+		return { ...entry, movement };
+	});
+}
+
+/**
+ * `units` of a canceled sale line coming back (vendas.md, "Cancelamento"), without changing the average cost: they
+ * bring their share of the stock's value (no `integer` overflow: a line holds at most 100.000 units). Without stock
+ * there's no average to keep, so they bring back what the sale took, `cost` (in cents). `null` when the stock would
+ * pass what a movement holds.
+ */
+function returnMovement(
+	balance: StockBalance,
+	units: number,
+	cost: number,
+): MovementPlan | null {
+	const valueChange =
+		balance.quantity > 0
+			? divideRounded(balance.value * units, balance.quantity)
+			: cost;
+	const after = {
+		quantity: balance.quantity + units,
+		value: balance.value + valueChange,
+	};
+	if (!fitsStock(after)) return null;
+	return {
+		quantity: units,
+		unitCost: divideRounded(valueChange, units),
+		valueChange,
+		stockAfter: after.quantity,
+		averageCostAfter: averageCost(after),
+	};
+}
+
+/** A canceled sale line: its units and what they cost the sale (in cents). */
+export type SaleReturnLine = {
+	productId: string;
+	quantity: number;
+	cost: number;
+};
+
+/**
+ * The movements that give a canceled sale's units back (`returnMovement`), applied in order over the current
+ * balances; two lines of the same product chain. `null` when a product's stock would pass what a movement holds.
+ */
+export function planSaleReturns<T extends SaleReturnLine>(
+	balances: ReadonlyMap<string, StockBalance>,
+	lines: T[],
+): (T & { movement: MovementPlan })[] | null {
+	const running = new Map(balances);
+	const planned: (T & { movement: MovementPlan })[] = [];
+	for (const line of lines) {
+		const balance = running.get(line.productId) ?? EMPTY_STOCK;
+		const movement = returnMovement(balance, line.quantity, line.cost);
+		if (!movement) return null;
+		running.set(line.productId, {
+			quantity: movement.stockAfter,
+			value: balance.value + movement.valueChange,
+		});
+		planned.push({ ...line, movement });
+	}
+	return planned;
 }

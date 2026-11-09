@@ -12,6 +12,7 @@ import {
 import { monthOf } from "../../src/lib/dates";
 import { MAX_CENTS } from "../../src/lib/money";
 import { PAGE_SIZE } from "../../src/lib/pagination";
+import { ProductStockService } from "../../src/modules/products/products.stock";
 import { PurchasesService } from "../../src/modules/purchases/purchases.service";
 import { stockBalances } from "../../src/modules/stock/stock.queries";
 import { useTestDatabase } from "../support/database";
@@ -23,6 +24,7 @@ import {
 	purchaseItem,
 	storeDayFrom,
 } from "../support/factories/purchases";
+import { createSale, saleItem } from "../support/factories/sales";
 
 useTestDatabase();
 
@@ -539,5 +541,255 @@ describe("stock ledger", () => {
 			audited("system", (tx) => tx.delete(stockMovements)),
 		).rejects.toMatchObject(appendOnly);
 		expect((await movementsOf(product.id))[0]?.quantity).toBe(1);
+	});
+});
+
+describe("PurchasesService.cancel", () => {
+	/** Cancels through the service, catching a refusal to inspect it. */
+	const cancel = (
+		session: Parameters<typeof PurchasesService.cancel>[0],
+		id: string,
+		reason: string | null = null,
+	) => PurchasesService.cancel(session, id, { reason });
+	const refusal = (...args: Parameters<typeof cancel>) =>
+		cancel(...args).catch((reason) => reason);
+
+	it("takes back exactly what it brought: 10 at R$ 92 + 10 at R$ 100, the second canceled, leaves 10 at R$ 92", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 9200 }),
+		]);
+		const second = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 10_000 }),
+		]);
+
+		const canceled = await cancel(session, second.id, "  Lançada em dobro  ");
+
+		expect(canceled).toMatchObject({
+			number: 2,
+			status: "canceled",
+			cancelReason: "Lançada em dobro",
+		});
+		expect(canceled.canceledAt).not.toBeNull();
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 10,
+			value: 92_000,
+		});
+		const [lot] = await db
+			.select({ quantity: stockLots.quantity })
+			.from(stockLots)
+			.where(eq(stockLots.purchaseItemId, second.items[0]?.id ?? ""));
+		expect(lot?.quantity).toBe(0);
+		const last = (await movementsOf(product.id)).at(-1);
+		expect(last).toMatchObject({
+			type: "purchase_canceled",
+			quantity: -10,
+			unitCost: 10_000,
+			valueChange: -100_000,
+			stockAfter: 10,
+			averageCostAfter: 9200,
+			purchaseItemId: second.items[0]?.id,
+			userId: session.user.id,
+		});
+	});
+
+	it("keeps a blank reason as none", async () => {
+		const { session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const purchase = await createPurchase(session, [purchaseItem(product.id)]);
+
+		expect(await cancel(session, purchase.id, "   ")).toMatchObject({
+			status: "canceled",
+			cancelReason: null,
+		});
+	});
+
+	it("undoes every line, two of the same product included, down to an empty stock worth nothing", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const a = await createProduct(storeId);
+		const b = await createProduct(storeId);
+		const purchase = await createPurchase(session, [
+			purchaseItem(a.id, { quantity: 3, unitCost: 1000 }),
+			purchaseItem(b.id, { quantity: 2, unitCost: 500 }),
+			purchaseItem(a.id, { quantity: 1, unitCost: 0 }),
+		]);
+
+		await cancel(session, purchase.id);
+
+		expect(await balanceOf(storeId, a.id)).toEqual({ quantity: 0, value: 0 });
+		expect(await balanceOf(storeId, b.id)).toEqual({ quantity: 0, value: 0 });
+		const movements = await movementsOf(a.id);
+		expect(movements.map((m) => [m.type, m.stockAfter])).toEqual([
+			["purchase", 3],
+			["purchase", 4],
+			["purchase_canceled", 1],
+			["purchase_canceled", 0],
+		]);
+	});
+
+	it("with a sale of other units in between, takes what it brought: 5 left at R$ 88", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 9200 }),
+		]);
+		const second = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 10_000 }),
+		]);
+		// Out of the first purchase (the oldest lot), at the average of R$ 96.
+		await createSale(session, [saleItem(product.id, { quantity: 5 })]);
+
+		await cancel(session, second.id);
+
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 5,
+			value: 44_000,
+		});
+	});
+
+	it("never leaves the stock worth less than zero after a cost correction", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 2, unitCost: 1000 }),
+		]);
+		const second = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 1, unitCost: 1000 }),
+		]);
+		await ProductStockService.correctCost(session, product.id, {
+			newCost: 0,
+			note: "Brinde",
+		});
+
+		await cancel(session, second.id);
+
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 2,
+			value: 0,
+		});
+	});
+
+	it("refuses a purchase with a unit sold, and writes nothing", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		const purchase = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 1000 }),
+		]);
+		await createSale(session, [saleItem(product.id)]);
+		const before = await movementsOf(product.id);
+
+		expect(await refusal(session, purchase.id)).toMatchObject({
+			code: 409,
+			response: { code: "purchase_units_gone" },
+		});
+		expect(await movementsOf(product.id)).toEqual(before);
+		expect((await PurchasesService.get(storeId, purchase.id)).status).toBe(
+			"active",
+		);
+	});
+
+	it("refuses a purchase with a unit gone from one of its lines, and writes nothing for the others", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const a = await createProduct(storeId);
+		const b = await createProduct(storeId);
+		const purchase = await createPurchase(session, [
+			purchaseItem(a.id, { quantity: 3 }),
+			purchaseItem(b.id, { quantity: 2 }),
+		]);
+		await createSale(session, [saleItem(b.id)]);
+
+		expect(await refusal(session, purchase.id)).toMatchObject({
+			code: 409,
+			response: { code: "purchase_units_gone" },
+		});
+		expect(await balanceOf(storeId, a.id)).toEqual({
+			quantity: 3,
+			value: 3000,
+		});
+		expect(
+			await db.$count(
+				stockMovements,
+				eq(stockMovements.type, "purchase_canceled"),
+			),
+		).toBe(0);
+		expect((await PurchasesService.get(storeId, purchase.id)).status).toBe(
+			"active",
+		);
+	});
+
+	it("refuses a purchase with a unit gone by an adjustment", async () => {
+		const { session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const purchase = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10 }),
+		]);
+		await ProductStockService.adjust(session, product.id, {
+			newQuantity: 9,
+			reason: "loss",
+			note: null,
+			expiry: null,
+		});
+
+		expect(await refusal(session, purchase.id)).toMatchObject({
+			code: 409,
+			response: { code: "purchase_units_gone" },
+		});
+	});
+
+	it("refuses to cancel twice", async () => {
+		const { session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const purchase = await createPurchase(session, [purchaseItem(product.id)]);
+		await cancel(session, purchase.id);
+
+		expect(await refusal(session, purchase.id)).toMatchObject({
+			code: 409,
+			response: { code: "purchase_already_canceled" },
+		});
+	});
+
+	it("cancels once when two cancellations come at the same time", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		const purchase = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 4 }),
+		]);
+
+		const results = await Promise.all([
+			refusal(session, purchase.id),
+			refusal(session, purchase.id),
+		]);
+
+		expect(results.filter((r) => r?.status === "canceled")).toHaveLength(1);
+		expect(results.filter((r) => r?.code === 409)).toHaveLength(1);
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 0,
+			value: 0,
+		});
+	});
+
+	it("answers 404 for a purchase of another store", async () => {
+		const { session } = await signedIn();
+		const other = await signedIn();
+		const product = await createProduct(other.session.store.id);
+		const foreign = await createPurchase(other.session, [
+			purchaseItem(product.id),
+		]);
+
+		expect(await refusal(session, foreign.id)).toMatchObject({
+			code: 404,
+			response: { code: "purchase_not_found" },
+		});
+		expect(
+			(await PurchasesService.get(other.session.store.id, foreign.id)).status,
+		).toBe("active");
 	});
 });

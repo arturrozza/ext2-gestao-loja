@@ -1,6 +1,3 @@
-import { eq } from "drizzle-orm";
-import { audited } from "../../../src/db/audit";
-import { sales } from "../../../src/db/schema";
 import { storeToday } from "../../../src/lib/dates";
 import type { AuthSession } from "../../../src/modules/auth/auth.model";
 import type { SalesModel } from "../../../src/modules/sales/sales.model";
@@ -48,14 +45,13 @@ export function createSale(
 	return SalesService.create(session, saleBody(items, overrides));
 }
 
-/** Marks a sale canceled, as the cancellation (MUN-17) will: it stays listed, out of every total. */
-export async function markCanceled(saleId: string) {
-	await audited("system", (tx) =>
-		tx
-			.update(sales)
-			.set({ canceledAt: new Date(), cancelReason: "Teste" })
-			.where(eq(sales.id, saleId)),
-	);
+/** Cancels a sale through the service, like the app does: it stays listed, out of every total. */
+export function cancelSale(
+	session: AuthSession,
+	saleId: string,
+	reason = "Lançada errada",
+) {
+	return SalesService.cancel(session, saleId, { reason });
 }
 
 /** A product of the session's store with `quantity` units bought at `unitCost`, ready to sell. */

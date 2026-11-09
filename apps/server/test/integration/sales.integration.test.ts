@@ -9,7 +9,9 @@ import {
 	stockLots,
 	stockMovements,
 } from "../../src/db/schema";
+import { MAX_CENTS } from "../../src/lib/money";
 import { ProductStockService } from "../../src/modules/products/products.stock";
+import { PurchasesService } from "../../src/modules/purchases/purchases.service";
 import { SalesService } from "../../src/modules/sales/sales.service";
 import { stockBalances } from "../../src/modules/stock/stock.queries";
 import { useTestDatabase } from "../support/database";
@@ -23,8 +25,8 @@ import {
 } from "../support/factories/purchases";
 import { createReseller } from "../support/factories/resellers";
 import {
+	cancelSale,
 	createSale,
-	markCanceled,
 	saleBody,
 	saleItem,
 } from "../support/factories/sales";
@@ -363,7 +365,7 @@ describe("SalesService.list", () => {
 		await createSale(session, [saleItem(product.id)], {
 			date: storeDayFrom(-2),
 		});
-		await markCanceled(first.id);
+		await cancelSale(session, first.id);
 
 		const page = await SalesService.list(storeId, {});
 
@@ -446,5 +448,211 @@ describe("SalesService.list", () => {
 			items: [],
 			totals: { revenue: 0, profit: 0, count: 0 },
 		});
+	});
+});
+
+describe("SalesService.cancel", () => {
+	const refusal = (...args: Parameters<typeof cancelSale>) =>
+		cancelSale(...args).catch((reason) => reason);
+
+	const lotsOf = (productId: string) =>
+		db
+			.select({ expiry: stockLots.expiry, quantity: stockLots.quantity })
+			.from(stockLots)
+			.where(eq(stockLots.productId, productId))
+			.orderBy(asc(stockLots.expiry));
+
+	it("gives the units back to the expiries they left, keeps the average cost and marks the sale with its reason", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId, { hasExpiry: true });
+		await createPurchase(session, [
+			purchaseItem(product.id, {
+				quantity: 2,
+				unitCost: 9200,
+				expiry: monthFrom(2),
+			}),
+			purchaseItem(product.id, {
+				quantity: 3,
+				unitCost: 10_000,
+				expiry: monthFrom(6),
+			}),
+		]);
+		const before = await lotsOf(product.id);
+		const sale = await createSale(session, [
+			saleItem(product.id, { quantity: 3 }),
+		]);
+		const afterSale = await balanceOf(storeId, product.id);
+
+		const canceled = await cancelSale(session, sale.id, "  Cliente desistiu  ");
+
+		expect(canceled).toMatchObject({
+			status: "canceled",
+			cancelReason: "Cliente desistiu",
+		});
+		expect(canceled.canceledAt).not.toBeNull();
+		expect(await lotsOf(product.id)).toEqual(before);
+		const balance = await balanceOf(storeId, product.id);
+		expect(balance?.quantity).toBe(5);
+		// 5 at R$ 96,80 on average; 3 sold leave 2 worth R$ 193,60, and the 3 come back at R$ 96,80 each.
+		expect(afterSale).toEqual({ quantity: 2, value: 19_360 });
+		expect(balance?.value).toBe(48_400);
+		const history = await ProductStockService.movements(storeId, product.id);
+		expect(history.items[0]).toMatchObject({
+			type: "sale_canceled",
+			quantity: 3,
+			unitCost: 9680,
+			stockAfter: 5,
+			averageCostAfter: 9680,
+			origin: { kind: "sale", id: sale.id, number: 1 },
+		});
+	});
+
+	it("brings back what the sale took when nothing is left in stock", async () => {
+		const { session, storeId, product } = await stocked(2, 4000);
+		const sale = await createSale(session, [
+			saleItem(product.id, { quantity: 2 }),
+		]);
+
+		await cancelSale(session, sale.id);
+
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 2,
+			value: 8000,
+		});
+	});
+
+	it("gives units back to a lot that expired in the meantime", async () => {
+		const { session } = await signedIn();
+		const product = await createProduct(session.store.id, { hasExpiry: true });
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 2, expiry: monthFrom(0) }),
+		]);
+		const sale = await createSale(session, [saleItem(product.id)]);
+		await setLotsExpiry(product.id, monthFrom(-1));
+
+		await cancelSale(session, sale.id);
+
+		expect(await lotsOf(product.id)).toEqual([
+			{ expiry: `${monthFrom(-1)}-01`, quantity: 2 },
+		]);
+	});
+
+	it("takes the sale out of the totals but keeps its numbers", async () => {
+		const { session, storeId, product } = await stocked();
+		const sale = await createSale(session, [saleItem(product.id)]);
+
+		await cancelSale(session, sale.id);
+
+		const page = await SalesService.list(storeId, {});
+		expect(page.items[0]).toMatchObject({
+			status: "canceled",
+			revenue: 10_000,
+			profit: 6000,
+		});
+		expect(page.totals).toMatchObject({ revenue: 0, profit: 0, count: 0 });
+	});
+
+	it("gives back every line of a sale with more than one product", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const a = await createProduct(storeId);
+		const b = await createProduct(storeId);
+		await createPurchase(session, [
+			purchaseItem(a.id, { quantity: 4, unitCost: 1000 }),
+			purchaseItem(b.id, { quantity: 2, unitCost: 500 }),
+		]);
+		const sale = await createSale(session, [
+			saleItem(a.id, { quantity: 3 }),
+			saleItem(b.id, { quantity: 2 }),
+		]);
+
+		await cancelSale(session, sale.id);
+
+		expect(await balanceOf(storeId, a.id)).toEqual({
+			quantity: 4,
+			value: 4000,
+		});
+		expect(await balanceOf(storeId, b.id)).toEqual({
+			quantity: 2,
+			value: 1000,
+		});
+	});
+
+	it("refuses units that would take the stock past what the ledger holds, and changes nothing", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		await createPurchase(session, [purchaseItem(product.id)]);
+		const sale = await createSale(session, [saleItem(product.id)]);
+		await createPurchase(session, [
+			purchaseItem(product.id, { unitCost: MAX_CENTS }),
+		]);
+
+		expect(await refusal(session, sale.id)).toMatchObject({
+			code: 422,
+			response: { code: "stock_limit" },
+		});
+		expect((await SalesService.get(storeId, sale.id)).status).toBe("active");
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 1,
+			value: MAX_CENTS,
+		});
+	});
+
+	it("unblocks the cancellation of the purchase its units came from", async () => {
+		const { session } = await signedIn();
+		const storeId = session.store.id;
+		const product = await createProduct(storeId);
+		const purchase = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 2 }),
+		]);
+		const sale = await createSale(session, [saleItem(product.id)]);
+
+		await cancelSale(session, sale.id);
+		const canceled = await PurchasesService.cancel(session, purchase.id, {
+			reason: null,
+		});
+
+		expect(canceled.status).toBe("canceled");
+		expect(await balanceOf(storeId, product.id)).toEqual({
+			quantity: 0,
+			value: 0,
+		});
+	});
+
+	it("refuses to cancel twice, and gives the units back once when two come at the same time", async () => {
+		const { session, storeId, product } = await stocked(5);
+		const sale = await createSale(session, [
+			saleItem(product.id, { quantity: 2 }),
+		]);
+
+		const results = await Promise.all([
+			refusal(session, sale.id),
+			refusal(session, sale.id),
+		]);
+		const again = await refusal(session, sale.id);
+
+		expect(results.filter((r) => r?.status === "canceled")).toHaveLength(1);
+		expect(results.filter((r) => r?.code === 409)).toHaveLength(1);
+		expect(again).toMatchObject({
+			code: 409,
+			response: { code: "sale_already_canceled" },
+		});
+		expect((await balanceOf(storeId, product.id))?.quantity).toBe(5);
+	});
+
+	it("answers 404 for a sale of another store, and changes nothing", async () => {
+		const { session, product } = await stocked();
+		const sale = await createSale(session, [saleItem(product.id)]);
+		const other = await signedIn();
+
+		expect(await refusal(other.session, sale.id)).toMatchObject({
+			code: 404,
+			response: { code: "sale_not_found" },
+		});
+		expect((await SalesService.get(session.store.id, sale.id)).status).toBe(
+			"active",
+		);
 	});
 });

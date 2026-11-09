@@ -37,4 +37,21 @@ export const salesController = new Elysia({ prefix: "/sales" })
 				422: ErrorModel,
 			},
 		},
+	)
+	.post(
+		"/:id/cancel",
+		({ session, params, body }) =>
+			SalesService.cancel(session, params.id, body),
+		{
+			auth: true,
+			params: SalesModel.params,
+			body: SalesModel.cancelBody,
+			response: {
+				200: SalesModel.detail,
+				401: ErrorModel,
+				404: ErrorModel,
+				409: ErrorModel,
+				422: ErrorModel,
+			},
+		},
 	);

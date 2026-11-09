@@ -57,6 +57,8 @@ const detail = t.Object({
 	/** When it was entered (ISO). */
 	createdAt: t.String(),
 	canceledAt: t.Union([t.Null(), t.String()]),
+	/** Why it was canceled, when the person said. */
+	cancelReason: t.Union([t.Null(), t.String()]),
 	items: t.Array(item),
 });
 
@@ -78,6 +80,9 @@ const body = t.Object({
 	),
 });
 
+/** Canceling a purchase (compras.md, "Cancelamento"): the reason is optional. */
+const cancelBody = t.Object({ reason: optionalText(500) });
+
 const listQuery = t.Object({
 	/** Only active or only canceled; left out, both. */
 	status: t.Optional(status),
@@ -89,6 +94,7 @@ export const PurchasesModel = {
 	listQuery,
 	detail,
 	body,
+	cancelBody,
 	params: t.Object({ id: t.String({ format: "uuid" }) }),
 };
 
@@ -99,4 +105,5 @@ export type PurchasesModel = {
 	listQuery: UnwrapSchema<typeof PurchasesModel.listQuery>;
 	detail: UnwrapSchema<typeof PurchasesModel.detail>;
 	body: UnwrapSchema<typeof PurchasesModel.body>;
+	cancelBody: UnwrapSchema<typeof PurchasesModel.cancelBody>;
 };

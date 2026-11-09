@@ -50,7 +50,7 @@ export const saleCostKind = pgEnum("sale_cost_kind", [
 export const saleCostMode = pgEnum("sale_cost_mode", ["amount", "percent"]);
 
 /**
- * Sales of a store (docs/product/vendas.md). Never edited: a wrong one is canceled (MUN-17) and entered again. The
+ * Sales of a store (docs/product/vendas.md). Never edited: a wrong one is canceled and entered again. The
  * revenue, costs and real profit are computed by the server once, when it's entered, and kept: a later purchase or
  * cost correction never changes them.
  */
@@ -86,7 +86,7 @@ export const sales = snakeCase.table(
 		userId: uuid()
 			.notNull()
 			.references(() => users.id),
-		/** Set by the cancellation (MUN-17), with its reason. */
+		/** Set by the cancellation, with its reason (vendas.md). */
 		canceledAt: timestamp({ withTimezone: true }),
 		cancelReason: text(),
 		...timestamps,
@@ -154,7 +154,7 @@ export const saleItems = snakeCase.table(
 );
 
 /**
- * The lots a sale line took its units from, soonest expiry first. The cancellation (MUN-17) gives them back to the
+ * The lots a sale line took its units from, soonest expiry first. The cancellation gives them back to the
  * same lots (vendas.md, "Cancelamento").
  */
 export const saleItemLots = snakeCase.table(

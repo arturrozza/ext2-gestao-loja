@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { treaty } from "@elysia/eden";
 import { app } from "../../src/app";
+import { MAX_CENTS } from "../../src/lib/money";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
 import { createProduct } from "../support/factories/catalog";
@@ -236,9 +237,95 @@ describe("sales routes", () => {
 		const posted = await api.sales.post(saleBody([saleItem(product.id)]));
 		const read = await api.sales({ id: crypto.randomUUID() }).get();
 		const listed = await api.sales.get();
+		const canceled = await api
+			.sales({ id: crypto.randomUUID() })
+			.cancel.post({ reason: "Teste" });
 
 		expect(posted.error?.status).toBe(401);
 		expect(read.error?.status).toBe(401);
 		expect(listed.error?.status).toBe(401);
+		expect(canceled.error?.status).toBe(401);
+	});
+});
+
+describe("POST /sales/:id/cancel", () => {
+	it("cancels a sale with its reason, and it stays listed", async () => {
+		const { headers, session, product } = await stocked();
+		const sale = await createSale(session, [saleItem(product.id)]);
+
+		const canceled = await api
+			.sales({ id: sale.id })
+			.cancel.post({ reason: "Cliente desistiu" }, { headers });
+		const listed = await api.sales.get({ headers, query: {} });
+
+		expect(canceled.error).toBeNull();
+		expect(canceled.data).toMatchObject({
+			status: "canceled",
+			cancelReason: "Cliente desistiu",
+		});
+		expect(listed.data?.items.map((item) => item.status)).toEqual(["canceled"]);
+		expect(listed.data?.totals.count).toBe(0);
+	});
+
+	it("answers 422 without a reason", async () => {
+		const { headers, session, product } = await stocked();
+		const sale = await createSale(session, [saleItem(product.id)]);
+		const post = (body: unknown) =>
+			api
+				.sales({ id: sale.id })
+				.cancel.post(body as { reason: string }, { headers });
+
+		const missing = await post({});
+		const blank = await post({ reason: "   " });
+		const tooLong = await post({ reason: "x".repeat(501) });
+
+		expect(missing.error?.status).toBe(422);
+		expect(blank.error?.status).toBe(422);
+		expect(tooLong.error?.status).toBe(422);
+	});
+
+	it("answers 409 when it's already canceled", async () => {
+		const { headers, session, product } = await stocked();
+		const sale = await createSale(session, [saleItem(product.id)]);
+		await api
+			.sales({ id: sale.id })
+			.cancel.post({ reason: "Erro" }, { headers });
+
+		const twice = await api
+			.sales({ id: sale.id })
+			.cancel.post({ reason: "Erro" }, { headers });
+
+		expect(twice.error?.status).toBe(409);
+		expect(twice.error?.value).toMatchObject({ code: "sale_already_canceled" });
+	});
+
+	it("answers 422 when the units would take the stock past what the ledger holds", async () => {
+		const { headers, session, product } = await stocked();
+		const sale = await createSale(session, [
+			saleItem(product.id, { quantity: 10 }),
+		]);
+		await createPurchase(session, [
+			purchaseItem(product.id, { unitCost: MAX_CENTS }),
+		]);
+
+		const canceled = await api
+			.sales({ id: sale.id })
+			.cancel.post({ reason: "Erro" }, { headers });
+
+		expect(canceled.error?.status).toBe(422);
+		expect(canceled.error?.value).toMatchObject({ code: "stock_limit" });
+	});
+
+	it("answers 404 for a sale of another store", async () => {
+		const { session, product } = await stocked();
+		const sale = await createSale(session, [saleItem(product.id)]);
+		const other = await signedIn();
+
+		const canceled = await api
+			.sales({ id: sale.id })
+			.cancel.post({ reason: "Erro" }, { headers: other.headers });
+
+		expect(canceled.error?.status).toBe(404);
+		expect(canceled.error?.value).toMatchObject({ code: "sale_not_found" });
 	});
 });

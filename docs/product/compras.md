@@ -26,10 +26,21 @@ real.
 - O número da compra ("Compra #12") é sequencial na loja e nunca se repete, nem quando ela é cancelada.
 - Se algo der errado em qualquer item, nada da compra é gravado.
 - Compra não é editada. Lançou errado, cancela e lança de novo.
-- Ao cancelar, o estoque e o custo médio são recalculados como se a compra não tivesse existido, e ela fica no histórico
-  marcada como cancelada.
-- Não dá para cancelar se alguma unidade daquela compra já foi vendida. Nesse caso, a correção é pelo
-  [ajuste ou por "Corrigir custo"](estoque.md).
+
+## Cancelamento
+
+- A pessoa confirma e pode informar o motivo, que é opcional.
+- A compra fica no histórico, marcada como cancelada, com o motivo quando houver. O número dela não volta a ser usado.
+- Saem do estoque as unidades que ela trouxe, com o valor que ela trouxe. Se depois dela só entraram outras compras,
+  estoque e custo médio ficam como se ela nunca tivesse existido.
+- Se houve venda ou correção de custo no meio, o custo médio fica um pouco diferente do "nunca existiu", porque as
+  vendas já feitas não mudam. Exemplo: 10 unidades a R$ 92 e depois 10 a R$ 100 dão custo médio de R$ 96. Vendem-se 5
+  (a R$ 96) e a segunda compra é cancelada: sobram 5 unidades a R$ 88.
+- O estoque nunca fica com valor negativo, e, se não sobrar unidade, o valor zera.
+- Não dá para cancelar se alguma unidade daquela compra já saiu do estoque, vendida, ajustada ou descartada. Nesse
+  caso, a correção é pelo [ajuste ou por "Corrigir custo"](estoque.md). Se a venda for cancelada antes, as unidades
+  voltam e a compra pode ser cancelada.
+- Não dá para cancelar duas vezes.
 
 ## Custo médio
 
@@ -46,7 +57,3 @@ da semana passada entra no custo médio de agora, e as vendas que já acontecera
 `docs/decisions.md`).
 
 Venda, cancelamento de venda e ajuste não alteram o custo médio.
-
-## Ainda não disponível no app
-
-Cancelar compra: o botão aparece na compra, marcado "Em construção", até a tarefa de cancelamentos.

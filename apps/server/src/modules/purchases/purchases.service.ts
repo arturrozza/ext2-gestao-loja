@@ -12,7 +12,13 @@ import { db } from "../../db";
 import { audited, type Executor, type Transaction } from "../../db/audit";
 import { nextNumber } from "../../db/numbering";
 import { insertedRow } from "../../db/rows";
-import { products, purchaseItems, purchases, users } from "../../db/schema";
+import {
+	products,
+	purchaseItems,
+	purchases,
+	stockLots,
+	users,
+} from "../../db/schema";
 import { expiryToDate, monthOf, storeToday } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
@@ -20,12 +26,20 @@ import { photoUrlOf } from "../../lib/photo-storage";
 import { blankToNull } from "../../lib/text";
 import type { AuthSession } from "../auth/auth.model";
 import { lockProducts } from "../products/products.lock";
-import { recordEntries, type StockEntry } from "../stock/stock.ledger";
+import { stockLimit } from "../stock/stock.errors";
+import {
+	recordEntries,
+	recordPurchaseCancellation,
+	type StockEntry,
+} from "../stock/stock.ledger";
+import type { CanceledEntry } from "../stock/stock.rules";
 import type { PurchasesModel } from "./purchases.model";
 import {
+	alreadyCanceled,
 	assertItems,
 	assertPurchaseDate,
 	summarizeLines,
+	unitsGone,
 } from "./purchases.rules";
 
 const notFound = () =>
@@ -110,6 +124,7 @@ async function find(
 		.select({
 			...headerColumns,
 			note: purchases.note,
+			cancelReason: purchases.cancelReason,
 			author: users.name,
 			createdAt: purchases.createdAt,
 		})
@@ -120,10 +135,11 @@ async function find(
 	const items = (await findItems(executor, [id])).map(
 		({ purchaseId: _, ...line }) => line,
 	);
-	const { note, author, createdAt, canceledAt } = purchase;
+	const { note, cancelReason, author, createdAt, canceledAt } = purchase;
 	return {
 		...toSummary(purchase, items),
 		note,
+		cancelReason,
 		author,
 		createdAt: createdAt.toISOString(),
 		canceledAt: canceledAt?.toISOString() ?? null,
@@ -179,13 +195,61 @@ async function insertLines(
 		.map(({ position: _, ...line }) => line);
 }
 
-/** A line that would take its product's stock past what the ledger holds (R$ 21 million, or 2 billion units). */
-const stockLimit = (index: number) =>
-	httpError(422, {
-		code: "stock_limit",
-		message: "O estoque desse produto passaria do limite que o sistema guarda.",
-		field: `items.${index}.quantity`,
-	});
+/** A line that would take its product's stock past what the ledger holds. */
+const lineStockLimit = (index: number) => stockLimit(`items.${index}.quantity`);
+
+/**
+ * The lines of a purchase of the store with the lot each brought, in the order entered; none when it isn't the
+ * store's. Neither changes after the purchase is entered, so they're read before the product lock (the units still
+ * in the lots are read under it, by the ledger).
+ */
+function cancelLines(
+	tx: Transaction,
+	storeId: string,
+	purchaseId: string,
+): Promise<CanceledEntry[]> {
+	return tx
+		.select({
+			purchaseItemId: purchaseItems.id,
+			productId: purchaseItems.productId,
+			quantity: purchaseItems.quantity,
+			unitCost: purchaseItems.unitCost,
+			lotId: stockLots.id,
+		})
+		.from(purchaseItems)
+		.innerJoin(stockLots, eq(stockLots.purchaseItemId, purchaseItems.id))
+		.where(
+			and(
+				eq(purchaseItems.purchaseId, purchaseId),
+				eq(purchaseItems.storeId, storeId),
+			),
+		)
+		.orderBy(asc(purchaseItems.position));
+}
+
+/**
+ * Marks a purchase canceled, if it isn't yet. Run under the product lock: a second cancellation waits there and then
+ * finds it marked. Whatever fails after it rolls the mark back with the transaction.
+ */
+async function markCanceled(
+	tx: Transaction,
+	storeId: string,
+	purchaseId: string,
+	reason: string | null,
+): Promise<void> {
+	const marked = await tx
+		.update(purchases)
+		.set({ canceledAt: new Date(), cancelReason: blankToNull(reason) })
+		.where(
+			and(
+				eq(purchases.id, purchaseId),
+				eq(purchases.storeId, storeId),
+				isNull(purchases.canceledAt),
+			),
+		)
+		.returning({ id: purchases.id });
+	if (marked.length === 0) throw alreadyCanceled();
+}
 
 /**
  * Purchases (docs/product/compras.md): the goods coming into the store. Every line feeds the stock ledger, which keeps
@@ -260,8 +324,39 @@ export const PurchasesService = {
 					.returning({ id: purchases.id }),
 			);
 			const entries = await insertLines(tx, storeId, purchase.id, input.items);
-			await recordEntries(tx, { storeId, userId }, entries, stockLimit);
+			await recordEntries(tx, { storeId, userId }, entries, lineStockLimit);
 			return find(tx, storeId, purchase.id);
+		});
+	},
+
+	/**
+	 * Cancels a purchase (compras.md, "Cancelamento"): every lot it brought goes back to zero and leaves with the value
+	 * it brought, and it stays in the history, marked. Only once, and only while all its units are still in stock.
+	 */
+	cancel(
+		session: AuthSession,
+		id: string,
+		input: PurchasesModel["cancelBody"],
+	): Promise<PurchasesModel["detail"]> {
+		const storeId = session.store.id;
+		const userId = session.user.id;
+		return audited(userId, async (tx) => {
+			const lines = await cancelLines(tx, storeId, id);
+			if (lines.length === 0) throw notFound();
+			// Products first, like every stock write (products.lock.ts).
+			await lockProducts(
+				tx,
+				storeId,
+				lines.map((line) => line.productId),
+			);
+			await markCanceled(tx, storeId, id, input.reason);
+			await recordPurchaseCancellation(
+				tx,
+				{ storeId, userId },
+				lines,
+				unitsGone,
+			);
+			return find(tx, storeId, id);
 		});
 	},
 };

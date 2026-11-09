@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../db";
 import { audited, type Transaction } from "../../db/audit";
 import { nextNumber } from "../../db/numbering";
@@ -7,6 +7,7 @@ import {
 	customers,
 	resellers,
 	saleCosts,
+	saleItemLots,
 	saleItems,
 	sales,
 } from "../../db/schema";
@@ -14,11 +15,17 @@ import { storeToday } from "../../lib/dates";
 import { blankToNull } from "../../lib/text";
 import type { AuthSession } from "../auth/auth.model";
 import { lockProducts } from "../products/products.lock";
-import { recordSaleExits } from "../stock/stock.ledger";
+import { stockLimit } from "../stock/stock.errors";
+import {
+	recordSaleExits,
+	recordSaleReturns,
+	type SaleReturn,
+} from "../stock/stock.ledger";
 import { sellableLots, stockBalances } from "../stock/stock.queries";
 import type { SalesModel } from "./sales.model";
-import { findSale, listSales } from "./sales.queries";
+import { findSale, listSales, notFound } from "./sales.queries";
 import {
+	alreadyCanceled,
 	assertChannel,
 	assertItems,
 	assertParty,
@@ -151,6 +158,74 @@ async function insertCosts(
 }
 
 /**
+ * Marks a sale canceled with its reason, if it isn't yet. Run under the product lock: a second cancellation waits
+ * there and then finds it marked. Whatever fails after it rolls the mark back with the transaction.
+ */
+async function markCanceled(
+	tx: Transaction,
+	storeId: string,
+	saleId: string,
+	reason: string,
+): Promise<void> {
+	const marked = await tx
+		.update(sales)
+		.set({ canceledAt: new Date(), cancelReason: reason.trim() })
+		.where(
+			and(
+				eq(sales.id, saleId),
+				eq(sales.storeId, storeId),
+				isNull(sales.canceledAt),
+			),
+		)
+		.returning({ id: sales.id });
+	if (marked.length === 0) throw alreadyCanceled();
+}
+
+/**
+ * The lines of a sale of the store with the lots their units left, in the order entered; none when it isn't the
+ * store's. Neither changes after the sale is entered, so they're read before the product lock.
+ */
+async function returnLines(
+	tx: Transaction,
+	storeId: string,
+	saleId: string,
+): Promise<SaleReturn[]> {
+	const lines = await tx
+		.select({
+			saleItemId: saleItems.id,
+			productId: saleItems.productId,
+			quantity: saleItems.quantity,
+			cost: saleItems.cost,
+		})
+		.from(saleItems)
+		.where(and(eq(saleItems.saleId, saleId), eq(saleItems.storeId, storeId)))
+		.orderBy(asc(saleItems.position));
+	const lots = Map.groupBy(
+		await tx
+			.select({
+				saleItemId: saleItemLots.saleItemId,
+				lotId: saleItemLots.lotId,
+				units: saleItemLots.quantity,
+			})
+			.from(saleItemLots)
+			.where(
+				inArray(
+					saleItemLots.saleItemId,
+					lines.map((line) => line.saleItemId),
+				),
+			),
+		(lot) => lot.saleItemId,
+	);
+	return lines.map((line) => ({
+		...line,
+		lots: (lots.get(line.saleItemId) ?? []).map(({ lotId, units }) => ({
+			lotId,
+			units,
+		})),
+	}));
+}
+
+/**
  * Sales (docs/product/vendas.md): what was sold, the costs and the real profit, which the server computes and keeps.
  * The units leave the stock through the ledger.
  */
@@ -197,6 +272,32 @@ export const SalesService = {
 			await insertCosts(tx, storeId, saleId, totals.costs);
 			await recordSaleExits(tx, { storeId, userId: session.user.id }, lines);
 			return findSale(tx, storeId, saleId);
+		});
+	},
+
+	/**
+	 * Cancels a sale with its reason (vendas.md, "Cancelamento"): the units go back to the lots they left without
+	 * changing the average cost, and it stays listed, marked, out of every total. Only once.
+	 */
+	cancel(
+		session: AuthSession,
+		id: string,
+		input: SalesModel["cancelBody"],
+	): Promise<SalesModel["detail"]> {
+		const storeId = session.store.id;
+		const userId = session.user.id;
+		return audited(userId, async (tx) => {
+			const lines = await returnLines(tx, storeId, id);
+			if (lines.length === 0) throw notFound();
+			// Products first, like every stock write (products.lock.ts).
+			await lockProducts(
+				tx,
+				storeId,
+				lines.map((line) => line.productId),
+			);
+			await markCanceled(tx, storeId, id, input.reason);
+			await recordSaleReturns(tx, { storeId, userId }, lines, stockLimit);
+			return findSale(tx, storeId, id);
 		});
 	},
 };

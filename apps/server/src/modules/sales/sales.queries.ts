@@ -33,7 +33,7 @@ import { marginOf, periodStart } from "./sales.rules";
 
 /* Sales read back (docs/product/vendas.md): the numbers kept when each was entered, never recomputed. */
 
-const notFound = () =>
+export const notFound = () =>
 	httpError(404, { code: "sale_not_found", message: "Venda não encontrada." });
 
 type ItemRow = SalesModel["item"] & { saleId: string };

@@ -77,6 +77,13 @@ export function useZodForm<
 		}
 	}
 
+	/** Back to the initial values, with no errors shown (a sheet opened again). */
+	function reset() {
+		setValues(initial);
+		setSubmitted(false);
+		setServerErrors({});
+	}
+
 	/** Message for the footer: a failed request that isn't about one field. */
 	function footerError(error: unknown): string | null {
 		if (!error || fieldOf(error)) return null;
@@ -92,5 +99,6 @@ export function useZodForm<
 		handleSubmit,
 		applyApiError,
 		footerError,
+		reset,
 	};
 }

@@ -12,6 +12,7 @@ import {
 	purchaseItem,
 	storeDayFrom,
 } from "../support/factories/purchases";
+import { createSale, saleItem } from "../support/factories/sales";
 
 useTestDatabase();
 
@@ -217,9 +218,95 @@ describe("purchases routes", () => {
 		);
 		const read = await api.purchases({ id: crypto.randomUUID() }).get();
 		const listed = await api.purchases.get();
+		const canceled = await api
+			.purchases({ id: crypto.randomUUID() })
+			.cancel.post({ reason: null });
 
 		expect(created.error?.status).toBe(401);
 		expect(read.error?.status).toBe(401);
 		expect(listed.error?.status).toBe(401);
+		expect(canceled.error?.status).toBe(401);
+	});
+});
+
+describe("POST /purchases/:id/cancel", () => {
+	it("cancels a purchase with its reason, and it stays in the history", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const purchase = await createPurchase(session, [purchaseItem(product.id)]);
+
+		const canceled = await api
+			.purchases({ id: purchase.id })
+			.cancel.post({ reason: "Fornecedor errado" }, { headers });
+		const listed = await api.purchases.get({
+			headers,
+			query: { status: "canceled" },
+		});
+
+		expect(canceled.error).toBeNull();
+		expect(canceled.data).toMatchObject({
+			status: "canceled",
+			cancelReason: "Fornecedor errado",
+		});
+		expect(listed.data?.items.map((item) => item.id)).toEqual([purchase.id]);
+	});
+
+	it("answers 422 for a malformed body", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const purchase = await createPurchase(session, [purchaseItem(product.id)]);
+		const post = (body: unknown) =>
+			api
+				.purchases({ id: purchase.id })
+				.cancel.post(body as { reason: null }, { headers });
+
+		const tooLong = await post({ reason: "x".repeat(501) });
+		const missing = await post({});
+
+		expect(tooLong.error?.status).toBe(422);
+		expect(missing.error?.status).toBe(422);
+	});
+
+	it("answers 409 when units already left and when it's already canceled", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const sold = await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 2 }),
+		]);
+		await createSale(session, [saleItem(product.id)]);
+		const other = await createPurchase(session, [purchaseItem(product.id)]);
+		await api
+			.purchases({ id: other.id })
+			.cancel.post({ reason: null }, { headers });
+
+		const gone = await api
+			.purchases({ id: sold.id })
+			.cancel.post({ reason: null }, { headers });
+		const twice = await api
+			.purchases({ id: other.id })
+			.cancel.post({ reason: null }, { headers });
+
+		expect(gone.error?.status).toBe(409);
+		expect(gone.error?.value).toMatchObject({ code: "purchase_units_gone" });
+		expect(twice.error?.status).toBe(409);
+		expect(twice.error?.value).toMatchObject({
+			code: "purchase_already_canceled",
+		});
+	});
+
+	it("answers 404 for a purchase of another store", async () => {
+		const { headers } = await signedIn();
+		const other = await signedIn();
+		const product = await createProduct(other.session.store.id);
+		const foreign = await createPurchase(other.session, [
+			purchaseItem(product.id),
+		]);
+
+		const canceled = await api
+			.purchases({ id: foreign.id })
+			.cancel.post({ reason: null }, { headers });
+
+		expect(canceled.error?.status).toBe(404);
+		expect(canceled.error?.value).toMatchObject({ code: "purchase_not_found" });
 	});
 });

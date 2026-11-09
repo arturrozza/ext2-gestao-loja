@@ -12,6 +12,27 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Cancelamento de venda e de compra (MUN-17)
+
+**Decisão:** venda e compra se cancelam uma vez só, ficam no histórico marcadas, e o estoque volta por movimentações
+novas (`sale_canceled` e `purchase_canceled`), sem mexer nas antigas.
+- **Venda:** o motivo é obrigatório. As unidades voltam aos mesmos lotes de onde saíram (`sale_item_lots`), mesmo que
+  a validade tenha vencido no meio-tempo, e voltam pela fatia delas no valor atual do estoque, então o custo médio não
+  muda. Com o produto zerado não há custo médio a manter, e elas voltam pelo custo que a venda gravou.
+- **Compra:** o motivo é opcional (coluna `cancel_reason`, como na venda). O lote de cada item vai a zero e sai
+  exatamente o valor que o item trouxe, nunca mais que o valor do estoque. Se não sobrar unidade, sai o valor inteiro.
+- **Compra com unidade que já saiu:** recusada, seja venda, ajuste ou descarte de vencido, e não só venda. A correção é
+  pelo ajuste ou por "Corrigir custo". Cancelar a venda antes devolve as unidades ao lote e libera a compra.
+- **Concorrência:** o cancelamento trava os produtos primeiro, como toda escrita no estoque, e marca o registro com
+  `canceled_at is null` na condição. Dois cancelamentos ao mesmo tempo entram em fila, e o segundo recebe 409.
+
+**Por quê:** tirar o que a compra trouxe é exato no caso comum (lançou errado e cancelou logo, ou só entraram outras
+compras depois). "Como se nunca tivesse existido" de verdade, com venda no meio, obrigaria a recalcular o custo das
+vendas já feitas, e a regra é que venda registrada não muda. Tirar pelo custo médio de agora nunca desfaz a compra
+quando há outras no estoque. Aceitar compra com unidade ajustada deixaria lote e valor sem bater, porque o ajuste já
+levou valor pelo custo médio. Voltar a venda pelo custo médio de agora segue o que `vendas.md` já dizia ("o custo
+médio não muda").
+
 ## 2026-11-09: Vendas com lucro real gravado e baixa pela validade mais próxima (MUN-16)
 
 **Decisão:** a venda é registrada de uma vez, tudo ou nada, e o server calcula e grava receita, custo dos produtos,
@@ -23,7 +44,7 @@ custos da venda e lucro real. Nada disso é recalculado depois.
 - **Baixa:** sai primeiro a validade mais próxima, depois os lotes sem validade, e o mais antigo dentro da mesma
   validade. Lote vencido nunca entra. Faltando unidade vendável em qualquer item, a venda inteira é recusada com o
   disponível ("Estoque insuficiente: disponível 2."). Cada item vira uma movimentação `sale` no livro, que aponta para
-  o item, e `sale_item_lots` guarda de quais lotes ele saiu, para o cancelamento (MUN-17) devolver nos mesmos lotes.
+  o item, e `sale_item_lots` guarda de quais lotes ele saiu, para o cancelamento devolver nos mesmos lotes.
   Uma movimentação tem no máximo uma origem (compra ou venda), garantido por um CHECK.
 - **Regras da venda:** um produto entra uma vez só por venda. Preço zero vale (brinde que sai com a venda) e receita
   zero também (desconto do valor inteiro). Custo em percentual incide sobre a receita, arredondado ao centavo um por
@@ -35,7 +56,7 @@ custos da venda e lucro real. Nada disso é recalculado depois.
 - **Clientes e revendedoras:** os totais saem das vendas não canceladas. A revendedora tem período na tela dela (mês
   atual por padrão), que vale para os números e a lista; na lista de revendedoras, os totais são de tudo.
 - **App:** a prévia do lucro na tela de nova venda usa a mesma conta do server, conferida por um teste de paridade. O
-  cancelamento continua "Em construção" até a MUN-17, como o da compra.
+  cancelamento ficou "Em construção" até a MUN-17, como o da compra.
 
 **Por quê:** gravar os números na hora é o que garante que uma compra depois não mude o lucro de uma venda já vista.
 Validade mais próxima primeiro evita perder produto vencendo na prateleira. Guardar os lotes de cada item deixa o
@@ -92,7 +113,7 @@ cliente preferir pela data, a regra muda aqui e em `compras.md`. Travar sempre n
 duas escritas nos mesmos produtos.
 **Pendente:** o `POST /purchases` não tem chave de idempotência. Se a resposta se perder (internet caindo depois de a
 API gravar) e a pessoa tocar de novo, a compra entra duas vezes. Até ter a chave, a correção é cancelar a repetida
-(MUN-17).
+(cancelamento disponível desde a MUN-17).
 
 ## 2026-11-06: Foto do produto no Cloudflare R2, enviada pela API (MUN-11)
 
@@ -184,8 +205,8 @@ se edita, só reativa. O app para de usar dados falsos de uma vez (a MUN-20 vai 
 ainda não existem mostram "Em construção" e escondem as ações, e estoque e custo aparecem como "—" até Compras e
 Estoque. A sugestão de "Cadastrar primeira entrada" passou para Compras (MUN-12), e o campo de foto some do cadastro
 até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva. (Mudou na MUN-12: compras, estoque,
-custo e a primeira entrada já estão no app. Mudou de novo na MUN-13 e na MUN-16: estoque e vendas também. Seguem em
-construção os cancelamentos, os relatórios, os alertas e o resumo da tela inicial.)
+custo e a primeira entrada já estão no app. Mudou de novo na MUN-13 e na MUN-16: estoque e vendas também; e na MUN-17,
+os cancelamentos. Seguem em construção os relatórios, os alertas e o resumo da tela inicial.)
 **Por quê:** excluir uma categoria tiraria os produtos dela e mudaria os relatórios por categoria do passado; arquivar
 esconde sem perder nada. Editar arquivado não tem uso e abre espaço para mexer no que já é histórico. Ligar só
 produtos à API deixaria compras, vendas e estoque falsos apontando para produtos que não existem mais; mostrar "Em

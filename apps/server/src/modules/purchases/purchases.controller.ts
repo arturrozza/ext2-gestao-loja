@@ -37,4 +37,21 @@ export const purchasesController = new Elysia({ prefix: "/purchases" })
 				422: ErrorModel,
 			},
 		},
+	)
+	.post(
+		"/:id/cancel",
+		({ session, params, body }) =>
+			PurchasesService.cancel(session, params.id, body),
+		{
+			auth: true,
+			params: PurchasesModel.params,
+			body: PurchasesModel.cancelBody,
+			response: {
+				200: PurchasesModel.detail,
+				401: ErrorModel,
+				404: ErrorModel,
+				409: ErrorModel,
+				422: ErrorModel,
+			},
+		},
 	);

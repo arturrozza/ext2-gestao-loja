@@ -40,3 +40,16 @@ export function useCreatePurchase() {
 		onSuccess: invalidate,
 	});
 }
+
+/**
+ * Canceling takes the units and their cost back out of the stock: refetch everything, like entering one. Also after a
+ * refusal (already canceled, units already gone): the screen shows the purchase as it is now. A blank reason is none.
+ */
+export function useCancelPurchase(id: string) {
+	const invalidate = useInvalidateBusinessData();
+	return useMutation({
+		mutationFn: (reason: string) =>
+			request(api.purchases({ id }).cancel.post({ reason })),
+		onSettled: invalidate,
+	});
+}

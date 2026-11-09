@@ -17,7 +17,7 @@ import { users } from "./users";
 
 /**
  * Purchases of a store (docs/product/compras.md): the goods that come in. Never edited; a wrong one is canceled
- * (MUN-17) and entered again, and stays in the history. Stock and cost live in the stock ledger (`stock.ts`), which
+ * and entered again, and stays in the history. Stock and cost live in the stock ledger (`stock.ts`), which
  * every item feeds.
  */
 export const purchases = snakeCase.table(
@@ -36,8 +36,9 @@ export const purchases = snakeCase.table(
 		userId: uuid()
 			.notNull()
 			.references(() => users.id),
-		/** Set by the cancellation (MUN-17). */
+		/** Set by the cancellation, with its optional reason (compras.md). */
 		canceledAt: timestamp({ withTimezone: true }),
+		cancelReason: text(),
 		...timestamps,
 	},
 	(table) => [

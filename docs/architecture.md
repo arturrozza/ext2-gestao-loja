@@ -125,8 +125,8 @@ ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem g
 ### Estoque (livro de movimentações)
 
 O estoque não tem coluna de saldo: o livro é a fonte da verdade (ver `docs/decisions.md`, MUN-12). O módulo
-`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras, vendas, ajustes e correções de custo;
-cancelamentos depois). As rotas do estoque ficam em `products` (`products.stock.ts`): o histórico
+`src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras, vendas, ajustes, correções de custo e os
+cancelamentos de compra e de venda). As rotas do estoque ficam em `products` (`products.stock.ts`): o histórico
 (`GET /products/:id/movements`), o valor total (`GET /products/stock-value`), o ajuste
 (`POST /products/:id/adjustments`) e a correção de custo (`POST /products/:id/cost-corrections`).
 
@@ -139,7 +139,9 @@ cancelamentos depois). As rotas do estoque ficam em `products` (`products.stock.
   `products`, usado na lista de produtos e no saldo antes de gravar; a quantidade por validade, os lotes abertos e os
   lotes que uma venda pode levar (`sellableLots`, validade mais próxima primeiro, vencidos fora).
 - `stock.ledger.ts`: o único lugar que grava lotes e movimentações, e `sale_item_lots` (de quais lotes cada item de
-  venda saiu).
+  venda saiu). O cancelamento de compra zera os lotes dela (recusa se alguma unidade já saiu), e o de venda devolve as
+  unidades aos lotes registrados em `sale_item_lots`.
+- `stock.errors.ts`: o erro `stock_limit`, quando uma escrita passaria do que o livro guarda.
 
 Quem grava no estoque trava antes os produtos (`lockProducts`, em `products/products.lock.ts`, `FOR UPDATE` em ordem
 de id), depois o cliente e a revendedora da venda (`FOR SHARE`, para não serem arquivados no meio) e só depois, se
@@ -153,7 +155,8 @@ ou venda, o que está vencido e os períodos da lista de vendas.
 
 ### Vendas
 
-`src/modules/sales` registra e lê as vendas (`POST /sales`, `GET /sales`, `GET /sales/:id`). As regras puras ficam em
+`src/modules/sales` registra, lê e cancela as vendas (`POST /sales`, `GET /sales`, `GET /sales/:id`,
+`POST /sales/:id/cancel`). As regras puras ficam em
 `sales.rules.ts` (estoque de cada item, conta do lucro real, períodos), as leituras em `sales.queries.ts` e os totais de
 clientes e revendedoras em `sales.totals.ts`, como colunas SQL correlacionadas que `customers` e `resellers` usam. A
 venda grava receita, custos e lucro calculados na hora; nada é recalculado depois (ver `docs/decisions.md`, MUN-16).

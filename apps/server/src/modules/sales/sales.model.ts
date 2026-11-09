@@ -191,11 +191,17 @@ const totals = t.Object({
 
 const page = t.Object({ ...pageOf(summary).properties, totals });
 
+/** Canceling a sale (vendas.md, "Cancelamento"): the reason is required, and not blank. */
+const cancelBody = t.Object({
+	reason: t.String({ minLength: 1, maxLength: 500, pattern: "\\S" }),
+});
+
 export const SalesModel = {
 	page,
 	listQuery,
 	detail,
 	body,
+	cancelBody,
 	params: t.Object({ id: t.String({ format: "uuid" }) }),
 };
 
@@ -207,4 +213,5 @@ export type SalesModel = {
 	cost: UnwrapSchema<typeof cost>;
 	detail: UnwrapSchema<typeof SalesModel.detail>;
 	body: UnwrapSchema<typeof SalesModel.body>;
+	cancelBody: UnwrapSchema<typeof SalesModel.cancelBody>;
 };

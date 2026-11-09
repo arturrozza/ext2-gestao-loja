@@ -248,3 +248,10 @@ export function periodStart(
 export function marginOf(profit: number, revenue: number): number | null {
 	return revenue > 0 ? profit / revenue : null;
 }
+
+/** A sale is canceled once (vendas.md, "Cancelamento"). */
+export const alreadyCanceled = () =>
+	httpError(409, {
+		code: "sale_already_canceled",
+		message: "Essa venda já foi cancelada.",
+	});

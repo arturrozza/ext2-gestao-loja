@@ -9,8 +9,8 @@ import { signedIn } from "../support/factories/accounts";
 import { createCustomer, customerBody } from "../support/factories/customers";
 import { storeDayFrom } from "../support/factories/purchases";
 import {
+	cancelSale,
 	createSale,
-	markCanceled,
 	saleItem,
 	stockedProduct,
 } from "../support/factories/sales";
@@ -254,7 +254,7 @@ describe("CustomersService", () => {
 		await sell(storeDayFrom(-10));
 		await sell(storeDayFrom(-3));
 		// The latest is canceled: it counts neither in the total nor as the last purchase.
-		await markCanceled((await sell(storeDayFrom(0))).id);
+		await cancelSale(session, (await sell(storeDayFrom(0))).id);
 
 		expect(await CustomersService.get(storeId, customer.id)).toMatchObject({
 			purchasesCount: 2,

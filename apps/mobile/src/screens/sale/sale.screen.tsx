@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
+import { CanceledNote } from "@/components/canceled-note";
 import { Figure, FigurePair } from "@/components/figure-pair";
 import { InfoRow } from "@/components/info-row";
 import { ItemRow } from "@/components/item-row";
@@ -65,21 +66,6 @@ function partiesLine(sale: SaleDetail) {
 		.join(" · ");
 }
 
-function CanceledNote({ sale }: { sale: SaleDetail }) {
-	if (!sale.canceledAt) return null;
-	return (
-		<View className="gap-1 rounded-[8px] bg-destructive/10 px-4 py-3">
-			<Text className="font-sans-semibold text-destructive text-sm">
-				Cancelada {formatMoment(sale.canceledAt).toLowerCase()}
-			</Text>
-			<Text className="text-destructive text-sm">
-				{sale.cancelReason ?? "Sem motivo"}. Não conta nos relatórios nem nas
-				comissões.
-			</Text>
-		</View>
-	);
-}
-
 /** The top card: what was sold and when, then the two numbers that matter. */
 function Summary({ sale }: { sale: SaleDetail }) {
 	const canceled = sale.status === "canceled";
@@ -119,7 +105,11 @@ function Summary({ sale }: { sale: SaleDetail }) {
 					struck={canceled}
 				/>
 			</FigurePair>
-			<CanceledNote sale={sale} />
+			<CanceledNote
+				canceledAt={sale.canceledAt}
+				reason={sale.cancelReason}
+				consequence="Não conta nos relatórios nem nas comissões."
+			/>
 		</View>
 	);
 }

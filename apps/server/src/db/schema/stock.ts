@@ -39,7 +39,7 @@ export const stockLots = snakeCase.table(
 		purchaseItemId: uuid().references(() => purchaseItems.id),
 		/** First day of the expiry month; null when the product has no expiry. */
 		expiry: date(),
-		/** Units still in it: sales take from it, so it only goes down. */
+		/** Units still in it: sales and adjustments take from it, a canceled sale gives back what it took. */
 		quantity: integer().notNull(),
 		...timestamps,
 	},

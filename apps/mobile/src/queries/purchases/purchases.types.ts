@@ -40,6 +40,8 @@ export type PurchaseDetail = PurchaseSummary & {
 	createdAt: string;
 	author: string;
 	canceledAt: string | null;
+	/** Why it was canceled, when the person said. */
+	cancelReason: string | null;
 };
 
 /** A purchase as the user enters it (compras.md). No edit: a wrong one is canceled and entered again. */

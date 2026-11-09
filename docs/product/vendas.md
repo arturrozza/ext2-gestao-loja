@@ -77,15 +77,14 @@ Exemplo: 2 unidades a R$ 100, desconto de R$ 20, custo médio de R$ 40, frete de
 
 Venda não é editada nem apagada. Se foi lançada errada, cancela e lança de novo.
 
-- A pessoa confirma e informa o motivo.
-- As unidades voltam às mesmas validades de onde saíram, com registro no histórico.
-- O custo médio não muda.
-- A venda continua visível, marcada como cancelada.
+- A pessoa confirma e informa o motivo, que é obrigatório.
+- As unidades voltam às mesmas validades de onde saíram, com registro no histórico. Se uma dessas validades venceu
+  nesse meio-tempo, as unidades voltam como vencidas.
+- O custo médio não muda: as unidades voltam pelo custo médio de agora. Se o produto estiver zerado, voltam pelo custo
+  que a própria venda gravou.
+- A venda continua visível, riscada, com quando e por que foi cancelada.
 - Ela deixa de contar em vendas, lucro e comissões.
-
-## Ainda não disponível no app
-
-Cancelar venda: o botão aparece na venda, marcado "Em construção", até a tarefa de cancelamentos.
+- Não dá para cancelar duas vezes.
 
 ## Fora do escopo
 

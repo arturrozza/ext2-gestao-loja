@@ -1,19 +1,23 @@
-import { Button } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
-import { UnderConstructionTag } from "@/components/under-construction";
+import { CancelControl } from "@/components/cancel-control";
 import type { PurchaseDetail } from "@/queries/purchases/purchases.types";
+import { useCancelPurchase } from "@/queries/purchases/use-purchases";
 
 /**
- * Cancel a purchase (compras.md): stock and average cost go back as if it never existed; it stays in the history,
- * marked. Under construction until MUN-17 (the API has no cancellation yet): the action shows, disabled and tagged.
- * MUN-17 brings the confirmation and the "can't cancel, units already sold" state.
+ * Cancel a purchase (compras.md, "Cancelamento"), with an optional reason: stock and average cost go back as if it
+ * never existed, and it stays in the history, marked. With a unit already sold or adjusted the API refuses it, and
+ * the sheet says why and how to correct it instead.
  */
 export function CancelPurchase({ purchase }: { purchase: PurchaseDetail }) {
-	if (purchase.status === "canceled") return null;
 	return (
-		<Button variant="ghost" disabled>
-			<Text className="text-destructive">Cancelar compra</Text>
-			<UnderConstructionTag />
-		</Button>
+		<CancelControl
+			canceled={purchase.status === "canceled"}
+			noun="compra"
+			title={`Compra #${purchase.number}`}
+			description="O estoque e o custo médio voltam como se ela não tivesse existido. Ela continua no histórico, marcada como cancelada."
+			successMessage="Compra cancelada"
+			reasonRequired={false}
+			placeholder="Ex.: lançada em dobro"
+			mutation={useCancelPurchase(purchase.id)}
+		/>
 	);
 }
