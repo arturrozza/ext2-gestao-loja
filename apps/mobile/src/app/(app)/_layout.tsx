@@ -1,5 +1,9 @@
 import { Stack } from "expo-router";
+import { ScreenErrorBoundary } from "@/components/screen-error-boundary";
 import { SHEET } from "@/lib/navigation";
+
+/** Expo Router picks this export up: a screen that throws shows the error instead of closing the app. */
+export const ErrorBoundary = ScreenErrorBoundary;
 
 const SHEETS = [
 	"sales/new",

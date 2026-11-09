@@ -120,6 +120,9 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
 - **`uploadFile` fora do Eden** (`apps/mobile/src/lib/api.ts`). O Eden só manda multipart quando o campo é um `Blob`,
   e o `File` do `expo-file-system` não passa no `instanceof Blob`; o `Blob` do React Native não aceita bytes. O envio
   usa o `File.upload` nativo do Expo, com o mesmo token e os mesmos `ApiError`. É a única chamada fora do `api`.
+- **Eden com `parseDate: false`** (`apps/mobile/src/lib/api.ts`). Por padrão o Eden converte em `Date` qualquer string
+  da resposta que pareça data, mesmo com o tipo dizendo `string`. O dia da compra (`"2026-11-09"`) chegava como `Date`
+  e a lista de compras derrubava o app no iOS. Datas viajam como string e o app formata (`src/lib/dates.ts`).
 
 ## Como atualizar
 

@@ -21,6 +21,9 @@ function authHeaders(): Record<string, string> | undefined {
 }
 
 export const api = treaty<App>(env.EXPO_PUBLIC_API_URL, {
+	// Eden turns any date-looking string into a `Date` by default, against the types: days ("2026-11-09"), expiry
+	// months and timestamps arrive as the strings the API sends (docs/stack.md, "Restrições conhecidas").
+	parseDate: false,
 	headers: authHeaders,
 	onRequest: () => ({ signal: timeoutSignal() }),
 });
