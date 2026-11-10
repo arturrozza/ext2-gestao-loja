@@ -65,7 +65,6 @@ Alias: `@/*` → `src/*`.
   export default HomeScreen;
   ```
 
-  A module still under construction default-exports `underConstructionRoute("Title", presentation)` instead (see Data).
   A screen shown as a sheet default-exports `sheetRoute(Screen)` (`components/route-sheet.tsx`).
 
 - Each screen lives in `src/screens/<screen>/<screen>.screen.tsx`. Components that belong only to that screen go in
@@ -104,12 +103,7 @@ Alias: `@/*` → `src/*`.
 - Every API call goes through the `api` client (`src/lib/api.ts`), typed with the server's `type App`. No raw `fetch`.
   The one exception is sending a local file (`uploadFile` there, used for the product photo): Eden only sends a `Blob`
   as multipart and an Expo file isn't one. It keeps the session header and the `ApiError`s; give it a `read` guard.
-- **Modules not built yet** (no API): their routes render `underConstructionRoute("Title", presentation)`
-  (`screens/under-construction/`), with a comment pointing at the real screen, which stays in `screens/`. Their hooks
-  keep the shape the screens need but call `underConstruction()` (`queries/under-construction.ts`), which fails like a
-  request. Shortcuts and actions that lead there show `UnderConstructionTag`; a block inside a working screen uses
-  `UnderConstructionCard` (`components/under-construction.tsx`). To connect a module: call `api` in its hooks, keep
-  the hook shape and `<module>.types.ts`, and point the routes back at the real screens. No fake data.
+- No fake data: every screen reads the API through its module's hooks, and there is no "under construction" stand-in.
   Screens rely on errors being an `ApiError` (`code`, pt-BR `message`, `details.field`) and on `unauthorized` ending the
   session: wrap every Eden call with `request()` from `src/lib/api.ts`, which returns the data or throws that `ApiError`
   (`network` when the server can't be reached). The session token lives in `src/lib/session-token.ts` (SecureStore) and

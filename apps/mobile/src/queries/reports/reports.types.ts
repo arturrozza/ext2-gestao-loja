@@ -7,10 +7,8 @@ export type ReportPeriod =
 	| { kind: "custom"; from: ISODate; to: ISODate };
 
 export type ReportBucket = {
-	/** First day of the bucket. */
+	/** First day of the bar: the day itself, the first of 7 days from the period's start, or the first of the month. */
 	date: ISODate;
-	/** Short label under the bar ("04/11"). */
-	label: string;
 	revenue: Money;
 	profit: Money;
 };
@@ -52,6 +50,12 @@ export type Report = {
 		bestMargin: ReportProduct[];
 		worstMargin: ReportProduct[];
 	};
-	categories: { name: string; revenue: Money; profit: Money }[];
+	/** Products without a category are one "Sem categoria" line (`id` null). */
+	categories: {
+		id: string | null;
+		name: string;
+		revenue: Money;
+		profit: Money;
+	}[];
 	resellers: { id: string; name: string; revenue: Money; commission: Money }[];
 };

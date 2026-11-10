@@ -56,6 +56,15 @@ export function addDays(day: ISODate, days: number): ISODate {
 	return date.toISOString().slice(0, 10);
 }
 
+const DAY_MS = 86_400_000;
+
+/** Whole calendar days from `from` to `to` (negative when `to` is earlier): "2026-02-24" to "2026-03-02" is 6. */
+export function daysBetween(from: ISODate, to: ISODate): number {
+	return Math.round(
+		(Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS,
+	);
+}
+
 /** Earliest day a purchase or sale takes: anything before is a typo (and the year 0 the date format lets through). */
 const EARLIEST_DAY = "2000-01-01";
 

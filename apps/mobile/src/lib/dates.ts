@@ -61,6 +61,17 @@ export function formatDate(value: ISODate): string {
 	return `${day}/${month}/${year}`;
 }
 
+/** "04/11" for "2026-11-04": short, for a label with little room. */
+export function formatDayMonth(value: ISODate): string {
+	return formatDate(value).slice(0, 5);
+}
+
+/** "nov/26" for "2026-11-04". */
+export function formatShortMonth(value: ISODate): string {
+	const date = fromISODate(value);
+	return `${monthName(date.getMonth()).slice(0, 3)}/${String(date.getFullYear()).slice(2)}`;
+}
+
 /** "Hoje", "Ontem" or "04/11/2026". */
 export function formatRelativeDate(value: ISODate): string {
 	const diff = daysBetween(value, todayISODate());

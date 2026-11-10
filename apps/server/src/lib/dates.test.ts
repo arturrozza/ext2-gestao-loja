@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	addDays,
 	dayProblem,
+	daysBetween,
 	expiryToDate,
 	isRealDay,
 	monthOf,
@@ -69,5 +70,18 @@ describe("addDays", () => {
 		expect(addDays("2026-03-02", -6)).toBe("2026-02-24");
 		expect(addDays("2026-12-28", 6)).toBe("2027-01-03");
 		expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
+	});
+});
+
+describe("daysBetween", () => {
+	it("counts the calendar days from one day to another", () => {
+		expect(daysBetween("2026-02-24", "2026-03-02")).toBe(6);
+		expect(daysBetween("2026-11-09", "2026-11-09")).toBe(0);
+		expect(daysBetween("2026-03-02", "2026-02-24")).toBe(-6);
+	});
+
+	it("counts a leap day and a whole year", () => {
+		expect(daysBetween("2028-02-28", "2028-03-01")).toBe(2);
+		expect(daysBetween("2025-11-09", "2026-11-09")).toBe(365);
 	});
 });

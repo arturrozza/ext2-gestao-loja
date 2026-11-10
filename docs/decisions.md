@@ -12,6 +12,25 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Relatórios por período, com os custos da venda divididos pelo valor de cada item (MUN-19)
+
+**Decisão:** o relatório de um período (hoje, 7 dias, mês atual, mês anterior ou personalizado, até 5 anos) sai de uma
+rota só, a partir das vendas já gravadas (valores de quando foram lançadas), sem as canceladas, pela data da venda.
+Para a margem de cada produto, os custos da venda inteira e o desconto ou acréscimo são **divididos entre os itens pelo
+valor de cada um** (quantidade × preço), em centavos que fecham exatamente com a venda: cada item leva a parte dele
+arredondada para baixo, e os centavos que sobram vão um a um para os itens que mais perderam na fração (no empate, o de
+maior valor e depois o primeiro da venda). Brinde (preço zero) não leva
+parte da venda nem dos custos, só o custo do próprio produto, e fica sem margem ("—"). Os rankings de produtos têm 5
+itens e só listam produtos com venda no período; os de margem deixam de fora quem só saiu como brinde. A evolução tem
+uma barra por dia (até 31 dias), por semana (até cerca de 6 meses) ou por mês. Produtos, categorias e revendedoras
+arquivados continuam aparecendo nos períodos em que venderam; produto sem categoria vira "Sem categoria".
+**Por quê:** era a dúvida em aberto do módulo. Dividir pelo valor acompanha como os custos nascem (taxa e comissão são
+percentuais da venda, frete e imposto crescem com o valor) e faz produtos, categorias e canais somarem o mesmo total
+do resumo, que é a regra "custos + custo dos produtos + lucro = vendas". As alternativas descartadas: dividir por
+unidade (um colar barato carregaria o mesmo frete de uma blusa cara, e a margem dele ficaria pior do que é) e não dividir
+(a margem do produto ficaria maior do que a real, sem frete, taxa e comissão). O mantenedor deixou a escolha comigo e
+pediu que ficasse bem documentada: se o cliente achar a margem por produto confusa, o ponto de ajuste é só essa divisão.
+
 ## 2026-11-09: Uma animação só para tudo que sobe de baixo (MUN-28)
 
 **Decisão:** gavetas, folhas de escolher, formulários e modais de tela cheia (foto, leitor de código) abrem e fecham
@@ -269,7 +288,8 @@ ainda não existem mostram "Em construção" e escondem as ações, e estoque e 
 Estoque. A sugestão de "Cadastrar primeira entrada" passou para Compras (MUN-12), e o campo de foto some do cadastro
 até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva. (Mudou na MUN-12: compras, estoque,
 custo e a primeira entrada já estão no app. Mudou de novo na MUN-13 e na MUN-16: estoque e vendas também; e na MUN-17,
-os cancelamentos; e na MUN-18, os alertas e o resumo da tela inicial. Seguem em construção os relatórios.)
+os cancelamentos; e na MUN-18, os alertas e o resumo da tela inicial; e na MUN-19, os relatórios: nenhum módulo
+está mais "Em construção", e a tela, a marca e o código dela saíram do app.)
 **Por quê:** excluir uma categoria tiraria os produtos dela e mudaria os relatórios por categoria do passado; arquivar
 esconde sem perder nada. Editar arquivado não tem uso e abre espaço para mexer no que já é histórico. Ligar só
 produtos à API deixaria compras, vendas e estoque falsos apontando para produtos que não existem mais; mostrar "Em

@@ -20,7 +20,7 @@ function marginText(margin: number | null) {
 	return margin === null ? "—" : formatRatio(margin);
 }
 
-/** Product rankings of the period, each highlighting what it ranks. Margins split a sale's costs by item value (provisional, relatorios.md). */
+/** Product rankings of the period, each highlighting what it ranks. Margins split a sale's costs among its items by value (relatorios.md). */
 export function ReportProducts({ products }: { products: Report["products"] }) {
 	const [ranking, setRanking] = useState<Ranking>("bestSellers");
 

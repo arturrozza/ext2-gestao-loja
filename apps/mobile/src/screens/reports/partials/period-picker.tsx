@@ -7,6 +7,7 @@ import { Text } from "@/components/ui/text";
 import { daysBetween, formatDate, parseDateInput } from "@/lib/dates";
 import type { ReportPeriod } from "@/queries/reports/reports.types";
 
+/** Same limit as the server (`MAX_RANGE_DAYS` in `reports.period.ts`): it refuses a span of this many days or more. */
 const MAX_RANGE_DAYS = 5 * 366;
 
 type Kind = ReportPeriod["kind"];
@@ -39,7 +40,7 @@ export function CustomRange({
 			setError("A data inicial vem depois da final.");
 			return;
 		}
-		if (daysBetween(start, end) > MAX_RANGE_DAYS) {
+		if (daysBetween(start, end) >= MAX_RANGE_DAYS) {
 			setError("Escolha um período de até 5 anos.");
 			return;
 		}

@@ -65,9 +65,6 @@ ou mudança em plugin do `app.json`.
 
 Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de novo:
 
-- **Módulos "Em construção"** (MUN-10). Os dados falsos saíram. A rota de um módulo que ainda não tem API mostra a
-  tela "Em construção", sem ações; a tela de verdade continua em `src/screens/` e os hooks dele mantêm o formato, mas
-  falham como uma requisição (`underConstruction()`). A task do módulo liga a API nos hooks e devolve as rotas às telas.
 - **Linker `hoisted` do Bun** (`bunfig.toml`). Com o `isolated` (o padrão), o `expo-doctor` acusa módulos nativos
   duplicados (`expo-font`, `expo-symbols`...), e isso quebra builds nativos. Testar o `isolated` de novo ao subir o
   Expo.

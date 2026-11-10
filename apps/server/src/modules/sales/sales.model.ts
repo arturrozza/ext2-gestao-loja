@@ -21,7 +21,7 @@ const MAX_SALE_COSTS = 20;
 
 const CHANNELS = ["store", "mercado_livre", "reseller"] as const;
 
-const channel = t.UnionEnum(CHANNELS);
+export const channel = t.UnionEnum(CHANNELS);
 
 const paymentCondition = t.Union([t.Literal("cash"), t.Literal("term")]);
 

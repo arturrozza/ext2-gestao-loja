@@ -5,6 +5,7 @@ import { Figure, FigurePair } from "@/components/figure-pair";
 import { InfoRow } from "@/components/info-row";
 import { ListCard } from "@/components/list-card";
 import { Text } from "@/components/ui/text";
+import { formatDayMonth, formatShortMonth, type ISODate } from "@/lib/dates";
 import { plural, SALE_CHANNELS } from "@/lib/labels";
 import { formatMoney, formatRatio, type Money } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -57,13 +58,18 @@ const EVOLUTION_METRICS = [
 	{ value: "profit", label: "Lucro" },
 ] as const;
 
+/** What a bar is called under the chart: "04/11" for a day or the first day of a week, "nov/26" for a month. */
+function barLabel(date: ISODate, unit: Report["evolutionUnit"]) {
+	return unit === "month" ? formatShortMonth(date) : formatDayMonth(date);
+}
+
 export function ReportEvolution({ report }: { report: Report }) {
 	const [selectedKey, setSelectedKey] = useState<string | null>(null);
 	const [metric, setMetric] = useState<"revenue" | "profit">("revenue");
 	const points = (read: (b: Report["evolution"][number]) => Money) =>
 		report.evolution.map((bucket) => ({
 			key: bucket.date,
-			label: bucket.label,
+			label: barLabel(bucket.date, report.evolutionUnit),
 			cents: read(bucket),
 		}));
 
@@ -157,7 +163,7 @@ export function ReportCategories({
 		<ListCard title="Categorias">
 			{categories.map((row) => (
 				<RevenueProfitRow
-					key={row.name}
+					key={row.id ?? "none"}
 					label={row.name}
 					revenue={row.revenue}
 					profit={row.profit}

@@ -41,7 +41,7 @@ src/
                       `signedMoneyTotalField`, `percentField`, `unitsField`, `idField` (a lowercase uuid in a body),
                       `dayField`, `expiryMonthField`)
   lib/dates.ts        the store's day (`storeToday()`, America/Sao_Paulo), `isRealDay()`, `dayProblem()` (the day of
-                      a purchase or sale), `addDays()` and expiry months
+                      a purchase or sale), `addDays()`, `daysBetween()` and expiry months
   lib/preview.ts      `previewOf()`: the product count and first products (thumbs) of a purchase or sale
   lib/money.ts        `MAX_CENTS`, `FULL_PERCENT`, `divideRounded()` and `percentOf()`: the one rounding rule
   lib/text.ts         `blankToNull()` (blank optional text → null) and `onlyDigits()`

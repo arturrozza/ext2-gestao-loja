@@ -21,8 +21,6 @@ export type Shortcut = {
 	subtitle: string;
 	icon: IconType;
 	href: Href;
-	/** The module isn't built yet: the card says so instead of a subtitle, and its screen too. */
-	underConstruction?: boolean;
 	/** Pending items (the active alerts), shown as a red badge; nothing at zero (docs/conventions.md). */
 	badge?: number;
 };
@@ -41,18 +39,9 @@ function alertsSubtitle(alerts: number | undefined) {
 	return alerts > 0 ? "Pedem atenção" : "Tudo certo";
 }
 
-const building = (title: string, icon: IconType, href: Href): Shortcut => ({
-	title,
-	subtitle: "",
-	icon,
-	href,
-	underConstruction: true,
-});
-
 /**
  * Every module is reachable from the home screen, in three groups of three: what's done every day (sell, buy, products),
- * the people around the store, and managing it (results, alerts, settings). Modules without an API yet are marked
- * "Em construção".
+ * the people around the store, and managing it (results, alerts, settings).
  */
 function homeSections(counts: {
 	sales: number | undefined;
@@ -113,7 +102,12 @@ function homeSections(counts: {
 		{
 			title: "Gestão",
 			items: [
-				building("Relatórios", ChartBarIcon, "/reports"),
+				{
+					title: "Relatórios",
+					subtitle: "Lucro por período",
+					icon: ChartBarIcon,
+					href: "/reports",
+				},
 				{
 					title: "Alertas",
 					subtitle: alertsSubtitle(counts.alerts),

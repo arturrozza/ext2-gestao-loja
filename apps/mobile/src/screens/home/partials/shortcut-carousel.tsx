@@ -2,11 +2,10 @@ import { Link } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { UnderConstructionTag } from "@/components/under-construction";
 import { hapticTap } from "@/lib/haptics";
 import type { Shortcut, ShortcutSection } from "./home-shortcuts";
 
-/** Under the title: the module's state, its number, or a placeholder of the same height while the number loads. */
+/** Under the title: the module's number, or a placeholder of the same height while the number loads. */
 function ShortcutSubtitle({
 	item,
 	failed,
@@ -14,7 +13,6 @@ function ShortcutSubtitle({
 	item: Shortcut;
 	failed: boolean;
 }) {
-	if (item.underConstruction) return <UnderConstructionTag />;
 	if (!item.subtitle && !failed) {
 		// Same height as the text line it stands for, so the card doesn't move when the numbers arrive.
 		return (
@@ -31,7 +29,6 @@ function ShortcutSubtitle({
 }
 
 function shortcutLabel(item: Shortcut) {
-	if (item.underConstruction) return `${item.title}, em construção`;
 	return item.badge ? `${item.title}, ${item.badge} pendentes` : item.title;
 }
 
