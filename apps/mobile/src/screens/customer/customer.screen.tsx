@@ -15,6 +15,7 @@ import {
 	useCustomer,
 	useSetCustomerArchived,
 } from "@/queries/customers/use-customers";
+import { WhatsAppLink } from "./partials/whatsapp-link";
 
 function Numbers({ customer }: { customer: Customer }) {
 	return (
@@ -39,6 +40,9 @@ function Numbers({ customer }: { customer: Customer }) {
 			</View>
 			<View className="border-border border-t">
 				<InfoRow label="Telefone" value={formatPhone(customer.phone)} />
+				{customer.address ? (
+					<InfoRow label="Endereço" value={customer.address} />
+				) : null}
 				{customer.note ? (
 					<InfoRow label="Observação" value={customer.note} />
 				) : null}
@@ -74,7 +78,10 @@ function CustomerContent({ customer }: { customer: Customer }) {
 				/>
 			}
 		>
-			<Numbers customer={customer} />
+			<View className="gap-3">
+				<Numbers customer={customer} />
+				{customer.phone ? <WhatsAppLink phone={customer.phone} /> : null}
+			</View>
 		</PersonSales>
 	);
 }

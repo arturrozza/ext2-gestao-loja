@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../../src/db";
 import { auditLog, customers } from "../../src/db/schema";
 import { PAGE_SIZE } from "../../src/lib/pagination";
+import type { CustomersModel } from "../../src/modules/customers/customers.model";
 import { CustomersService } from "../../src/modules/customers/customers.service";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
@@ -105,13 +106,19 @@ describe("CustomersService", () => {
 
 		const created = await CustomersService.create(
 			session,
-			customerBody({ name: " Ana ", phone: "(11) 3333-4444", note: "VIP" }),
+			customerBody({
+				name: " Ana ",
+				phone: "(11) 3333-4444",
+				address: " Rua das Flores, 120 ",
+				note: "VIP",
+			}),
 		);
 
 		expect(created).toEqual({
 			id: expect.any(String),
 			name: "Ana",
 			phone: "1133334444",
+			address: "Rua das Flores, 120",
 			note: "VIP",
 			archived: false,
 			...NO_PURCHASES,
@@ -141,7 +148,12 @@ describe("CustomersService", () => {
 			note: null,
 		});
 
-		expect(created).toMatchObject({ name: "Bia", phone: null, note: null });
+		expect(created).toMatchObject({
+			name: "Bia",
+			phone: null,
+			address: null,
+			note: null,
+		});
 	});
 
 	it("allows two customers with the same name", async () => {
@@ -171,6 +183,39 @@ describe("CustomersService", () => {
 			phone: null,
 			note: "Gosta de floral",
 		});
+	});
+
+	it("edits the address: sets it, keeps it when the body leaves it out, clears it when blank", async () => {
+		const { session } = await signedIn();
+		const customer = await createCustomer(session.store.id, { name: "Ana" });
+		const edit = (body: Partial<CustomersModel["body"]>) =>
+			CustomersService.update(
+				session,
+				customer.id,
+				customerBody({ name: "Ana", ...body }),
+			);
+
+		const set = await edit({ address: "Rua das Flores, 120" });
+		const kept = await edit({ note: "VIP" });
+		const cleared = await edit({ address: "  " });
+
+		expect(set.address).toBe("Rua das Flores, 120");
+		expect(kept).toMatchObject({ address: "Rua das Flores, 120", note: "VIP" });
+		expect(cleared.address).toBeNull();
+	});
+
+	it("keeps the address out of the search", async () => {
+		const { session } = await signedIn();
+		await createCustomer(session.store.id, {
+			name: "Ana",
+			address: "Rua das Flores, 120",
+		});
+
+		const search = (text: string) =>
+			CustomersService.list(session.store.id, { search: text });
+
+		expect((await search("ana")).total).toBe(1);
+		expect((await search("flores")).total).toBe(0);
 	});
 
 	it("refuses to edit an archived customer", async () => {

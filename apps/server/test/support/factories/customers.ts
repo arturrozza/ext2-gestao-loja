@@ -1,8 +1,8 @@
 import { audited } from "../../../src/db/audit";
 import { insertedRow } from "../../../src/db/rows";
 import { customers } from "../../../src/db/schema";
-import { normalizePerson } from "../../../src/lib/person";
 import type { CustomersModel } from "../../../src/modules/customers/customers.model";
+import { normalizeCustomer } from "../../../src/modules/customers/customers.rules";
 
 let sequence = 0;
 
@@ -25,7 +25,7 @@ export async function createCustomer(
 				.insert(customers)
 				.values({
 					storeId,
-					...normalizePerson(customerBody(body)),
+					...normalizeCustomer(customerBody(body)),
 					archivedAt: archived ? new Date() : null,
 				})
 				.returning(),

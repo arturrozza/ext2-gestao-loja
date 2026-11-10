@@ -8,6 +8,12 @@ export const optionalText = z
 	.trim()
 	.transform((value) => value || null);
 
+/** Optional free-text address (the store's, a customer's), with the API's limit so the message names the problem. */
+export const optionalAddress = optionalText.refine(
+	(value) => value === null || value.length <= 300,
+	"O endereço pode ter no máximo 300 caracteres.",
+);
+
 /** Optional phone with area code. */
 export const optionalPhone = optionalText.refine(
 	(value) => value === null || [10, 11].includes(onlyDigits(value).length),

@@ -5,15 +5,17 @@ import { archivedAtValue, insertedRow } from "../../db/rows";
 import { customers } from "../../db/schema";
 import { httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
-import { normalizePerson, personSearchFilter } from "../../lib/person";
+import { personSearchFilter } from "../../lib/person";
 import type { AuthSession } from "../auth/auth.model";
 import { customerSalesColumns } from "../sales/sales.totals";
 import type { CustomersModel } from "./customers.model";
+import { normalizeCustomer } from "./customers.rules";
 
 const columns = {
 	id: customers.id,
 	name: customers.name,
 	phone: customers.phone,
+	address: customers.address,
 	note: customers.note,
 	archivedAt: customers.archivedAt,
 	// What they bought: canceled sales never count (clientes.md).
@@ -118,7 +120,7 @@ export const CustomersService = {
 		input: CustomersModel["body"],
 	): Promise<CustomersModel["customer"]> {
 		const storeId = session.store.id;
-		const values = normalizePerson(input);
+		const values = normalizeCustomer(input);
 		return audited(session.user.id, async (tx) => {
 			const { id } = insertedRow(
 				await tx
@@ -136,7 +138,7 @@ export const CustomersService = {
 		input: CustomersModel["body"],
 	): Promise<CustomersModel["customer"]> {
 		const storeId = session.store.id;
-		const values = normalizePerson(input);
+		const values = normalizeCustomer(input);
 		return audited(session.user.id, async (tx) => {
 			await lockEditable(tx, storeId, id);
 			await tx.update(customers).set(values).where(inStore(storeId, id));

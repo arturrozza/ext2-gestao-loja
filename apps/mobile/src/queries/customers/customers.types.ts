@@ -7,6 +7,8 @@ export type Customer = {
 	name: string;
 	/** Digits only ("11999998888"); shown with `formatPhone`. */
 	phone: string | null;
+	/** Free text. */
+	address: string | null;
 	note: string | null;
 	archived: boolean;
 	/** Active (not canceled) sales only. */
@@ -20,5 +22,6 @@ export type CustomerListFilters = { search: string; archived: boolean };
 export type CustomerInput = {
 	name: string;
 	phone: string | null;
+	address: string | null;
 	note: string | null;
 };

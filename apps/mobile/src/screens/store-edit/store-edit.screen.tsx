@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { AddressField } from "@/components/address-field";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
 import { FormSection } from "@/components/form-section";
@@ -65,14 +66,10 @@ function StoreForm({ store }: { store: StoreProfile }) {
 					error={form.errors.phone}
 					keyboardType="phone-pad"
 				/>
-				<FormField
-					label="Endereço (opcional)"
-					placeholder="Rua, número – bairro, cidade/UF"
+				<AddressField
 					value={form.values.address}
 					onChangeText={(text) => form.set("address", text)}
 					error={form.errors.address}
-					multiline
-					className="h-auto min-h-12 py-3"
 				/>
 			</FormSection>
 		</FormScreen>

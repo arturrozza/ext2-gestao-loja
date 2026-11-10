@@ -7,6 +7,8 @@ const customer = t.Object({
 	name: t.String(),
 	/** Digits only ("11999998888"). */
 	phone: t.Union([t.Null(), t.String()]),
+	/** Free text. */
+	address: t.Union([t.Null(), t.String()]),
 	note: t.Union([t.Null(), t.String()]),
 	archived: t.Boolean(),
 	/** Active (not canceled) sales with this customer. */
@@ -22,6 +24,11 @@ const body = t.Object({
 	name: t.String({ minLength: 1, maxLength: 120, pattern: "\\S" }),
 	/** With the area code, masked or not. */
 	phone: optionalText(30),
+	/**
+	 * Free text. Optional in the contract so an app from before the field still saves: left out, an edit keeps the
+	 * address the customer has.
+	 */
+	address: t.Optional(optionalText(300)),
 	note: optionalText(500),
 });
 

@@ -16,6 +16,8 @@ export const customers = snakeCase.table(
 		name: text().notNull(),
 		/** Digits only, with the area code (10 or 11); the app masks it. */
 		phone: text(),
+		/** Free text, as the store writes it ("Rua das Flores, 120, ap 32 - Jardins"). Not part of the search. */
+		address: text(),
 		note: text(),
 		/** Name and phone lowercased and without accents (`normalizeSearch`): what the search matches. */
 		searchText: text().notNull(),

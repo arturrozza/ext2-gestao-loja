@@ -12,6 +12,21 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Endereço e WhatsApp no cliente (MUN-25)
+
+**Decisão:** o cliente ganha um endereço opcional, que antes estava fora do escopo, e a tela dele ganha um botão que
+abre a conversa no WhatsApp.
+- **Endereço:** um texto livre só, sem separar rua, número, bairro, cidade e CEP. Não entra na busca de clientes.
+- **WhatsApp:** o botão fica só na tela do cliente, não na lista, e só aparece quando há telefone. O número vai com o
+  código do Brasil na frente, porque o telefone é guardado com DDD e sem o país. Sem o aplicativo instalado, a
+  conversa abre no navegador.
+- **Contrato:** o endereço é opcional no corpo da requisição. Um aplicativo de antes do campo continua salvando, e uma
+  edição que não manda o endereço mantém o que o cliente já tem.
+
+**Por quê:** o endereço foi pedido para o cadastro do cliente, e separar em campos só valeria para filtrar por bairro ou
+calcular frete, que ninguém pediu. Na busca, o endereço atrapalharia: quem procura "Flores" pelo nome acharia também
+quem mora na Rua das Flores. Na lista, um ícone por linha polui e é fácil de tocar sem querer.
+
 ## 2026-11-09: Cancelamento de venda e de compra (MUN-17)
 
 **Decisão:** venda e compra se cancelam uma vez só, ficam no histórico marcadas, e o estoque volta por movimentações

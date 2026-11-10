@@ -19,7 +19,16 @@ describe("customers routes", () => {
 		);
 		const id = created.data?.id ?? "";
 		const got = await api.customers({ id }).get({ headers });
-		const edited = await api
+		const edited = await api.customers({ id }).put(
+			customerBody({
+				name: "Ana Souza",
+				address: "Rua das Flores, 120",
+				note: "VIP",
+			}),
+			{ headers },
+		);
+		// An app from before the address field leaves it out: the edit keeps the one saved.
+		const kept = await api
 			.customers({ id })
 			.put(customerBody({ name: "Ana Souza", note: "VIP" }), { headers });
 		const archived = await api
@@ -36,6 +45,7 @@ describe("customers routes", () => {
 		expect(created.data).toMatchObject({
 			name: "Ana",
 			phone: "11999998888",
+			address: null,
 			note: null,
 			archived: false,
 			purchasesCount: 0,
@@ -43,14 +53,19 @@ describe("customers routes", () => {
 			lastPurchaseAt: null,
 		});
 		expect(got.data).toEqual(created.data);
-		expect(edited.data).toMatchObject({ name: "Ana Souza", note: "VIP" });
+		expect(edited.data).toMatchObject({
+			name: "Ana Souza",
+			address: "Rua das Flores, 120",
+			note: "VIP",
+		});
+		expect(kept.data).toEqual(edited.data);
 		expect(archived.data?.archived).toBe(true);
 		expect(listed.data).toMatchObject({ nextCursor: null, total: 1 });
 		expect(listed.data?.items.map((customer) => customer.id)).toEqual([id]);
 		expect(back.data?.archived).toBe(false);
 	});
 
-	it("answers 422 for a blank name, a bad phone, a negative cursor and an id that isn't a uuid", async () => {
+	it("answers 422 for a blank name, a bad phone, a too long address, a negative cursor and an id that isn't a uuid", async () => {
 		const { headers } = await signedIn();
 
 		const blank = await api.customers.post(customerBody({ name: "  " }), {
@@ -58,6 +73,10 @@ describe("customers routes", () => {
 		});
 		const phone = await api.customers.post(
 			customerBody({ phone: "9999-8888" }),
+			{ headers },
+		);
+		const address = await api.customers.post(
+			customerBody({ address: "x".repeat(301) }),
 			{ headers },
 		);
 		const cursor = await api.customers.get({ headers, query: { cursor: -1 } });
@@ -70,6 +89,10 @@ describe("customers routes", () => {
 		expect(phone.error?.value).toMatchObject({
 			code: "validation",
 			field: "phone",
+		});
+		expect(address.error?.value).toMatchObject({
+			code: "validation",
+			field: "address",
 		});
 		expect(cursor.error?.status).toBe(422);
 		expect(badId.error?.status).toBe(422);

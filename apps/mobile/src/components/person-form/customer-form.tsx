@@ -1,4 +1,5 @@
 import type { UseMutationResult } from "@tanstack/react-query";
+import { AddressField } from "@/components/address-field";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
 import { FormSection } from "@/components/form-section";
@@ -37,6 +38,11 @@ export function CustomerFields({ form }: { form: CustomerFormState }) {
 				onChangeText={(text) => set("phone", maskPhone(text))}
 				error={errors.phone}
 				keyboardType="phone-pad"
+			/>
+			<AddressField
+				value={values.address}
+				onChangeText={(text) => set("address", text)}
+				error={errors.address}
 			/>
 			<FormField
 				label="Observação (opcional)"
