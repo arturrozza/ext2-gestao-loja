@@ -14,8 +14,9 @@ Show the maintainer the open work in Linear, easiest first, so they can pick the
    workspace.
 2. List the team's issues: `mcp__linear-ext2__list_issues` with `team: "MUN"`, `limit: 250`. Follow `cursor` while
    `hasNextPage` is true.
-3. Keep only the open ones: drop `statusType` `completed`, `canceled` and `duplicate`, and the status
-   `Waiting for Release` (merged into `main`, nothing left to pick up).
+3. Keep only the ones still available to pick up: drop `statusType` `completed`, `canceled` and `duplicate`, and drop
+   by status name `In Progress` (already being worked on) and `Waiting for Release` (merged into `main`, nothing left
+   to pick up). Filter these two by status name, not `statusType`: both are `started`.
 4. Rate each task's difficulty from what Linear says, reading its description. Do not open the code; this is a quick
    look, not a plan. Weigh, roughly in this order:
    - A business rule still undecided: the decision (recorded in `docs/decisions.md`) comes before any code.
@@ -36,6 +37,7 @@ Brazilian Portuguese, short. One table, then at most three lines of suggestion.
 | **MUN-11** Título | Fácil | Backlog | Sem prioridade | Escopo claro, sem decisão pendente |
 
 After the table, suggest which task to pick up and why in one or two lines. If any task is in `Waiting for Release`,
-add one line naming them (they ship with `/release-prod`). If nothing is open, say so. Do not start any task until the
+add one line naming them (they ship with `/release-prod`). If any task is `In Progress`, add one line naming them too,
+without rating them. If nothing is open, say so. Do not start any task until the
 maintainer chooses; once they do, move it to `In Progress` and assign it to them if unassigned
 (`mcp__linear-ext2__save_issue`), and create the branch `<type>/mun-<n>-<slug>`.
