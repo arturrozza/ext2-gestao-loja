@@ -23,6 +23,7 @@ Other official docs:
 bunx expo install <pkg>      # ALWAYS use this to add deps (resolves the SDK-compatible version)
 bunx expo install --check    # check for incompatible versions (--fix fixes them)
 bun run start                # dev server (or `bun run dev:mobile` at the root)
+bun run start:prod           # dev server against the production API (`bun run start:prod` at the root too)
 bun run typecheck
 bun run doctor               # expo-doctor: must pass with no issues
 ```
@@ -65,6 +66,7 @@ Alias: `@/*` → `src/*`.
   ```
 
   A module still under construction default-exports `underConstructionRoute("Title", presentation)` instead (see Data).
+  A screen shown as a sheet default-exports `sheetRoute(Screen)` (`components/route-sheet.tsx`).
 
 - Each screen lives in `src/screens/<screen>/<screen>.screen.tsx`. Components that belong only to that screen go in
   its `partials/` folder. A partial needed by a second screen moves to `src/components/`.
@@ -82,9 +84,12 @@ Alias: `@/*` → `src/*`.
 - Screens use `ScreenLayout` (header + content + hairline under the header on scroll + bottom gradient behind the tab
   bar; `compactTitle` adds the iOS-style frosted-glass compact bar, `CompactHeader`, that appears on scroll; no vertical
   scroll indicator). On Android, `expo-blur` only blurs inside a `BlurTargetView` passed as `blurTarget`. Stack screens slide in from the right
-  (`ios_from_right` in `_layout.tsx`); create/edit forms open as a sheet from the bottom (`SHEETS` there, `ScreenLayout
-  sheet` + `SheetHeader`). No fade screen transitions and no fade-in of whole screens.
-  Bottom sheets slide up with `withTiming` (`Modal animationType="none"`), close by dragging down, and only the backdrop fades.
+  (`ios_from_right` in `_layout.tsx`); create/edit forms open as a sheet from the bottom (`SHEETS` there, the route
+  file exports `sheetRoute(Screen)`, the screen uses `ScreenLayout sheet` + `SheetHeader`). No fade screen transitions
+  and no fade-in of whole screens.
+  Everything that comes up from the bottom shares one slide (`useSheetMotion`): `BottomSheet`, `SheetModal`, route
+  sheets and `FullScreenModal`. Always ours (`Modal animationType="none"`, route `animation: "none"`), never the
+  system's `slide`; only the backdrop fades. Sheets close by dragging down.
 - Font: Manrope (`src/lib/fonts.ts`). Each weight is its own family: `font-sans`, `font-sans-medium`,
   `font-sans-semibold`, `font-sans-bold`; never `font-medium`/`font-bold`.
 - Base components: React Native Reusables in `src/components/ui/` (ours to edit). Icons: Phosphor (`phosphor-react-native`) via

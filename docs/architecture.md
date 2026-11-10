@@ -237,6 +237,7 @@ Existe um único `.env`, na raiz (copie do `.env.example`).
 | Stack completa no Docker (postgres + server) | `bun run up` / `bun run down` |
 | Server com hot reload | `bun run db:up` e depois `bun run dev:server` (não rode junto com o `server` do Docker: os dois usam a porta 3000) |
 | App | `bun run dev:mobile` |
+| App apontando para a API de produção (sem subir o server) | `bun run start:prod`. Os dados são os reais da loja: use para ver tela, não para testar cadastro |
 
 | Recurso | Dev | Teste |
 | --- | --- | --- |

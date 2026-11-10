@@ -1,3 +1,4 @@
+import { sheetRoute } from "@/components/route-sheet";
 import { NewPurchaseScreen } from "@/screens/new-purchase/new-purchase.screen";
 
-export default NewPurchaseScreen;
+export default sheetRoute(NewPurchaseScreen);

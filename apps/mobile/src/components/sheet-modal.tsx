@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SheetFrame, sheetTop } from "@/components/sheet-frame";
 import { SheetHeader } from "@/components/sheet-header";
+import { useSheetMotion } from "@/components/sheet-motion";
 
 /**
  * A sheet opened from a screen without navigating (pickers that hand a choice back): same look and drag as the form
@@ -23,18 +24,19 @@ export function SheetModal({
 	children: ReactNode;
 }) {
 	const insets = useSafeAreaInsets();
+	const motion = useSheetMotion(open);
 	return (
 		<Modal
-			visible={open}
+			visible={motion.mounted}
 			transparent
-			animationType="slide"
+			animationType="none"
 			statusBarTranslucent
 			navigationBarTranslucent
 			onRequestClose={onClose}
 		>
 			{/* A modal is its own window: gestures need their own root there. */}
 			<GestureHandlerRootView style={styles.root}>
-				<SheetFrame onClose={onClose}>
+				<SheetFrame motion={motion} onClose={onClose}>
 					{/* The view measures itself from the sheet, below the gap on top: the offset puts that gap back. */}
 					<KeyboardAvoidingView
 						behavior="padding"

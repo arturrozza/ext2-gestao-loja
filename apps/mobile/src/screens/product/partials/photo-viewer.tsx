@@ -1,10 +1,9 @@
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { XIcon } from "phosphor-react-native/src/icons/X";
-import { Modal, StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import {
 	GestureDetector,
-	GestureHandlerRootView,
 	usePanGesture,
 	usePinchGesture,
 	useSimultaneousGestures,
@@ -17,6 +16,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FullScreenModal } from "@/components/full-screen-modal";
 import { IconButton } from "@/components/icon-button";
 import { PHOTO_BACKDROP } from "@/lib/theme";
 
@@ -119,23 +119,16 @@ export function PhotoViewer({
 }) {
 	const insets = useSafeAreaInsets();
 	return (
-		<Modal
-			visible={open}
-			animationType="slide"
-			statusBarTranslucent
-			navigationBarTranslucent
-			onRequestClose={onClose}
-		>
-			{/* A modal is its own window: gestures need their own root there. */}
-			<GestureHandlerRootView style={styles.root}>
+		<FullScreenModal open={open} onClose={onClose}>
+			<View style={styles.root}>
 				{/* The app's status bar is dark (root layout): on the black backdrop it has to be light. */}
 				<StatusBar style="light" />
 				<ZoomablePhoto uri={uri} label={label} />
 				<View className="absolute right-5" style={{ top: insets.top + 8 }}>
 					<IconButton icon={XIcon} label="Fechar foto" onPress={onClose} />
 				</View>
-			</GestureHandlerRootView>
-		</Modal>
+			</View>
+		</FullScreenModal>
 	);
 }
 

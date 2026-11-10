@@ -1,8 +1,9 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { XIcon } from "phosphor-react-native/src/icons/X";
-import { useRef } from "react";
-import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FullScreenModal } from "@/components/full-screen-modal";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -37,7 +38,7 @@ function PermissionAsk({
 
 /**
  * Full-screen camera that reads one barcode (EAN/UPC/Code 128) and hands it to `onScanned`. Used in the product
- * form, the product search, sales and purchases (docs/product/produtos.md). The camera only mounts while open.
+ * form, the product search, sales and purchases (docs/product/produtos.md). The camera only mounts while open (and while it slides away).
  */
 export function BarcodeScanner({
 	open,
@@ -52,23 +53,20 @@ export function BarcodeScanner({
 	const [permission, requestPermission] = useCameraPermissions();
 	// onBarcodeScanned fires for every frame with a code: only the first one counts.
 	const handled = useRef(false);
+	useEffect(() => {
+		if (open) handled.current = false;
+	}, [open]);
 
 	return (
-		<Modal
-			visible={open}
-			animationType="slide"
-			onRequestClose={onClose}
-			onShow={() => {
-				handled.current = false;
-			}}
-		>
+		<FullScreenModal open={open} onClose={onClose}>
 			<View className="flex-1 bg-secondary">
 				{permission?.granted ? (
 					<CameraView
 						style={StyleSheet.absoluteFill}
 						barcodeScannerSettings={{ barcodeTypes: [...BARCODE_TYPES] }}
 						onBarcodeScanned={(result) => {
-							if (handled.current) return;
+							// Still mounted while it slides away: a code read after closing doesn't count.
+							if (!open || handled.current) return;
 							handled.current = true;
 							hapticPress();
 							onScanned(result.data);
@@ -106,6 +104,6 @@ export function BarcodeScanner({
 					</View>
 				) : null}
 			</View>
-		</Modal>
+		</FullScreenModal>
 	);
 }

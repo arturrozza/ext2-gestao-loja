@@ -1,3 +1,4 @@
+import { sheetRoute } from "@/components/route-sheet";
 import { EditCustomerScreen } from "@/screens/edit-customer/edit-customer.screen";
 
-export default EditCustomerScreen;
+export default sheetRoute(EditCustomerScreen);

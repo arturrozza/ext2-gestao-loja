@@ -156,13 +156,20 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
 - Sem barra de rolagem vertical visível nas telas (`showsVerticalScrollIndicator={false}` no `ScreenLayout`).
 - Transições entre telas: deslizam da direita (`ios_from_right`). Formulários de criar e editar abrem como folha, imitando
   o modal do iPhone: sobem de baixo, deixam um espaço em cima com a tela anterior aparecendo, têm cantos arredondados e
-  um botão grande de fechar (`ScreenLayout sheet` + `SheetHeader`; a rota entra em `SHEETS` no `(app)/_layout.tsx`).
+  um botão grande de fechar (`ScreenLayout sheet` + `SheetHeader`). A rota entra em `SHEETS` no `(app)/_layout.tsx` e o
+  arquivo dela exporta `sheetRoute(Tela)` (`components/route-sheet.tsx`), que é quem desenha a folha.
   Nada de transição de tela com fade (`fade`, `fade_from_bottom`) nem fade no conteúdo ao abrir a tela.
-- Gavetas (bottom sheets, como a do "+"): sobem deslizando de baixo com `withTiming` (abre ~320 ms com
-  `Easing.out(Easing.cubic)`, fecha ~220 ms) e descem ao fechar. Só o fundo escurecido (`BACKDROP`) muda de opacidade; a
-  gaveta nunca faz fade. `Modal` com `animationType="none"`; a animação é nossa. Exceção: folhas de tela inteira fora da navegação
-  (`SheetModal`, leitor de código) usam o `animationType="slide"` nativo, que já sobe de baixo.
-- **Animações suaves, sem bounce:** Reanimated com `withTiming` (120–320 ms). `LinearTransition` quando itens entram,
+- **Tudo que sobe de baixo abre e fecha igual** (`useSheetMotion`, em `components/sheet-motion.tsx`): gavetas
+  (`BottomSheet`, como a do "+"), folhas de escolher (`SheetModal`), formulários (`sheetRoute`) e modais de tela cheia
+  (`FullScreenModal`: foto do produto, leitor de código). Abre em 450 ms, subindo rápido e freando devagar no final
+  (`Easing.bezier(0.32, 0.72, 0, 1)`, a curva das folhas do iPhone), e fecha em 280 ms acelerando para baixo
+  (`Easing.in(Easing.cubic)`). Só o fundo escurecido (`BACKDROP`) muda de opacidade; a folha nunca faz fade. A animação
+  é sempre nossa: `Modal` com `animationType="none"` e rota com `animation: "none"` (`SHEET`), nunca o `slide` do
+  sistema, que sobe o fundo escuro junto com a folha. Nos formulários, qualquer saída (fechar, arrastar, voltar do
+  sistema, `router.back()` ou `replace` depois de salvar) espera a folha descer; quem segura é o `RouteSheet`, e o
+  `DiscardGuard` pergunta por ele.
+- **Animações suaves, sem bounce:** Reanimated com `withTiming` (120–320 ms; a abertura das folhas, 450 ms, é a
+  exceção). `LinearTransition` quando itens entram,
   saem ou expandem, e `FadeIn` só para pedaços pequenos que surgem dentro da tela (erro de campo, detalhe
   expandido), nunca na tela inteira. Nada de `springify()`. Não ponha `className` em
   `Animated.View`: use uma `View` dentro dele.
@@ -206,6 +213,8 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   `automaticallyAdjustKeyboardInsets`; no Android, `KeyboardAvoidingView` só em volta da área que rola). No iOS todo
   campo de texto tem uma barra com "OK" em cima do teclado para fechá-lo (`DoneTextInput`: todo campo de texto usa
   ele, nunca um `TextInput` puro; `Input`, `AmountField`, `QuantityStepper` e `SearchField` já usam). Gavetas (`BottomSheet`) continuam subindo com o teclado.
+  Nas folhas fora da navegação (`SheetModal`: escolher produto, "Nova categoria") o rodapé também sobe, porque a folha
+  inteira encolhe com o teclado.
 - **Nada de card em volta de campos** (o mantenedor vetou card dentro de card): os campos ficam direto na folha branca.
   Para separar grupos, use o título da `FormSection`; para separar itens repetidos (produtos de uma venda ou compra,
   custos), um fio (`border-border border-b`). Blocos só de leitura (resultado da venda, custo atual, prévia do ajuste)

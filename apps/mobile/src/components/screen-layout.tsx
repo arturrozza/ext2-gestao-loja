@@ -20,7 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CompactHeader } from "@/components/compact-header";
-import { SheetFrame, sheetTop } from "@/components/sheet-frame";
+import { sheetTop } from "@/components/sheet-frame";
 import { Text } from "@/components/ui/text";
 import { DIVIDER, FADE, FADE_MUTED, THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -70,22 +70,12 @@ type ScreenLayoutProps<T> = {
 	/** Pull to refresh on a screen without `list` (a list brings its own). */
 	onRefresh?: () => unknown;
 	/**
-	 * Shown as a sheet over the previous screen (create and edit forms): a gap at the top, rounded top corners. The route
-	 * must be presented as a transparent modal sliding from the bottom (`(app)/_layout.tsx`). Pair with `SheetHeader`.
+	 * The screen is inside a sheet (create and edit forms): white page, room for the gap above it. The sheet itself comes
+	 * from the route, which exports `sheetRoute(Screen)` and is listed in `SHEETS` (`(app)/_layout.tsx`). Pair with
+	 * `SheetHeader`.
 	 */
 	sheet?: boolean;
 };
-
-/** Wraps the screen in a `SheetFrame` when it's shown as a sheet. */
-function MaybeSheet({
-	sheet,
-	children,
-}: {
-	sheet: boolean;
-	children: ReactNode;
-}) {
-	return sheet ? <SheetFrame>{children}</SheetFrame> : children;
-}
 
 /**
  * Keeps the focused field above the keyboard without lifting the footer: the footer stays at the bottom, under the
@@ -315,47 +305,41 @@ export function ScreenLayout<T = never>({
 
 	// Only the scroll area makes room for the keyboard; the footer stays at the bottom, under it (`KeyboardRoom`).
 	return (
-		<MaybeSheet sheet={sheet}>
-			<View
-				className={cn("flex-1", tone === "muted" ? "bg-card" : "bg-background")}
-			>
-				{header}
-				<KeyboardRoom sheet={sheet}>
-					<BlurTargetView ref={blurTarget} style={styles.fill}>
-						{list ? (
-							<ListBody
-								list={list}
-								header={content}
-								scrollProps={scrollProps}
-							/>
-						) : (
-							<ScrollView {...scrollProps} refreshControl={refreshControl}>
-								{content}
-							</ScrollView>
-						)}
-					</BlurTargetView>
-					{compactTitle ? (
-						<CompactHeader
-							title={compactTitle}
-							scrollY={scrollY}
-							blurTarget={blurTarget}
-						/>
+		<View
+			className={cn("flex-1", tone === "muted" ? "bg-card" : "bg-background")}
+		>
+			{header}
+			<KeyboardRoom sheet={sheet}>
+				<BlurTargetView ref={blurTarget} style={styles.fill}>
+					{list ? (
+						<ListBody list={list} header={content} scrollProps={scrollProps} />
 					) : (
-						<Animated.View
-							pointerEvents="none"
-							style={[styles.edge, styles.divider, dividerStyle]}
-						/>
+						<ScrollView {...scrollProps} refreshControl={refreshControl}>
+							{content}
+						</ScrollView>
 					)}
-					<LinearGradient
-						pointerEvents="none"
-						colors={[fade.clear, fade.half, fade.solid]}
-						locations={withTabs ? [0, 0.35, 0.6] : [0, 0.5, 1]}
-						style={[styles.edge, withTabs ? styles.bottomTabs : styles.bottom]}
+				</BlurTargetView>
+				{compactTitle ? (
+					<CompactHeader
+						title={compactTitle}
+						scrollY={scrollY}
+						blurTarget={blurTarget}
 					/>
-				</KeyboardRoom>
-				{footer}
-			</View>
-		</MaybeSheet>
+				) : (
+					<Animated.View
+						pointerEvents="none"
+						style={[styles.edge, styles.divider, dividerStyle]}
+					/>
+				)}
+				<LinearGradient
+					pointerEvents="none"
+					colors={[fade.clear, fade.half, fade.solid]}
+					locations={withTabs ? [0, 0.35, 0.6] : [0, 0.5, 1]}
+					style={[styles.edge, withTabs ? styles.bottomTabs : styles.bottom]}
+				/>
+			</KeyboardRoom>
+			{footer}
+		</View>
 	);
 }
 

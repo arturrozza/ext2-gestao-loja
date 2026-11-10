@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/page-title";
+import { sheetRoute } from "@/components/route-sheet";
 import { ScreenHeader } from "@/components/screen-header";
 import { ScreenLayout } from "@/components/screen-layout";
 import { SheetHeader } from "@/components/sheet-header";
@@ -45,9 +46,12 @@ export function underConstructionRoute(
 	title: string,
 	presentation: Presentation = "stack",
 ) {
-	return function UnderConstructionRoute() {
+	function UnderConstructionRoute() {
 		return (
 			<UnderConstructionScreen title={title} presentation={presentation} />
 		);
-	};
+	}
+	return presentation === "sheet"
+		? sheetRoute(UnderConstructionRoute)
+		: UnderConstructionRoute;
 }

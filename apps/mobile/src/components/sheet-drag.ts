@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { type PanGesture, usePanGesture } from "react-native-gesture-handler";
-import { Easing, type SharedValue, withTiming } from "react-native-reanimated";
+import { Easing, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import type { SheetMotion } from "@/components/sheet-motion";
 import { hapticTap } from "@/lib/haptics";
 
 /** Drag-down gesture of the sheet the screen is in; `SheetHeader` attaches it. `null` outside a sheet. */
@@ -28,11 +29,12 @@ const REFUSED_AFTER_MS = 500;
  * activates once the finger moves down.
  */
 export function useDragToClose(
-	dragY: SharedValue<number>,
-	height: SharedValue<number>,
+	{ open, dragY, height }: Pick<SheetMotion, "open" | "dragY" | "height">,
 	onClose: () => void,
 ) {
 	const mounted = useRef(true);
+	const stillOpen = useRef(open);
+	stillOpen.current = open;
 	const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	useEffect(
 		() => () => {
@@ -45,7 +47,10 @@ export function useDragToClose(
 		hapticTap();
 		onClose();
 		timer.current = setTimeout(() => {
-			if (mounted.current) dragY.value = withTiming(0, SETTLE);
+			// Accepted meanwhile (it's sliding down): pulling it back would bring it up again.
+			if (mounted.current && stillOpen.current) {
+				dragY.value = withTiming(0, SETTLE);
+			}
 		}, REFUSED_AFTER_MS);
 	};
 	return usePanGesture({

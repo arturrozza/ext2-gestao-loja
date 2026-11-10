@@ -12,6 +12,24 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Uma animação só para tudo que sobe de baixo (MUN-28)
+
+**Decisão:** gavetas, folhas de escolher, formulários e modais de tela cheia (foto, leitor de código) abrem e fecham
+com a mesma animação, feita pelo app (`useSheetMotion`): abre em 450 ms, subindo rápido e freando devagar, e fecha em
+280 ms. Só o fundo escurece; a folha nunca aparece por fade e não quica. A tela de trás não encolhe.
+- **Formulários:** o navegador deixou de animar essas rotas (`animation: "none"`). A folha é desenhada pela rota
+  (`sheetRoute`), e toda saída (fechar, arrastar, voltar do sistema, navegar depois de salvar) é segurada até a folha
+  descer. Um lugar só segura a saída (`RouteSheet`); o aviso de descartar pergunta por ele.
+- **"Nova categoria":** virou folha de formulário (cabeçalho com fechar, botão fixo embaixo, aviso ao fechar com nome
+  digitado). Continua sendo uma folha sobre a tela, não uma rota, para o cadastro de produto receber a categoria criada.
+- **`bun run start:prod`:** sobe o app de desenvolvimento apontando para a API de produção, para ver telas sem subir o
+  server. Os dados são os reais da loja.
+
+**Por quê:** havia quatro jeitos de abrir. O `slide` do sistema sobe o fundo escuro junto com a folha, como um bloco, e
+a transição do navegador não escurecia a tela de trás; nenhum dos dois deixa escolher a curva. Com a animação nossa em
+tudo, o valor é ajustado em um lugar. Segurar a saída dos formulários foi o preço: sem isso a tela sumiria seca ao
+fechar. Encolher a tela de trás, como no iPhone, ficou de fora por exigir mexer na raiz do app. Foto e leitor de código
+não fecham arrastando: na foto o arrasto já move o zoom.
 ## 2026-11-09: Alertas só de estoque e validade, e resumo do mês na tela inicial (MUN-18)
 
 **Decisão:** os alertas ficam em quatro: sem estoque, estoque baixo, vencido e perto de vencer. Margem baixa, margem

@@ -1,14 +1,10 @@
-import { useRouter } from "expo-router";
 import { vars } from "nativewind";
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, {
-	useAnimatedStyle,
-	useSharedValue,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SheetDragContext, useDragToClose } from "@/components/sheet-drag";
-import { leaveScreen } from "@/lib/navigation";
+import { SheetBackdrop, type SheetMotion } from "@/components/sheet-motion";
 import { SHEET_SHADOW } from "@/lib/theme";
 
 /**
@@ -24,44 +20,39 @@ export function sheetTop(insetTop: number) {
 	return insetTop + 10;
 }
 
-/** Position of the dragged sheet and its gesture. */
-function useSheetDrag(onClose: () => void) {
-	const y = useSharedValue(0);
-	const height = useSharedValue(800);
-	const gesture = useDragToClose(y, height, onClose);
-	const style = useAnimatedStyle(() => ({
-		transform: [{ translateY: y.value }],
-	}));
-	return { gesture, style, height };
-}
-
 /**
- * The sheet's card, imitating the iPhone's modal: a gap at the top where the previous screen shows, rounded top corners,
- * white with gray cards, and dragged down from its header (`SheetHeader`) to close. `onClose` defaults to going back.
+ * The sheet's card, imitating the iPhone's modal: a gap at the top where the previous screen shows (dimmed), rounded top
+ * corners, white with gray cards, and dragged down from its header (`SheetHeader`) to close. `motion` slides it in and
+ * out (`useSheetMotion`); whoever owns it decides what closing means (a route goes back, a modal hides).
  */
 export function SheetFrame({
+	motion,
 	onClose,
 	children,
 }: {
-	onClose?: () => void;
+	motion: SheetMotion;
+	onClose: () => void;
 	children: ReactNode;
 }) {
-	const router = useRouter();
 	const insets = useSafeAreaInsets();
-	const drag = useSheetDrag(onClose ?? (() => leaveScreen(router)));
+	const drag = useDragToClose(motion, onClose);
 	return (
-		<View className="flex-1" style={{ paddingTop: sheetTop(insets.top) }}>
+		<View
+			className="flex-1"
+			style={{ paddingTop: sheetTop(insets.top) }}
+			// On its way out it's no longer there to be tapped: no second save, no second close.
+			pointerEvents={motion.open ? "auto" : "none"}
+		>
+			<SheetBackdrop motion={motion} onPress={onClose} />
 			<Animated.View
-				style={[styles.fill, styles.lift, drag.style]}
-				onLayout={(event) => {
-					drag.height.value = event.nativeEvent.layout.height;
-				}}
+				style={[styles.fill, styles.lift, motion.sheetStyle]}
+				onLayout={motion.onLayout}
 			>
 				<View
 					className="flex-1 overflow-hidden rounded-t-[24px]"
 					style={SHEET_SURFACES}
 				>
-					<SheetDragContext.Provider value={drag.gesture}>
+					<SheetDragContext.Provider value={drag}>
 						{children}
 					</SheetDragContext.Provider>
 				</View>

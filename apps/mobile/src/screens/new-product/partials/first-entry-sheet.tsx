@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useRef } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,12 @@ export function FirstEntrySheet({
 }: {
 	product: { id: string; name: string } | null;
 }) {
-	// One way out: a second tap (or the sheet closing after the first) must not navigate again.
-	const left = useRef(false);
+	// One way out: after the first tap this drawer closes, sliding down together with the form's sheet, and the sheet
+	// drops any navigation that comes after the first (`RouteSheet`).
+	const [left, setLeft] = useState(false);
 	const open = (target: "purchase" | "product") => {
-		if (!product || left.current) return;
-		left.current = true;
+		if (!product || left) return;
+		setLeft(true);
 		if (target === "purchase") {
 			router.replace({
 				pathname: "/purchases/new",
@@ -31,7 +32,7 @@ export function FirstEntrySheet({
 
 	return (
 		<BottomSheet
-			open={product !== null}
+			open={product !== null && !left}
 			onClose={() => open("product")}
 			title="Produto cadastrado"
 		>

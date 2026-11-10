@@ -1,3 +1,4 @@
+import { sheetRoute } from "@/components/route-sheet";
 import { ChangePasswordScreen } from "@/screens/change-password/change-password.screen";
 
-export default ChangePasswordScreen;
+export default sheetRoute(ChangePasswordScreen);

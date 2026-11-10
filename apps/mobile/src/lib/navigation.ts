@@ -6,9 +6,12 @@ export function leaveScreen(router: ReturnType<typeof useRouter>) {
 	else router.replace("/");
 }
 
-/** Create and edit forms: a sheet that slides up over the screen it came from (`ScreenLayout sheet`). */
+/**
+ * Create and edit forms: a sheet over the screen it came from. The navigator only puts it there; the slide and the
+ * dimmed backdrop are the sheet's own (`sheetRoute`), so the route file must export `sheetRoute(Screen)`.
+ */
 export const SHEET = {
 	presentation: "transparentModal",
-	animation: "slide_from_bottom",
+	animation: "none",
 	contentStyle: { backgroundColor: "transparent" },
 } as const;
