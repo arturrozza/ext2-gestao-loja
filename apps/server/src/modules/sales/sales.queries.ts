@@ -9,6 +9,7 @@ import {
 	inArray,
 	isNull,
 	lt,
+	lte,
 	type SQL,
 	sql,
 } from "drizzle-orm";
@@ -29,7 +30,7 @@ import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
 import { photoUrlOf } from "../../lib/photo-storage";
 import { previewOf } from "../../lib/preview";
 import type { SalesModel } from "./sales.model";
-import { marginOf, periodStart } from "./sales.rules";
+import { type DayTotals, marginOf, periodStart } from "./sales.rules";
 
 /* Sales read back (docs/product/vendas.md): the numbers kept when each was entered, never recomputed. */
 
@@ -264,4 +265,29 @@ export async function listSales(
 		total,
 		totals,
 	};
+}
+
+/** The store's active sales of each day from `start` to `end` (inclusive), summed; days without sales are missing. */
+export function dailyTotals(
+	storeId: string,
+	start: ISODate,
+	end: ISODate,
+): Promise<DayTotals[]> {
+	return db
+		.select({
+			date: sales.date,
+			revenue: sql`sum(${sales.revenue})`.mapWith(Number),
+			profit: sql`sum(${sales.profit})`.mapWith(Number),
+			salesCount: count(),
+		})
+		.from(sales)
+		.where(
+			and(
+				eq(sales.storeId, storeId),
+				active,
+				gte(sales.date, start),
+				lte(sales.date, end),
+			),
+		)
+		.groupBy(sales.date);
 }

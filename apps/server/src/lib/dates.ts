@@ -31,6 +31,11 @@ export function monthOf(day: ISODate): ExpiryMonth {
 	return day.slice(0, 7);
 }
 
+/** The first day of the month of `day` ("2026-11-09" → "2026-11-01"). */
+export function monthStart(day: ISODate): ISODate {
+	return `${monthOf(day)}-01`;
+}
+
 /** How an expiry month is stored: the first day of the month ("2027-03" → "2027-03-01"). */
 export function expiryToDate(expiry: ExpiryMonth): ISODate {
 	return `${expiry}-01`;

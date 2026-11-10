@@ -1,12 +1,15 @@
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
+import { QueryView } from "@/components/query-states";
 import { ScreenLayout } from "@/components/screen-layout";
+import { SummarySkeleton } from "@/components/skeleton";
 import { Text } from "@/components/ui/text";
-import { UnderConstructionCard } from "@/components/under-construction";
 import { hapticTap } from "@/lib/haptics";
 import { initials } from "@/lib/masks";
 import { useSession } from "@/queries/auth/use-auth";
+import { useHomeSummary } from "@/queries/home/use-home";
 import { useHomeShortcuts } from "./partials/home-shortcuts";
+import { ProfitHighlight } from "./partials/profit-highlight";
 import { ShortcutCarousel } from "./partials/shortcut-carousel";
 
 function greeting() {
@@ -47,25 +50,23 @@ function HomeGreeting() {
 
 /**
  * Home (light-gray page, white cards): month summary on top, then one carousel of shortcuts per group of modules.
- * The summary comes with sales (MUN-18; `partials/profit-highlight.tsx` is its card); until then it's under
- * construction.
  */
 export function HomeScreen() {
-	const home = useHomeShortcuts();
+	const summary = useHomeSummary();
+	const home = useHomeShortcuts(summary.data?.alerts);
 
 	return (
 		<ScreenLayout
 			bottom="tabs"
 			tone="muted"
 			compactTitle="Início"
-			onRefresh={home.refetch}
+			onRefresh={() => Promise.all([summary.refetch(), home.refetch()])}
 			contentClassName="gap-7 pt-3"
 		>
 			<HomeGreeting />
-			<UnderConstructionCard
-				title="Resumo do mês"
-				description="Lucro, vendas e custos do mês chegam com as vendas."
-			/>
+			<QueryView query={summary} skeleton={<SummarySkeleton />}>
+				{(data) => <ProfitHighlight summary={data} />}
+			</QueryView>
 			{home.sections.map((section) => (
 				<ShortcutCarousel
 					key={section.title}

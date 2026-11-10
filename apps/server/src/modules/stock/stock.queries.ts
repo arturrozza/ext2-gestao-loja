@@ -82,7 +82,7 @@ export function stockStateFilter(state: StockState, today: ISODate): SQL {
 		case "low":
 			return sql`(${stockQuantity()} > 0 and ${stockQuantity()} <= ${products.minStock})`;
 		case "out":
-			return sql`${stockQuantity()} = 0`;
+			return sql`(${stockQuantity()} = 0 and ${products.minStock} is not null)`;
 		case "near_expiry":
 			return hasLot(lotNearExpiry(today));
 		case "expired":

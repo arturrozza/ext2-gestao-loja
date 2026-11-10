@@ -67,14 +67,6 @@ function StoreSettingsCard() {
 						label="Avisar vencimento"
 						value={`${settings.expiryWarningDays} dias antes`}
 					/>
-					<InfoRow
-						label="Período de análise"
-						value={`últimos ${settings.staleProductDays} dias`}
-					/>
-					<InfoRow
-						label="Margem baixa"
-						value={`abaixo de ${formatPercent(settings.lowMarginPercent)}`}
-					/>
 				</ListCard>
 			)}
 		</QueryView>

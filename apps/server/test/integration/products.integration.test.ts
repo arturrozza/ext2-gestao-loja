@@ -587,18 +587,26 @@ describe("product stock", () => {
 		);
 	}
 
-	it("starts at zero, out of stock", async () => {
+	it("starts at zero, out of stock only with a minimum", async () => {
 		const { session } = await signedIn();
 
-		const product = await ProductsService.create(session, productBody());
+		const followed = await ProductsService.create(
+			session,
+			productBody({ minStock: 5 }),
+		);
+		const unfollowed = await ProductsService.create(
+			session,
+			productBody({ name: "Sem mínimo", minStock: null }),
+		);
 
-		expect(product).toMatchObject({
+		expect(followed).toMatchObject({
 			stock: 0,
 			sellableStock: 0,
 			averageCost: 0,
 			stockValue: 0,
 			flags: { lowStock: false, outOfStock: true },
 		});
+		expect(unfollowed.flags).toMatchObject({ outOfStock: false });
 	});
 
 	it("shows the stock and the average cost the purchases left, in the list and the product", async () => {
@@ -670,6 +678,8 @@ describe("product stock", () => {
 		const plenty = await createProduct(storeId, { name: "A farto" });
 		const low = await createProduct(storeId, { name: "B baixo", minStock: 5 });
 		await createProduct(storeId, { name: "C zerado", minStock: 5 });
+		// Zero without a minimum: nobody follows it, so it isn't "out" (alertas.md).
+		await createProduct(storeId, { name: "E nunca comprado" });
 		const expired = await createProduct(storeId, {
 			name: "D vencido",
 			hasExpiry: true,
@@ -697,7 +707,7 @@ describe("product stock", () => {
 			"C zerado",
 			"D vencido",
 		]);
-		expect(await list([])).toHaveLength(4);
+		expect(await list([])).toHaveLength(5);
 	});
 
 	it("filters exactly the products whose flags say so", async () => {

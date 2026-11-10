@@ -1,4 +1,4 @@
-import { addDays, dayProblem, type ISODate, monthOf } from "../../lib/dates";
+import { addDays, dayProblem, type ISODate, monthStart } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { MAX_CENTS, percentOf } from "../../lib/money";
 import type { LockedProduct } from "../products/products.lock";
@@ -240,9 +240,17 @@ export function periodStart(
 ): ISODate | null {
 	if (period === "today") return today;
 	if (period === "7d") return addDays(today, -6);
-	if (period === "month") return `${monthOf(today)}-01`;
+	if (period === "month") return monthStart(today);
 	return null;
 }
+
+/** The active sales of one day, summed (`dailyTotals`). */
+export type DayTotals = {
+	date: ISODate;
+	revenue: number;
+	profit: number;
+	salesCount: number;
+};
 
 /** Profit ÷ revenue; `null` without revenue (a sale fully discounted). */
 export function marginOf(profit: number, revenue: number): number | null {

@@ -1,13 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { underConstruction } from "@/queries/under-construction";
-import type { HomeSummary } from "./home.types";
+import { api, request } from "@/lib/api";
 
 export const homeKeys = { summary: ["home", "summary"] as const };
 
-/** Month summary of the home (MUN-18): under construction. */
+/** The home's month summary, week bars and number of alerts. */
 export function useHomeSummary() {
 	return useQuery({
 		queryKey: homeKeys.summary,
-		queryFn: () => underConstruction<HomeSummary>(),
+		queryFn: () => request(api.home.get()),
 	});
 }

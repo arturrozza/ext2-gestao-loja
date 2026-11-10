@@ -139,6 +139,13 @@ describe("stockFlags", () => {
 			outOfStock: false,
 		});
 	});
+
+	it("is never out of stock without a minimum: the store doesn't follow it", () => {
+		expect(stockFlags(0, null)).toEqual({
+			lowStock: false,
+			outOfStock: false,
+		});
+	});
 });
 
 describe("stockSummary", () => {

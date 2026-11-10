@@ -12,6 +12,22 @@ Formato:
 **Por quê:** o motivo, e as alternativas descartadas quando ajudar.
 ```
 
+## 2026-11-09: Alertas só de estoque e validade, e resumo do mês na tela inicial (MUN-18)
+
+**Decisão:** os alertas ficam em quatro: sem estoque, estoque baixo, vencido e perto de vencer. Margem baixa, margem
+negativa e produto parado saíram do MVP, e os campos de período de análise e de margem baixa sumiram das
+configurações no app (as colunas continuam no banco, sem uso). A tela de Alertas mostra um card por tipo, com quantos
+produtos estão nele, e o card abre a lista de Produtos com aquele filtro. "Sem estoque" passa a valer só para produto
+com estoque mínimo definido, no alerta, no filtro e na etiqueta da lista. A tela inicial mostra o resumo do mês: lucro,
+faturamento, margem, número de vendas, a variação do lucro contra os mesmos dias do mês anterior (sem número quando o
+mês anterior não teve lucro) e as vendas dos últimos 7 dias. O atalho de Alertas mostra o total.
+**Por quê:** o mantenedor pediu KISS e nada de spam para o cliente. Os alertas de margem e de produto parado exigiam
+regras sem resposta clara (como dividir os custos da venda entre os produtos, o que fazer com brinde, de quando conta o
+"parado") e geravam aviso à toa; a margem por produto já está prevista nos Relatórios. Reaproveitar os filtros de
+Produtos deixa o número do card sempre igual ao da lista e evita uma tela nova de alertas. Sem a exigência do mínimo,
+uma loja que cadastra o catálogo inteiro antes de comprar abriria com centenas de "sem estoque". Isso fecha a dúvida
+"produto parado que nunca vendeu", e substitui os padrões provisórios de margem e de produto parado de 2026-11-04.
+
 ## 2026-11-09: Endereço e WhatsApp no cliente (MUN-25)
 
 **Decisão:** o cliente ganha um endereço opcional, que antes estava fora do escopo, e a tela dele ganha um botão que
@@ -221,7 +237,7 @@ ainda não existem mostram "Em construção" e escondem as ações, e estoque e 
 Estoque. A sugestão de "Cadastrar primeira entrada" passou para Compras (MUN-12), e o campo de foto some do cadastro
 até a tarefa de foto (MUN-11), para não aceitar uma foto que não seria salva. (Mudou na MUN-12: compras, estoque,
 custo e a primeira entrada já estão no app. Mudou de novo na MUN-13 e na MUN-16: estoque e vendas também; e na MUN-17,
-os cancelamentos. Seguem em construção os relatórios, os alertas e o resumo da tela inicial.)
+os cancelamentos; e na MUN-18, os alertas e o resumo da tela inicial. Seguem em construção os relatórios.)
 **Por quê:** excluir uma categoria tiraria os produtos dela e mudaria os relatórios por categoria do passado; arquivar
 esconde sem perder nada. Editar arquivado não tem uso e abre espaço para mexer no que já é histórico. Ligar só
 produtos à API deixaria compras, vendas e estoque falsos apontando para produtos que não existem mais; mostrar "Em
@@ -315,8 +331,8 @@ paginadas e virtualizadas, e produto se escolhe sempre por um seletor em tela ch
 Onde as regras não diziam, as telas adotaram estes padrões, provisórios até o mantenedor ou o cliente confirmar:
 
 - **Condição de pagamento:** "À vista" e "A prazo".
-- **Janela da margem:** o mesmo período do produto parado (60 dias por padrão), já que as regras usam um número só.
-- **Produto parado que nunca vendeu:** conta a partir da primeira entrada em estoque.
+- **Janela da margem** e **produto parado que nunca vendeu:** saíram com os alertas de margem e de produto parado
+  (MUN-18).
 - **Margem por produto:** os custos e o desconto da venda são divididos pelo valor de cada item.
 - **Cancelar compra:** bloqueado também se unidades saíram por ajuste, não só por venda.
 - **Unidades vencidas:** contam no valor em estoque até serem descartadas.

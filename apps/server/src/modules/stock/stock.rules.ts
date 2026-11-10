@@ -136,7 +136,9 @@ export type QuantityFlags = { lowStock: boolean; outOfStock: boolean };
 export type ExpiryFlags = { nearExpiry: boolean; expired: boolean };
 
 /**
- * Low: at or below the minimum, while there's some (none at all is "out", not also low). Without a minimum, never low.
+ * Low: at or below the minimum, while there's some (none at all is "out", not also low). Without a minimum, never low
+ * nor out: the minimum is how the store says it follows a product, so a product registered and never bought isn't
+ * an alert (alertas.md).
  * Both count every unit, expired ones included until discarded (estoque.md): a product whose only units are expired
  * is low by its minimum, never "in_stock" (nothing sellable).
  */
@@ -146,7 +148,7 @@ export function stockFlags(
 ): QuantityFlags {
 	return {
 		lowStock: quantity > 0 && minStock !== null && quantity <= minStock,
-		outOfStock: quantity === 0,
+		outOfStock: quantity === 0 && minStock !== null,
 	};
 }
 

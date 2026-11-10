@@ -6,10 +6,12 @@ import {
 	loggable,
 	validationError,
 } from "./lib/http-error";
+import { alertsController } from "./modules/alerts/alerts.controller";
 import { authController } from "./modules/auth/auth.controller";
 import { categoriesController } from "./modules/categories/categories.controller";
 import { customersController } from "./modules/customers/customers.controller";
 import { healthController } from "./modules/health/health.controller";
+import { homeController } from "./modules/home/home.controller";
 import { productsController } from "./modules/products/products.controller";
 import { purchasesController } from "./modules/purchases/purchases.controller";
 import { resellersController } from "./modules/resellers/resellers.controller";
@@ -56,6 +58,8 @@ export const app = new Elysia()
 	.use(resellersController)
 	.use(customersController)
 	.use(purchasesController)
-	.use(salesController);
+	.use(salesController)
+	.use(alertsController)
+	.use(homeController);
 
 export type App = typeof app;

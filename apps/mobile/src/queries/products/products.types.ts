@@ -6,6 +6,7 @@ import type { Page } from "@/queries/pagination";
 export type StockFlags = {
 	/** Quantity at or below the minimum (and not zero). */
 	lowStock: boolean;
+	/** Zero units, on a product with a minimum: without one the store doesn't follow it (alertas.md). */
 	outOfStock: boolean;
 	/** Has units within the "expiry warning" days of the settings. */
 	nearExpiry: boolean;

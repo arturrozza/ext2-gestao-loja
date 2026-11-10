@@ -23,6 +23,8 @@ export type Shortcut = {
 	href: Href;
 	/** The module isn't built yet: the card says so instead of a subtitle, and its screen too. */
 	underConstruction?: boolean;
+	/** Pending items (the active alerts), shown as a red badge; nothing at zero (docs/conventions.md). */
+	badge?: number;
 };
 
 export type ShortcutSection = { title: string; items: Shortcut[] };
@@ -31,6 +33,12 @@ export type ShortcutSection = { title: string; items: Shortcut[] };
 function count(value: number | undefined, some: string, none: string) {
 	if (value === undefined) return "";
 	return value > 0 ? `${value} ${some}` : none;
+}
+
+/** The badge carries the number, so the subtitle only says whether something needs a look; empty while it loads. */
+function alertsSubtitle(alerts: number | undefined) {
+	if (alerts === undefined) return "";
+	return alerts > 0 ? "Pedem atenção" : "Tudo certo";
 }
 
 const building = (title: string, icon: IconType, href: Href): Shortcut => ({
@@ -53,6 +61,7 @@ function homeSections(counts: {
 	activeCustomers: number | undefined;
 	activeResellers: number | undefined;
 	activeUsers: number | undefined;
+	alerts: number | undefined;
 }): ShortcutSection[] {
 	return [
 		{
@@ -105,7 +114,13 @@ function homeSections(counts: {
 			title: "Gestão",
 			items: [
 				building("Relatórios", ChartBarIcon, "/reports"),
-				building("Alertas", BellIcon, "/alerts"),
+				{
+					title: "Alertas",
+					subtitle: alertsSubtitle(counts.alerts),
+					icon: BellIcon,
+					href: "/alerts",
+					badge: counts.alerts,
+				},
 				{
 					title: "Loja",
 					subtitle: "Dados e ajustes",
@@ -118,11 +133,12 @@ function homeSections(counts: {
 }
 
 /**
- * The home's shortcut sections, with the counts that already come from the API (this month's sales, products,
- * purchases, customers, resellers and users). `failed`: a number behind the subtitles failed to load, so the cards show
+ * The home's shortcut sections, with their counts (this month's sales, products, purchases, customers, resellers,
+ * users and active alerts). `failed`: a number behind the subtitles failed to load, so the cards show
  * nothing instead of a loading line forever.
  */
-export function useHomeShortcuts() {
+/** `alerts`: the total from the month summary, which the home reads itself. */
+export function useHomeShortcuts(alerts: number | undefined) {
 	// The same filters as the products tab opens with: one query for both.
 	const products = useProducts({
 		search: "",
@@ -145,6 +161,7 @@ export function useHomeShortcuts() {
 			activeCustomers: customers.data?.pages[0]?.total,
 			activeResellers: resellers.data?.length,
 			activeUsers: users.data?.filter((user) => user.active).length,
+			alerts,
 		}),
 		failed: queries.some((query) => query.isError),
 		refetch: () => Promise.all(queries.map((query) => query.refetch())),

@@ -30,6 +30,11 @@ function ShortcutSubtitle({
 	);
 }
 
+function shortcutLabel(item: Shortcut) {
+	if (item.underConstruction) return `${item.title}, em construção`;
+	return item.badge ? `${item.title}, ${item.badge} pendentes` : item.title;
+}
+
 function ShortcutCard({
 	item,
 	failed,
@@ -43,12 +48,19 @@ function ShortcutCard({
 			<Pressable
 				onPress={hapticTap}
 				accessibilityRole="button"
-				accessibilityLabel={
-					item.underConstruction ? `${item.title}, em construção` : item.title
-				}
+				accessibilityLabel={shortcutLabel(item)}
 				className="h-[120px] w-[136px] justify-between rounded-2xl bg-background p-3.5 active:bg-accent"
 			>
-				<Icon as={item.icon} size={22} className="text-foreground/50" />
+				<View className="flex-row items-start justify-between">
+					<Icon as={item.icon} size={22} className="text-foreground/50" />
+					{item.badge ? (
+						<View className="h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5">
+							<Text className="font-sans-semibold text-[11px] text-destructive-foreground">
+								{item.badge > 99 ? "99+" : item.badge}
+							</Text>
+						</View>
+					) : null}
+				</View>
 				<View className="gap-1">
 					<Text className="font-sans-semibold text-sm" numberOfLines={1}>
 						{item.title}

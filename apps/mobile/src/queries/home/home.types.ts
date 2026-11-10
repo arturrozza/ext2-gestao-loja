@@ -1,16 +1,14 @@
 import type { ISODate } from "@/lib/dates";
 import type { Money } from "@/lib/money";
 
-/** What the home screen shows: the month's summary and the counts on the shortcuts (docs/product/README.md). */
+/** What the home screen shows: the month summary and the number on the Alerts shortcut (docs/product/README.md). */
 export type HomeSummary = {
 	month: {
-		/** "novembro": the month these numbers are about. */
-		name: string;
-		/** "outubro": the month `profitChange` compares with. */
-		previousName: string;
+		/** First day of the month these numbers are about. */
+		start: ISODate;
 		profit: Money;
 		revenue: Money;
-		/** `null` while there are no sales. */
+		/** `null` while there's no revenue. */
 		margin: number | null;
 		salesCount: number;
 		/**
@@ -21,11 +19,5 @@ export type HomeSummary = {
 	};
 	/** Last 7 days, oldest first; the last one is today. */
 	week: { date: ISODate; revenue: Money }[];
-	counts: {
-		products: number;
-		purchases: number;
-		activeResellers: number;
-		activeCustomers: number;
-		alerts: number;
-	};
+	alerts: number;
 };

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { MagnifyingGlassIcon } from "phosphor-react-native/src/icons/MagnifyingGlass";
 import { PackageIcon } from "phosphor-react-native/src/icons/Package";
 import { TagIcon } from "phosphor-react-native/src/icons/Tag";
@@ -105,16 +105,35 @@ function subtitleOf(
 		.join(" · ");
 }
 
+/** A stock state the tab was opened with (an alert sends `?stock=low`), or `null`. */
+function stockParam(value: string | undefined): StockState | null {
+	return (
+		STOCK_STATE_OPTIONS.find((option) => option.value === value)?.value ?? null
+	);
+}
+
 /**
- * Products tab (docs/product/produtos.md): search by name/code/barcode (camera too), stock, category and status filters
+ * Products tab. Opened from an alert (`?stock=low&at=…`), the list starts with only its products; a new `at` on every
+ * tap remounts it, so the other filters start over too.
+ */
+export function ProductsScreen() {
+	const params = useLocalSearchParams<{ stock?: string; at?: string }>();
+	const fromAlert = stockParam(params.stock);
+	return (
+		<ProductList key={params.at} initialStock={fromAlert ? [fromAlert] : []} />
+	);
+}
+
+/**
+ * The product list (docs/product/produtos.md): search by name/code/barcode (camera too), stock, category and status filters
  * in a sheet, each row with its stock, and the store's total stock value on top.
  * New products start at the tab bar's "+". Virtualized and paginated: the catalog can be huge.
  */
-export function ProductsScreen() {
+function ProductList({ initialStock }: { initialStock: StockState[] }) {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<Status>("active");
 	const [pickedCategoryIds, setPickedCategoryIds] = useState<string[]>([]);
-	const [stock, setStock] = useState<StockState[]>([]);
+	const [stock, setStock] = useState<StockState[]>(initialStock);
 	const categories = useCategories();
 	// Archived categories can't be picked (produtos.md); their products still show without the filter.
 	const activeCategories = (categories.data ?? []).filter((c) => !c.archived);

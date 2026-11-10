@@ -114,6 +114,16 @@ export function monthName(monthIndex: number): string {
 	return MONTHS[monthIndex] ?? "";
 }
 
+/** "novembro" for "2026-11-01". */
+export function monthNameOf(day: ISODate): string {
+	return monthName(fromISODate(day).getMonth());
+}
+
+/** The month before the one of `day`: "outubro" for "2026-11-01", "dezembro" for January. */
+export function previousMonthNameOf(day: ISODate): string {
+	return monthName((fromISODate(day).getMonth() + 11) % 12);
+}
+
 /** "08/2027". */
 export function formatExpiry(value: ExpiryMonth): string {
 	const [year, month] = value.split("-");

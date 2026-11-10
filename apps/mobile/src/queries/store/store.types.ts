@@ -8,17 +8,14 @@ export type StoreProfile = {
 	address: string | null;
 };
 
-/** Store settings: sale defaults and alert thresholds (acesso-e-loja.md, alertas.md). */
+/** Store settings: sale defaults and the expiry warning (acesso-e-loja.md, alertas.md). */
 export type StoreSettings = {
 	defaultTaxPercent: Percent;
 	mercadoLivreFeePercent: Percent;
 	/** "Perto de vencer" when this many days or fewer are left. */
 	expiryWarningDays: number;
-	/**
-	 * Analysis window in days: "Produto parado" after this many days without a sale, and "Margem baixa/negativa" over
-	 * the sales of these days (alertas.md uses 60 for both).
-	 */
+	/** Unused since the margin and stale product alerts left (docs/decisions.md, MUN-18); kept as saved. */
 	staleProductDays: number;
-	/** "Margem baixa" under this percentage. */
+	/** Unused, like `staleProductDays`. */
 	lowMarginPercent: Percent;
 };

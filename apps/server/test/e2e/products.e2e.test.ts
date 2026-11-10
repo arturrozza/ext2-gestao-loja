@@ -187,7 +187,7 @@ describe("products routes", () => {
 		const { headers, session } = await signedIn();
 		const storeId = session.store.id;
 		const stocked = await createProduct(storeId, { name: "Com estoque" });
-		await createProduct(storeId, { name: "Sem estoque" });
+		await createProduct(storeId, { name: "Sem estoque", minStock: 1 });
 		await createPurchase(session, [
 			purchaseItem(stocked.id, { quantity: 10, unitCost: 9200 }),
 		]);

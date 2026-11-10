@@ -18,6 +18,4 @@ export const storeSettingsSchema = z.object({
 	defaultTaxPercent: percentField("Informe o imposto entre 0 e 100%."),
 	mercadoLivreFeePercent: percentField("Informe a taxa entre 0 e 100%."),
 	expiryWarningDays: days("o aviso"),
-	staleProductDays: days("o período"),
-	lowMarginPercent: percentField("Informe o limite entre 0 e 100%."),
 });

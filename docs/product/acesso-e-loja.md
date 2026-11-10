@@ -31,9 +31,8 @@ Garantir que só quem é da loja acesse os dados dela e permitir manter os dados
 - Se a pessoa esquecer a senha, a equipe redefine (entrando com a senha mestra), ou outro usuário da loja desativa
   esse usuário e cria outro.
 - Dados da loja: nome, documento, telefone e endereço.
-- Configurações: imposto padrão, taxa do Mercado Livre, antecedência de vencimento, período de produto parado e limite de
-  margem baixa.
-- Uma loja nova começa com imposto e taxa do Mercado Livre em 0% e os alertas em 30 dias, 60 dias e 10%
+- Configurações: imposto padrão, taxa do Mercado Livre e antecedência de vencimento.
+- Uma loja nova começa com imposto e taxa do Mercado Livre em 0% e a antecedência de vencimento em 30 dias
   ([Alertas](alertas.md)).
 
 ## Em aberto

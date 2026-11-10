@@ -25,9 +25,10 @@ A base são os documentos da EXT1 ([`gugeldev/ext.1`](https://github.com/gugelde
 | [Revendedoras](revendedoras.md) | Cadastrar, calcular comissão, ver vendas e comissões |
 | [Clientes](clientes.md) | Cadastrar clientes fixos e ver o histórico de compras (a confirmar) |
 | [Relatórios](relatorios.md) | Ver lucro, custos, canais, produtos e comissões por período |
-| [Alertas](alertas.md) | Ser avisado sobre estoque, validade, margem e produto parado |
+| [Alertas](alertas.md) | Ser avisado sobre falta de estoque e validade |
 
-A tela inicial mostra o resumo do mês e dá acesso a todos os módulos, agrupados em três seções de três: Dia a dia
+A tela inicial mostra o resumo do mês (lucro real, faturamento, margem e número de vendas, comparando o lucro com os
+mesmos dias do mês anterior, e as vendas dos últimos 7 dias) e dá acesso a todos os módulos, agrupados em três seções de três: Dia a dia
 (vendas, compras, produtos), Pessoas (clientes, revendedoras, usuários) e Gestão (relatórios, alertas, dados da
 loja). Os alertas ativos aparecem como um número no atalho de Alertas. Embaixo, uma barra com Início, Vendas e Estoque
 e um botão "+" que abre as ações de cadastro: nova venda, nova compra, novo produto e novo cliente.

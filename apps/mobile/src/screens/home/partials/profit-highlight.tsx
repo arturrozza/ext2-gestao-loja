@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { monthNameOf, previousMonthNameOf } from "@/lib/dates";
 import { hapticSelect, hapticTap, withHaptic } from "@/lib/haptics";
 import {
 	formatMoney,
@@ -48,7 +49,7 @@ function Trend({ month }: { month: HomeSummary["month"] }) {
 				{percent}
 			</Text>
 			<Text className="text-muted-foreground text-xs">
-				vs. mesmo período de {month.previousName}
+				vs. mesmo período de {previousMonthNameOf(month.start)}
 			</Text>
 		</View>
 	);
@@ -70,8 +71,6 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Back on the home with the month summary (MUN-18).
- *
  * White highlight card: the month's real profit (the app's core number; tapping it opens the report) and the numbers
  * behind it. The eye hides money values for when a customer can see the screen.
  */
@@ -86,7 +85,7 @@ export function ProfitHighlight({ summary }: { summary: HomeSummary }) {
 			<View className="gap-1.5">
 				<View className="flex-row items-center justify-between">
 					<Text className="font-sans-medium text-muted-foreground text-sm">
-						Lucro real · {month.name}
+						Lucro real · {monthNameOf(month.start)}
 					</Text>
 					<Pressable
 						accessibilityRole="button"

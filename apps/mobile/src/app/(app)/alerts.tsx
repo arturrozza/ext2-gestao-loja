@@ -1,4 +1,3 @@
-import { underConstructionRoute } from "@/screens/under-construction/under-construction.screen";
+import { AlertsScreen } from "@/screens/alerts/alerts.screen";
 
-// Under construction (docs/decisions.md). The real screen: "@/screens/alerts/alerts.screen"
-export default underConstructionRoute("Alertas");
+export default AlertsScreen;

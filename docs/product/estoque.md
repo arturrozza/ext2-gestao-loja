@@ -22,7 +22,8 @@ própria: fica na lista e na tela de [Produtos](produtos.md).
 - Valor em estoque = quantidade × custo médio. O custo médio é guardado sem arredondar; só aparece arredondado ao
   centavo.
 - Estoque baixo: quantidade igual ou abaixo do mínimo, com alguma unidade. Sem nenhuma, é "sem estoque". Sem mínimo
-  definido, o produto nunca fica com estoque baixo.
+  definido, o produto nunca fica com estoque baixo nem sem estoque: aparece só com a quantidade
+  ([Alertas](alertas.md)).
 - As unidades vencidas contam na quantidade e no valor até serem descartadas, mas não no que está disponível para
   venda.
 - Perto de vencer: unidades ainda não vencidas cujo mês de validade termina dentro da antecedência de vencimento das

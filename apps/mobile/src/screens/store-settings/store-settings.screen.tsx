@@ -20,18 +20,24 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 		defaultTaxPercent: percentToInput(settings.defaultTaxPercent),
 		mercadoLivreFeePercent: percentToInput(settings.mercadoLivreFeePercent),
 		expiryWarningDays: String(settings.expiryWarningDays),
-		staleProductDays: String(settings.staleProductDays),
-		lowMarginPercent: percentToInput(settings.lowMarginPercent),
 	});
 
 	const submit = form.handleSubmit((data) =>
-		update.mutate(data, {
-			onSuccess: () => {
-				showToast("Configurações salvas");
-				router.back();
+		// The margin and stale product thresholds aren't used for now (docs/decisions.md): they go back as they are.
+		update.mutate(
+			{
+				...data,
+				staleProductDays: settings.staleProductDays,
+				lowMarginPercent: settings.lowMarginPercent,
 			},
-			onError: form.applyApiError,
-		}),
+			{
+				onSuccess: () => {
+					showToast("Configurações salvas");
+					router.back();
+				},
+				onError: form.applyApiError,
+			},
+		),
 	);
 
 	return (
@@ -71,23 +77,6 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 					onChangeText={(text) => form.set("expiryWarningDays", text)}
 					error={form.errors.expiryWarningDays}
 					keyboardType="number-pad"
-				/>
-				<FormField
-					label="Período de análise (dias)"
-					placeholder="Ex.: 60"
-					hint="Produto parado: sem venda nesse período. Margem: calculada nas vendas desse período."
-					value={form.values.staleProductDays}
-					onChangeText={(text) => form.set("staleProductDays", text)}
-					error={form.errors.staleProductDays}
-					keyboardType="number-pad"
-				/>
-				<FormField
-					label="Margem baixa abaixo de (%)"
-					placeholder="Ex.: 10"
-					value={form.values.lowMarginPercent}
-					onChangeText={(text) => form.set("lowMarginPercent", text)}
-					error={form.errors.lowMarginPercent}
-					keyboardType="decimal-pad"
 				/>
 			</FormSection>
 		</FormScreen>

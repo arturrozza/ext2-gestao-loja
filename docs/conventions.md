@@ -171,8 +171,8 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   ação principal (o "+", botões laranja; o `Button` já faz sozinho). Dentro de conteúdo que rola, a vibração vai no
   `onPress` (ao soltar), não no `onPressIn`, para não vibrar quando a pessoa só começa a rolar. Na navbar e no header,
   que não rolam, pode ser `onPressIn`.
-- **Listas:** `ListCard` + `ListRow` para listas curtas. Listas que crescem (produtos, vendas, compras, clientes,
-  alertas) são paginadas e virtualizadas: `ScreenLayout list` + `useInfiniteList`. Escolher produto é sempre pelo
+- **Listas:** `ListCard` + `ListRow` para listas curtas. Listas que crescem (produtos, vendas, compras, clientes)
+  são paginadas e virtualizadas: `ScreenLayout list` + `useInfiniteList`. Escolher produto é sempre pelo
   `ProductPicker` (folha, busca, leitura de código, filtros), nunca por um seletor simples: o catálogo é grande.
 - **Linha de item (`ItemRow`)**, a mesma em vendas, compras, produtos, clientes, revendedoras e itens de uma venda:
   miniatura à esquerda, título e uma linha pequena no meio, valor e uma nota pequena colorida à direita. Mesma altura em

@@ -374,7 +374,10 @@ describe("ProductStockService.adjust", () => {
 	it("discards the expired units, which then leave the value", async () => {
 		const { session } = await signedIn();
 		const storeId = session.store.id;
-		const product = await createProduct(storeId, { hasExpiry: true });
+		const product = await createProduct(storeId, {
+			hasExpiry: true,
+			minStock: 1,
+		});
 		await createPurchase(session, [
 			purchaseItem(product.id, {
 				quantity: 4,
