@@ -25,8 +25,8 @@ Versões e ferramentas: [`stack.md`](stack.md).
 
 ## Acesso (auth)
 
-Auth própria e enxuta, sem lib: só e-mail e senha, sem cadastro aberto, e-mail ou OAuth (decisão em
-[`decisions.md`](decisions.md)).
+Auth própria e enxuta, sem lib: só e-mail e senha, sem cadastro aberto, e-mail ou OAuth. Regras de produto em
+[`product/acesso.md`](product/acesso.md).
 
 - **Senha:** argon2id pelo `Bun.password` (sal e parâmetros dentro do hash). E-mail guardado em minúsculas.
 - **Sessão:** token opaco de 256 bits, mandado pelo app em `Authorization: Bearer <token>` (RFC 6750). O banco guarda
@@ -65,12 +65,12 @@ Auth própria e enxuta, sem lib: só e-mail e senha, sem cadastro aberto, e-mail
 docker-compose.yml      postgres + server
 docker/                 script de init do postgres (cria o banco ext2_test)
 apps/
-  server/               @ext2/server — API (com Dockerfile próprio)
-  mobile/               @ext2/mobile — app Expo
+  server/               @ext2/server: API (com Dockerfile próprio)
+  mobile/               @ext2/mobile: app Expo
 packages/               pacotes compartilhados (nenhum ainda)
 docs/
-  product/              módulos, funcionalidades e regras de negócio (fonte da verdade do produto)
-  decisions.md          o que foi decidido e por quê
+  product/              módulos, regras funcionais, regras de negócio e modelo de dados (fonte da verdade do produto)
+  getting-started.md    como rodar o projeto
   architecture.md       este arquivo
   stack.md              ferramentas, versões e restrições conhecidas
   conventions.md        código, validação, dados e git
@@ -124,7 +124,13 @@ ação, quem fez, quando, a linha antes e depois e os campos que mudaram. Quem g
 
 ### Estoque (livro de movimentações)
 
-O estoque não tem coluna de saldo: o livro é a fonte da verdade (ver `docs/decisions.md`, MUN-12). O módulo
+O estoque não tem coluna de saldo: o livro de movimentações é a fonte da verdade. A quantidade de um produto é a soma
+dos lotes, o valor é a soma das movimentações (`value_change`) e o custo médio é valor ÷ quantidade, calculado quando
+precisa e arredondado só para mostrar. Um saldo em coluna poderia divergir do histórico; a soma do livro não diverge.
+O custo médio segue a ordem de lançamento (coluna `seq`), não a data informada, para nada já registrado ser
+recalculado. A entrada soma o valor exato; a saída tira `custo médio × unidades` arredondado ao centavo, e zerar o
+estoque zera o valor, para o erro de arredondamento não acumular. Por isso `quantidade × custo unitário` de uma
+movimentação pode diferir 1 centavo do `value_change`, que é o valor que vale. O módulo
 `src/modules/stock` não tem rotas; é usado por quem mexe no estoque (compras, vendas, ajustes, correções de custo e os
 cancelamentos de compra e de venda). As rotas do estoque ficam em `products` (`products.stock.ts`): o histórico
 (`GET /products/:id/movements`), o valor total (`GET /products/stock-value`), o ajuste
@@ -159,7 +165,11 @@ ou venda, o que está vencido e os períodos da lista de vendas.
 `POST /sales/:id/cancel`). As regras puras ficam em
 `sales.rules.ts` (estoque de cada item, conta do lucro real, períodos), as leituras em `sales.queries.ts` e os totais de
 clientes e revendedoras em `sales.totals.ts`, como colunas SQL correlacionadas que `customers` e `resellers` usam. A
-venda grava receita, custos e lucro calculados na hora; nada é recalculado depois (ver `docs/decisions.md`, MUN-16).
+venda grava receita, custos e lucro calculados na hora; nada é recalculado depois. A prévia do lucro na tela de nova
+venda usa a mesma conta do server, conferida por um teste de paridade.
+
+As rotas que criam compra e venda não têm chave de idempotência: se a resposta se perde depois de a API gravar e o
+usuário envia de novo, o registro entra duas vezes. A correção é cancelar o repetido.
 
 ### Fotos dos produtos (Cloudflare R2)
 
@@ -273,8 +283,7 @@ A versão do Bun no CI vem do `packageManager` do `package.json` da raiz, a mesm
   [`conventions.md`](conventions.md).
 - **Infrastructure as Code:** toda a infra do projeto Railway (service `ext.2`, Postgres, volume, build, deploy,
   variáveis) fica em `.railway/railway.ts` (SDK `railway/iac`). **Não mude nada pelo dashboard**: mude o arquivo e
-  aplique (ver abaixo). O formato antigo (`railway.json`, "Config as Code") foi depreciado pelo Railway e não vale
-  para services novos.
+  aplique (ver abaixo).
 - **Wait for CI** (`checkSuites: true`): o Railway segura o deploy até o workflow passar. Se o CI falhar, o commit não
   vai para produção.
 - **Build:** pelo `apps/server/Dockerfile`, com a raiz do repo como contexto (sem root directory).
@@ -314,7 +323,7 @@ railway config pull --variables=managed   # só se algo mudou pelo dashboard: tr
 
 Não rode `railway config apply` na mão, a não ser numa emergência: o normal é aplicar pelo merge da release.
 
-#### Setup inicial (já feito)
+#### Criando o projeto no Railway (fork)
 
 1. No dashboard: **New Project → Deploy from GitHub repo** → `gugeldev/ext.2`, e **+ New → Database → PostgreSQL**.
 2. Na raiz do repo: `railway link` e `railway config pull --variables=managed` para importar o projeto.
@@ -337,11 +346,10 @@ O app não vai para as lojas: é de um cliente só. A instalação é feita com 
   recebem sem revisão da Apple. O `ascAppId` (id do app no App Store Connect) fica no perfil de submit `testflight`
   do `eas.json`, para o envio funcionar sem modo interativo. Cada build do TestFlight expira em 90 dias: gere outra
   antes disso, mesmo sem mudança nativa. O cliente segue no ad hoc (perfil `production`), que não expira assim.
-- **Pendente, número de build (iOS):** o App Store Connect rejeita duas builds com o mesmo `buildNumber` na mesma
-  `version`, e o `eas.json` usa `"appVersionSource": "local"` sem `autoIncrement`. A segunda build do perfil
-  `testflight` na mesma versão (renovação dos 90 dias, por exemplo) falharia no envio. Antes dela, passar para
-  `"appVersionSource": "remote"` com `"autoIncrement": true` no perfil, para o EAS controlar o número de build. O
-  `version` (que define o `runtimeVersion` do OTA) continua manual.
+- **Número de build (iOS):** o App Store Connect rejeita duas builds com o mesmo `buildNumber` na mesma `version`, e o
+  `eas.json` usa `"appVersionSource": "local"` sem `autoIncrement`. Uma segunda build do perfil `testflight` na mesma
+  versão falha no envio, a menos que o perfil passe para `"appVersionSource": "remote"` com `"autoIncrement": true`.
+  O `version` (que define o `runtimeVersion` do OTA) é manual.
 - **Criptografia (iOS):** `ios.config.usesNonExemptEncryption: false` no `app.json` (só HTTPS padrão), para a Apple
   não pedir a declaração de exportação a cada build.
 - **`runtimeVersion` com policy `appVersion`:** um update só chega a binários com o mesmo `version` do `app.json`.

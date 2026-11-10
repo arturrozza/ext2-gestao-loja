@@ -13,7 +13,7 @@ const ICON = require("../../../assets/images/icon.png");
 
 /**
  * First screen without a session: a photo that melts into the page, what the app is, and one big button to sign in.
- * There's no sign-up: accounts are created by someone who already uses the app (docs/product/acesso-e-loja.md).
+ * There's no sign-up: accounts are created by someone who already uses the app (docs/product/acesso.md).
  */
 export function WelcomeScreen() {
 	const { height } = useWindowDimensions();

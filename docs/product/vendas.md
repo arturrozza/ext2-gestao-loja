@@ -1,70 +1,118 @@
 # Vendas
 
-## Objetivo
+Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
 
-Registrar cada venda com seus custos reais, dar baixa no estoque e mostrar o **lucro real**. Inclui custos e comissões.
+## Regras funcionais
 
-## Funcionalidades
+### Nova venda
 
-- Registrar venda.
-- Ver a lista, com filtros, e os detalhes de uma venda, incluindo a composição dos custos.
-- Cancelar venda.
+- **RF-VEN-01.** O usuário pode registrar uma venda com data, canal, produtos, desconto ou acréscimo, custos,
+  condição de pagamento, forma de pagamento, cliente e, no canal Revendedora, a revendedora.
+- **RF-VEN-02.** A data vem preenchida com hoje e pode ser alterada.
+- **RF-VEN-03.** O usuário pode adicionar produtos pela busca ou lendo o código de barras. Cada produto entra com
+  quantidade 1 e com o preço base, e o usuário pode alterar quantidade e preço.
+- **RF-VEN-04.** O usuário escolhe entre nenhum ajuste, desconto ou acréscimo sobre a venda inteira.
+- **RF-VEN-05.** O app sugere os custos da venda, editáveis e removíveis:
+  - o imposto padrão da loja, quando maior que zero;
+  - no canal Mercado Livre, a taxa do Mercado Livre como taxa de plataforma, quando maior que zero;
+  - no canal Revendedora, a comissão padrão da revendedora escolhida.
+- **RF-VEN-06.** Ao trocar de canal ou de revendedora, o app troca a taxa e a comissão sugeridas e mantém os outros
+  custos.
+- **RF-VEN-07.** O usuário pode adicionar custos de frete, imposto, taxa de plataforma, comissão e outros, em reais ou
+  em percentual, com um nome opcional (por exemplo, "Embalagem").
+- **RF-VEN-08.** A condição de pagamento vem como "À vista" e pode ser trocada para "A prazo". A forma de pagamento
+  (Pix, dinheiro, crédito ou débito) começa sem seleção.
+- **RF-VEN-09.** O usuário pode buscar um cliente ou criar um na própria venda, informando só o nome.
+- **RF-VEN-10.** Enquanto a venda é preenchida, o app mostra a receita, os custos e o lucro ou prejuízo.
+- **RF-VEN-11.** Se a venda dá prejuízo, o app avisa e permite concluir.
+- **RF-VEN-12.** Se falta estoque vendável de um produto, o app mostra "Estoque insuficiente: disponível N." com os
+  atalhos "Lançar compra" e "Ajustar estoque". Depois da correção, o usuário volta para a venda com os dados
+  preenchidos.
 
-## Lista
+### Lista e detalhes
 
-- As vendas aparecem do dia mais recente para o mais antigo, pela data da venda.
-- No topo, o total vendido, o lucro real, a margem e quantas vendas entram no filtro.
-- Filtros:
-  - **Período:** hoje, últimos 7 dias (hoje e os 6 dias antes), mês atual ou tudo. Vale a data da venda.
-  - **Canal:** um ou mais.
-  - **Resultado:** com lucro (acima de zero) ou com prejuízo (abaixo de zero). Uma venda de lucro zero não entra em
-    nenhum dos dois.
-- Venda cancelada continua na lista, riscada, mas não conta nos totais.
+- **RF-VEN-13.** O usuário pode ver a lista de vendas, da data mais recente para a mais antiga.
+- **RF-VEN-14.** O topo da lista mostra o total vendido, o lucro real, a margem e o número de vendas que entram nos
+  filtros.
+- **RF-VEN-15.** O usuário pode filtrar a lista por:
+  - **período:** hoje, últimos 7 dias, mês atual ou tudo;
+  - **canal:** um ou mais;
+  - **resultado:** com lucro ou com prejuízo.
+- **RF-VEN-16.** A venda cancelada aparece na lista riscada.
+- **RF-VEN-17.** O usuário pode ver os detalhes de uma venda: produtos, preços, receita, composição dos custos, custo
+  dos produtos, lucro real, margem, pagamento, cliente, revendedora, autor e, quando cancelada, data e motivo do
+  cancelamento.
 
-## O que a venda guarda
+### Cancelamento
 
-- **Data:** já vem com a de hoje e não pode ser futura.
-- **Canal:** Loja, Mercado Livre ou Revendedora. Mercado Livre é só um canal manual.
-- **Produtos:** ao menos um, com quantidade e preço. Cada produto entra uma vez só: para vender mais, aumenta a
-  quantidade.
-- **Desconto ou acréscimo:** opcional, sobre a venda inteira.
-- **Custos:** frete, imposto, taxa de plataforma, comissão e outros, em reais ou percentual.
-- **Condição de pagamento:** obrigatória, já vem como "À vista". Só informativa.
-- **Forma de pagamento:** obrigatória (Pix, dinheiro, crédito ou débito), começa sem seleção. Só informativa.
-- **Cliente:** opcional, ver [Clientes](clientes.md).
-- **Revendedora:** obrigatória no canal Revendedora.
+- **RF-VEN-18.** O usuário pode cancelar uma venda, depois de confirmar, informando o motivo.
 
-## Regras
+## Regras de negócio
 
-- O preço vem do preço base e pode ser editado só naquela venda. Pode ser zero: um brinde que sai com a venda. Ele sai
-  do estoque, e o custo dele entra no lucro dessa venda.
-- O desconto não passa do valor dos produtos. Um desconto igual ao valor deixa a receita em zero: a venda fica com
-  prejuízo do custo e sem margem.
-- Só produtos, clientes e revendedoras ativos entram na venda.
-- Se o valor der prejuízo, o app avisa, mas deixa concluir.
-- O app sugere a taxa do Mercado Livre, a comissão e o imposto padrão. Todos são editáveis na venda.
-- A taxa da maquininha, se considerada, entra como taxa de plataforma ou outros.
-- O custo de cada item é o custo médio no momento do lançamento e fica gravado, mesmo que o custo médio mude depois.
-- Venda com data passada usa o custo médio de agora; a data escolhida vale para a lista e os relatórios.
-- **Estoque insuficiente:** a venda é bloqueada, com atalhos: "Estoque insuficiente: disponível 2. [Lançar compra] [Ajustar
-  estoque]". Depois de corrigir, a pessoa volta para a venda com tudo preenchido.
-- A baixa segue a ordem definida em [Estoque](estoque.md): primeiro a validade mais próxima, e unidades vencidas não
-  entram. O "disponível" conta só as unidades que podem ser vendidas.
-- Receita, custos e lucro são sempre calculados pelo sistema, nunca digitados, e ficam gravados na venda. Uma compra
-  ou correção de custo depois não muda vendas já registradas.
-- Custo em percentual é calculado sobre a receita e arredondado ao centavo, um por um.
-- Se algo falhar no meio, nada da venda é gravado.
+### Dados da venda
 
-## Lucro real
+- **RN-VEN-01.** A data da venda não pode ser futura.
+- **RN-VEN-02.** O canal é obrigatório: Loja, Mercado Livre ou Revendedora.
+- **RN-VEN-03.** A revendedora é obrigatória no canal Revendedora e não é aceita nos outros canais.
+- **RN-VEN-04.** Uma venda tem de 1 a 100 produtos. Cada produto aparece uma vez por venda; para vender mais unidades,
+  aumenta-se a quantidade.
+- **RN-VEN-05.** A quantidade de cada produto é inteira, de 1 a 100.000.
+- **RN-VEN-06.** O preço de cada produto vem do preço base e pode ser alterado só naquela venda. O preço pode ser zero
+  (brinde que sai com a venda): o brinde sai do estoque e o custo dele entra no lucro da venda.
+- **RN-VEN-07.** O desconto não passa do valor dos produtos. Um desconto igual ao valor dos produtos deixa a receita em
+  zero.
+- **RN-VEN-08.** Uma venda tem até 20 custos. Custo em percentual vai de 0% a 100%.
+- **RN-VEN-09.** A condição de pagamento (À vista ou A prazo) e a forma de pagamento são obrigatórias e apenas
+  informativas: o sistema não controla recebimentos.
+- **RN-VEN-10.** O cliente é opcional.
+- **RN-VEN-11.** Só produtos, clientes e revendedoras ativos entram em uma venda.
+- **RN-VEN-12.** A taxa da maquininha, quando considerada, é lançada como taxa de plataforma ou como outro custo.
+- **RN-VEN-13.** O número da venda ("Venda #12") é sequencial na loja e nunca se repete, nem quando a venda é
+  cancelada.
+
+### Estoque e custo
+
+- **RN-VEN-14.** A venda é recusada se algum produto não tem unidades vendáveis suficientes. As unidades vendáveis
+  excluem as vencidas.
+- **RN-VEN-15.** As unidades saem do estoque pela ordem definida em [Estoque](estoque.md): validade mais próxima
+  primeiro.
+- **RN-VEN-16.** O custo de cada produto é o custo médio no momento do registro, arredondado ao centavo, e fica gravado
+  na venda.
+- **RN-VEN-17.** Uma venda com data passada usa o custo médio do momento do registro. A data informada vale para a
+  lista e os relatórios.
+- **RN-VEN-18.** Receita, custos e lucro real são calculados pelo sistema no registro e ficam gravados. Uma compra,
+  ajuste ou correção de custo posterior não altera vendas já registradas.
+- **RN-VEN-19.** Venda não é editada nem apagada. Uma venda lançada errada é cancelada e lançada de novo.
+
+### Lista
+
+- **RN-VEN-20.** O período "últimos 7 dias" é hoje e os 6 dias anteriores. Os períodos usam a data da venda.
+- **RN-VEN-21.** "Com lucro" é lucro acima de zero e "com prejuízo" é lucro abaixo de zero. Venda com lucro zero não
+  entra em nenhum dos dois.
+- **RN-VEN-22.** Vendas canceladas não entram nos totais.
+
+### Cancelamento
+
+- **RN-VEN-23.** O motivo do cancelamento é obrigatório (até 500 caracteres).
+- **RN-VEN-24.** As unidades voltam aos mesmos lotes de onde saíram, com uma movimentação de venda cancelada. Se o lote
+  venceu nesse meio tempo, as unidades voltam vencidas.
+- **RN-VEN-25.** O cancelamento não altera o custo médio: as unidades voltam pelo custo médio atual. Se o produto está
+  sem estoque, voltam pelo custo gravado na venda.
+- **RN-VEN-26.** A venda cancelada continua visível, com data e motivo do cancelamento, e deixa de contar em vendas,
+  lucro, comissões, relatórios e totais de clientes e revendedoras.
+- **RN-VEN-27.** Uma venda cancelada não pode ser cancelada de novo.
+
+## Cálculos
 
 ```
-receita         = soma de (quantidade × preço) − desconto + acréscimo
-custo percentual = receita × percentual
-lucro real      = receita − custo dos produtos − custos da venda
-margem          = lucro real ÷ receita
+receita           = soma de (quantidade × preço) − desconto + acréscimo
+custo do produto  = quantidade × custo médio no registro
+custo percentual  = receita × percentual, arredondado ao centavo, um custo por vez
+lucro real        = receita − custo dos produtos − custos da venda
+margem            = lucro real ÷ receita
 ```
 
-O desconto conta uma vez só, na receita. Isso corrige a fórmula da EXT1, que o subtraía duas vezes.
+O desconto é descontado uma vez, na receita. Com receita zero, a margem não é calculada.
 
 Exemplo: 2 unidades a R$ 100, desconto de R$ 20, custo médio de R$ 40, frete de R$ 15 e taxa de 10%.
 
@@ -72,25 +120,9 @@ Exemplo: 2 unidades a R$ 100, desconto de R$ 20, custo médio de R$ 40, frete de
 - Custo dos produtos: 2 × R$ 40 = R$ 80
 - Taxa: 10% de R$ 180 = R$ 18
 - **Lucro real:** R$ 180 − R$ 80 − R$ 15 − R$ 18 = **R$ 67**
-
-## Cancelamento
-
-Venda não é editada nem apagada. Se foi lançada errada, cancela e lança de novo.
-
-- A pessoa confirma e informa o motivo, que é obrigatório.
-- As unidades voltam às mesmas validades de onde saíram, com registro no histórico. Se uma dessas validades venceu
-  nesse meio-tempo, as unidades voltam como vencidas.
-- O custo médio não muda: as unidades voltam pelo custo médio de agora. Se o produto estiver zerado, voltam pelo custo
-  que a própria venda gravou.
-- A venda continua visível, riscada, com quando e por que foi cancelada.
-- Ela deixa de contar em vendas, lucro e comissões.
-- Não dá para cancelar duas vezes.
+- **Margem:** R$ 67 ÷ R$ 180 = 37,2%
 
 ## Fora do escopo
 
-Controle do que falta receber, parcelas, fiado, importação do Mercado Livre e devolução parcial.
-
-## Em aberto
-
-- Conferir com o cliente a conta do lucro real, o imposto e a taxa padrão:
-  [validar com o cliente](README.md#validar-com-o-cliente).
+Edição de venda, controle do que falta receber, parcelas, fiado, devolução parcial e importação de vendas do Mercado
+Livre.

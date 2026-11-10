@@ -71,7 +71,7 @@ function Legend({ data }: { data: SaleBreakdownData }) {
 }
 
 /**
- * Where the money of the sale went (vendas.md, "Lucro real"): a bar of the revenue split into product cost, sale costs
+ * Where the money of the sale went (vendas.md, "Cálculos"): a bar of the revenue split into product cost, sale costs
  * and profit, its legend, then every line of the calculation.
  */
 export function MoneySplit({ data }: { data: SaleBreakdownData }) {

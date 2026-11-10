@@ -5,7 +5,7 @@ import {
 	signedMoneyTotalField,
 } from "../../lib/fields";
 
-/** The home's month summary (docs/product/README.md): this month's active sales, by sale day. */
+/** The home's month summary (docs/product/inicio.md): this month's active sales, by sale day. */
 const summary = t.Object({
 	month: t.Object({
 		/** The first day of the month these numbers are about. */

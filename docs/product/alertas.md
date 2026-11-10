@@ -1,34 +1,35 @@
 # Alertas
 
-## Objetivo
+Avisos de falta de estoque e de validade.
 
-Avisar o lojista antes do prejuízo, sem encher de avisos: falta de produto e validade.
+## Regras funcionais
 
-## Funcionalidades
+- **RF-ALE-01.** A tela de Alertas mostra um card por tipo de alerta, com o número de produtos em cada um.
+- **RF-ALE-02.** Tocar em um card abre a lista de produtos já filtrada por aquele alerta. Da tela do produto, o usuário
+  pode lançar uma compra, ajustar o estoque ou descartar as unidades vencidas.
+- **RF-ALE-03.** O atalho de Alertas na tela inicial mostra o total de alertas ([Início](inicio.md)).
 
-- Ver quantos produtos estão em cada alerta, num card por tipo.
-- Tocar no card abre a lista de Produtos já filtrada por aquele alerta. De lá, cada produto leva à ação certa: lançar
-  compra, ajustar o estoque ou descartar as unidades vencidas.
-- A tela inicial mostra o total de alertas no atalho de Alertas.
+## Regras de negócio
 
-## Regras
+- **RN-ALE-01.** Os tipos de alerta são:
 
-| Alerta | Quando aparece |
-| --- | --- |
-| Sem estoque | Quantidade zero, em produto com estoque mínimo definido |
-| Estoque baixo | Quantidade igual ou abaixo do mínimo, com alguma unidade |
-| Vencido | Há unidades com validade passada |
-| Perto de vencer | Há unidades que vencem dentro da antecedência de vencimento (30 dias por padrão) |
+  | Alerta | Quando aparece |
+  | --- | --- |
+  | Sem estoque | Quantidade zero, em produto com estoque mínimo definido |
+  | Estoque baixo | Quantidade maior que zero e igual ou menor que o estoque mínimo |
+  | Vencido | O produto tem unidades com validade de um mês que já terminou |
+  | Perto de vencer | O produto tem unidades não vencidas cujo mês de validade termina dentro da antecedência de vencimento da loja (30 dias por padrão) |
 
-- O estoque mínimo é como a loja diz "quero acompanhar este produto": sem mínimo, o produto não gera alerta de
-  quantidade. Assim, quem cadastra o catálogo inteiro e ainda não comprou tudo não recebe uma enxurrada de avisos.
-- A antecedência de vencimento fica nas [configurações da loja](acesso-e-loja.md).
-- Os alertas são os mesmos filtros de estoque da lista de Produtos, então o número do card sempre bate com a lista.
-- Alertas são calculados a partir dos dados e somem sozinhos quando o problema é resolvido.
-- Um produto pode estar em mais de um alerta ao mesmo tempo, e o total da tela inicial conta cada um.
-- Produto arquivado não gera alerta. Produto sem validade não gera alerta de vencimento.
+- **RN-ALE-02.** Produto sem estoque mínimo não gera alerta de quantidade.
+- **RN-ALE-03.** Produto sem validade não gera alerta de vencimento.
+- **RN-ALE-04.** Produto arquivado não gera alerta.
+- **RN-ALE-05.** Os alertas usam os mesmos critérios dos filtros de estoque da lista de produtos: o número do card é
+  igual ao número de produtos da lista filtrada.
+- **RN-ALE-06.** Os alertas são calculados a partir dos dados atuais e deixam de aparecer quando a situação é
+  resolvida. Não é possível dispensar um alerta.
+- **RN-ALE-07.** Um produto pode estar em mais de um alerta ao mesmo tempo.
+- **RN-ALE-08.** A antecedência de vencimento é configurada na [Loja](loja.md).
 
 ## Fora do escopo
 
-Margem baixa, margem negativa e produto parado (a margem por produto fica para os [Relatórios](relatorios.md)),
-push notification, e-mail e dispensar alerta.
+Alertas de margem baixa, margem negativa e produto parado, notificação push e e-mail.

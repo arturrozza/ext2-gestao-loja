@@ -16,7 +16,7 @@ import { useSession } from "@/queries/auth/use-auth";
 
 SplashScreen.preventAutoHideAsync();
 
-/** Only the welcome and login screens are reachable without a session (docs/product/acesso-e-loja.md). */
+/** Only the welcome and login screens are reachable without a session (docs/product/acesso.md). */
 function Screens({ session }: { session: ReturnType<typeof useSession> }) {
 	// A saved session that couldn't be checked (no internet on a cold start) isn't a signed-out user: offer a retry
 	// instead of dropping them on the welcome screen.

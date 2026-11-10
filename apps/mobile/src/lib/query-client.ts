@@ -15,7 +15,7 @@ function shouldRetry(failureCount: number, error: unknown) {
 	return failureCount < 1 && (!isApiError(error) || error.code === "network");
 }
 
-/** An expired session (30 days without use, acesso-e-loja.md) on any request sends the user back to login. */
+/** An expired session (30 days without use, docs/product/acesso.md) on any request sends the user back to login. */
 function onError(error: unknown) {
 	if (isApiError(error, "unauthorized")) clearSession(queryClient);
 }

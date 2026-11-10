@@ -11,7 +11,7 @@ import { useSignIn } from "@/queries/auth/use-auth";
 import { loginSchema } from "./login.schema";
 
 /**
- * Sign in with e-mail and password, as a sheet over the welcome screen (docs/product/acesso-e-loja.md). The root guard
+ * Sign in with e-mail and password, as a sheet over the welcome screen (docs/product/acesso.md). The root guard
  * swaps to the app once the session arrives. A forgotten password is reset by the team.
  */
 export function LoginScreen() {

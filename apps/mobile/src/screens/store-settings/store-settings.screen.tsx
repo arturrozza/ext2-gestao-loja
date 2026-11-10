@@ -25,21 +25,13 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 	});
 
 	const submit = form.handleSubmit((data) =>
-		// The margin and stale product thresholds aren't used for now (docs/decisions.md): they go back as they are.
-		update.mutate(
-			{
-				...data,
-				staleProductDays: settings.staleProductDays,
-				lowMarginPercent: settings.lowMarginPercent,
+		update.mutate(data, {
+			onSuccess: () => {
+				showToast("Configurações salvas");
+				router.back();
 			},
-			{
-				onSuccess: () => {
-					showToast("Configurações salvas");
-					router.back();
-				},
-				onError: form.applyApiError,
-			},
-		),
+			onError: form.applyApiError,
+		}),
 	);
 
 	return (

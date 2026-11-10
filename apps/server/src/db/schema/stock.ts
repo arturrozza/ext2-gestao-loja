@@ -21,7 +21,7 @@ import { users } from "./users";
 /*
  * Stock (docs/product/estoque.md). Nothing here keeps a running balance: the quantity of a product is the sum of its
  * lots and its value is the sum of its movements (the ledger is the source of truth, like Odoo's valuation layers),
- * and the average cost is value ÷ quantity, worked out when needed (docs/decisions.md).
+ * and the average cost is value ÷ quantity, worked out when needed (docs/architecture.md).
  */
 
 /** Units of a product with the same origin and expiry. The user never sees lots, only quantity per expiry. */

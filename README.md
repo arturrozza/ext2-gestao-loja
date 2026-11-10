@@ -23,11 +23,11 @@ Para desenvolver o server com hot reload, use `bun run db:up` + `bun run dev:ser
 
 ## Documentação
 
-- [`docs/product/`](docs/product/README.md) — o que o sistema faz: módulos, funcionalidades e regras de negócio
-- [`docs/getting-started.md`](docs/getting-started.md) — como rodar o projeto
-- [`docs/architecture.md`](docs/architecture.md) — como as partes se conectam, env, Docker
-- [`docs/stack.md`](docs/stack.md) — ferramentas, versões e restrições conhecidas
-- [`docs/conventions.md`](docs/conventions.md) — nomes, código, validação, dados, git
-- [`docs/testing.md`](docs/testing.md) — estratégia de testes
-- [`docs/decisions.md`](docs/decisions.md) — registro de decisões e o porquê
-- [`AGENTS.md`](AGENTS.md) — regras para agentes de IA
+- [`docs/product/`](docs/product/README.md): o que o sistema faz (módulos, regras funcionais, regras de negócio e modelo
+  de dados)
+- [`docs/getting-started.md`](docs/getting-started.md): como rodar o projeto
+- [`docs/architecture.md`](docs/architecture.md): como as partes se conectam, env, Docker
+- [`docs/stack.md`](docs/stack.md): ferramentas, versões e restrições conhecidas
+- [`docs/conventions.md`](docs/conventions.md): nomes, código, validação, dados, git
+- [`docs/testing.md`](docs/testing.md): estratégia de testes
+- [`AGENTS.md`](AGENTS.md): regras para agentes de IA

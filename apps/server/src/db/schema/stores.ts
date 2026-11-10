@@ -13,11 +13,8 @@ export const stores = snakeCase.table(
 		/** Suggested on every sale; the sale can change it (vendas.md). Zero until the store sets its own. */
 		defaultTaxPercent: percentColumn().notNull().default(0),
 		mercadoLivreFeePercent: percentColumn().notNull().default(0),
-		/** Alert thresholds, defaults from alertas.md. */
+		/** "Perto de vencer" warning, in days (alertas.md). */
 		expiryWarningDays: integer().notNull().default(30),
-		staleProductDays: integer().notNull().default(60),
-		/** 10% (alertas.md). */
-		lowMarginPercent: percentColumn().notNull().default(1000),
 		...timestamps,
 	},
 	(table) => [
@@ -26,6 +23,5 @@ export const stores = snakeCase.table(
 			"stores_mercado_livre_fee_percent_range",
 			table.mercadoLivreFeePercent,
 		),
-		percentRange("stores_low_margin_percent_range", table.lowMarginPercent),
 	],
 );

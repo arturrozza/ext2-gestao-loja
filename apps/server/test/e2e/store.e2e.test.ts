@@ -15,13 +15,11 @@ const profile = {
 	address: "Rua A, 1",
 };
 
-/** Percentages in basis points: 6%, 16,5% and 10%. */
+/** Percentages in basis points: 6% and 16,5%. */
 const settings = {
 	defaultTaxPercent: 600,
 	mercadoLivreFeePercent: 1650,
 	expiryWarningDays: 30,
-	staleProductDays: 60,
-	lowMarginPercent: 1000,
 };
 
 describe("GET /store and PUT /store", () => {
@@ -76,13 +74,13 @@ describe("GET /store/settings and PUT /store/settings", () => {
 		const { headers } = await signedIn();
 
 		const { data } = await api.store.settings.put(
-			{ ...settings, defaultTaxPercent: 0, lowMarginPercent: 10_000 },
+			{ ...settings, defaultTaxPercent: 0, mercadoLivreFeePercent: 10_000 },
 			{ headers },
 		);
 
 		expect(data).toMatchObject({
 			defaultTaxPercent: 0,
-			lowMarginPercent: 10_000,
+			mercadoLivreFeePercent: 10_000,
 		});
 	});
 
@@ -90,21 +88,21 @@ describe("GET /store/settings and PUT /store/settings", () => {
 		const { headers } = await signedIn();
 
 		const days = await api.store.settings.put(
-			{ ...settings, staleProductDays: 0 },
+			{ ...settings, expiryWarningDays: 0 },
 			{ headers },
 		);
 		const percent = await api.store.settings.put(
-			{ ...settings, lowMarginPercent: 10_001 },
+			{ ...settings, mercadoLivreFeePercent: 10_001 },
 			{ headers },
 		);
 
 		expect(days.error?.value).toMatchObject({
 			code: "validation",
-			field: "staleProductDays",
+			field: "expiryWarningDays",
 		});
 		expect(percent.error?.value).toMatchObject({
 			code: "validation",
-			field: "lowMarginPercent",
+			field: "mercadoLivreFeePercent",
 		});
 	});
 
@@ -117,7 +115,6 @@ describe("GET /store/settings and PUT /store/settings", () => {
 		for (const field of [
 			"defaultTaxPercent",
 			"mercadoLivreFeePercent",
-			"lowMarginPercent",
 		] as const) {
 			for (const value of percents) {
 				const { error } = await api.store.settings.put(

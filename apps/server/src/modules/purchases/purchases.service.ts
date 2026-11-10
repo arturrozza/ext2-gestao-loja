@@ -294,7 +294,7 @@ export const PurchasesService = {
 
 	/**
 	 * Enters a purchase: the purchase, its lines, and a lot and an entry in the ledger for each line, all or nothing.
-	 * The average cost follows the order purchases are entered in, whatever their date (docs/decisions.md).
+	 * The average cost follows the order purchases are entered in, whatever their date (docs/product/compras.md).
 	 */
 	create(
 		session: AuthSession,

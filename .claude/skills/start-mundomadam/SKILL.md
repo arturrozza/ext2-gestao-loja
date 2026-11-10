@@ -19,7 +19,7 @@ Show the maintainer the open work in Linear, easiest first, so they can pick the
    to pick up). Filter these two by status name, not `statusType`: both are `started`.
 4. Rate each task's difficulty from what Linear says, reading its description. Do not open the code; this is a quick
    look, not a plan. Weigh, roughly in this order:
-   - A business rule still undecided: the decision (recorded in `docs/decisions.md`) comes before any code.
+   - A business rule still undecided: the decision (written into the `docs/product/` module) comes before any code.
    - How many apps it touches (server, mobile): each one adds work, and the server adds unit, integration and e2e
      tests (`docs/testing.md`).
    - Whether it touches money, stock or store scoping (`docs/conventions.md`, Dados).

@@ -30,7 +30,7 @@ to ask good questions, but don't plan yet.
 Run the `grilling` skill on the task. Keep it in plain pt-BR with concrete examples ("o app diz 8, a prateleira tem
 10"). The maintainer doesn't read jargon. Follow its rounds, and ask only about decisions that are really open; a
 sensible default needs no question, just mention it. When a business rule is decided or changes, write it into
-the `docs/product/` module and into `docs/decisions.md` in the same change.
+the `docs/product/` module in the same change.
 
 Alignment ends when nothing is open. Don't ask "posso começar?". Start right away, unless the maintainer slowed things
 down ("calma", "um por vez"). In that case wait for an explicit go ("pode implementar", "bora codar"). Agreeing to a
@@ -76,8 +76,8 @@ to do with the branch, stop and report it.
 
 ## 6. Docs
 
-Update `docs/` so the decisions and the current state are fully recorded: the `docs/product/` module (rules, open
-questions closed), `docs/decisions.md` (what was decided and why, newest first), and `architecture.md`, `stack.md`,
+Update `docs/` so the decisions and the current state are fully recorded: the `docs/product/` module (its `RF`/`RN` rules and `modelo-de-dados.md`
+when entities or fields change), and `architecture.md`, `stack.md`,
 `conventions.md` or `testing.md` when the change touches them. Also update the `AGENTS.md` files when a rule for agents
 changed. Docs are in pt-BR, and product docs stay at business level. Commit as `docs(<scope>): ...`.
 

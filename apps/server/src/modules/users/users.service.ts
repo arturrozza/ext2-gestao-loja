@@ -59,7 +59,7 @@ async function lockTarget(
 	return target;
 }
 
-/** Users of the session's store. No roles: any user manages the others (docs/product/acesso-e-loja.md). */
+/** Users of the session's store. No roles: any user manages the others (docs/product/usuarios.md). */
 export const UsersService = {
 	async list(storeId: string): Promise<UsersModel["user"][]> {
 		const rows = await db

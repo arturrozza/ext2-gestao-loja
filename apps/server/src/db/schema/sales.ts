@@ -37,7 +37,7 @@ export const paymentMethod = pgEnum("payment_method", [
 	"debit",
 ]);
 
-/** A cost of the sale (vendas.md, "Custos"). */
+/** A cost of the sale (vendas.md, RF-VEN-07). */
 export const saleCostKind = pgEnum("sale_cost_kind", [
 	"freight",
 	"tax",

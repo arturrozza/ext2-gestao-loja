@@ -15,7 +15,7 @@ import type {
 } from "./stock.rules";
 
 /*
- * A product's stock, read from the ledger (docs/decisions.md): its quantity is the sum of its lots and its value the
+ * A product's stock, read from the ledger (docs/architecture.md): its quantity is the sum of its lots and its value the
  * sum of its movements. These are correlated to `products.id`, so they go in any select from `products`.
  */
 
@@ -31,7 +31,7 @@ const warningDays = (): SQL =>
 	sql`(select ${stores.expiryWarningDays} from ${stores} where ${stores.id} = ${stockLots.storeId})`;
 
 /**
- * A lot not expired yet whose month ends within the warning days (alertas.md, "Perto de vencer"): the day after its
+ * A lot not expired yet whose month ends within the warning days (alertas.md, RN-ALE-01): the day after its
  * last day comes by `today + days + 1`.
  */
 const lotNearExpiry = (today: ISODate): SQL =>
@@ -153,7 +153,7 @@ export async function openLots(
 
 /**
  * The lots of these products a sale can take from on `today`, by product, in the order it takes them (estoque.md,
- * "Saída na venda"): soonest expiry first, those without expiry last, and the oldest first within the same expiry.
+ * RN-EST-12): soonest expiry first, those without expiry last, and the oldest first within the same expiry.
  * Expired lots never sell.
  */
 export async function sellableLots(

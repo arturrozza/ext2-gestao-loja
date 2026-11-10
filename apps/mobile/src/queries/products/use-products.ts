@@ -221,7 +221,7 @@ export function useStockProductsById(ids: string[]) {
 	return products;
 }
 
-/** The store's total stock value, archived products included (estoque.md, "Na lista"). */
+/** The store's total stock value, archived products included (estoque.md, RN-EST-05). */
 export function useStockValue() {
 	return useQuery({
 		queryKey: productsKeys.stockValue(),

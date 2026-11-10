@@ -1,6 +1,6 @@
 /*
  * How a sale's total and costs are split among its lines, to give each product its own revenue and profit
- * (docs/product/relatorios.md, "Margem por produto"): by the value of each line, to the cent, so the lines always add
+ * (docs/product/relatorios.md, "Margem de cada produto"): by the value of each line, to the cent, so the lines always add
  * up to the sale.
  */
 

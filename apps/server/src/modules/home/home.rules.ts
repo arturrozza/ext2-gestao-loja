@@ -42,7 +42,7 @@ const between = (days: DayTotals[], start: ISODate, end: ISODate) =>
 	days.filter((day) => day.date >= start && day.date <= end);
 
 /**
- * The home's month summary and week bars (docs/product/README.md), from the daily totals since last month's 1st
+ * The home's month summary and week bars (docs/product/inicio.md), from the daily totals since last month's 1st
  * (always before the week's start):
  * this month so far, compared with the same days of last month, and the revenue of today and the 6 days before.
  */

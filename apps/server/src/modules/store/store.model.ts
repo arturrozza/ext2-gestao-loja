@@ -1,7 +1,7 @@
 import { t, type UnwrapSchema } from "elysia";
 import { optionalText, percentField } from "../../lib/fields";
 
-/** Alert periods (docs/decisions.md: 1 to 365 days). */
+/** Expiry warning (docs/product/loja.md: 1 to 365 days). */
 const days = t.Integer({ minimum: 1, maximum: 365 });
 
 const profile = t.Object({
@@ -15,8 +15,6 @@ const settings = t.Object({
 	defaultTaxPercent: percentField,
 	mercadoLivreFeePercent: percentField,
 	expiryWarningDays: days,
-	staleProductDays: days,
-	lowMarginPercent: percentField,
 });
 
 export const StoreModel = { profile, settings };

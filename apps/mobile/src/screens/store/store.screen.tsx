@@ -88,7 +88,7 @@ function StoreSettingsCard() {
 	);
 }
 
-/** Store data, settings and the account (password, sign out). docs/product/acesso-e-loja.md. */
+/** Store data, settings and the account (password, sign out). docs/product/loja.md. */
 export function StoreScreen() {
 	const session = useSession();
 	const [signingOut, setSigningOut] = useState(false);

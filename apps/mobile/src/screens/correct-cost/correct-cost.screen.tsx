@@ -101,7 +101,7 @@ function CostForm({ product }: { product: ProductDetail }) {
 	);
 }
 
-/** Fix a wrong average cost (estoque.md, "Corrigir custo"), with the reason recorded. */
+/** Fix a wrong average cost (estoque.md, "Correção de custo"), with the reason recorded. */
 export function CorrectCostScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = useProduct(id);

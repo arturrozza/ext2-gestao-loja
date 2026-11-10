@@ -4,7 +4,7 @@ import { httpError, loggable } from "./http-error";
 
 /**
  * Where product photos live (Cloudflare R2 in production). Only the API writes to the bucket: the app sends the photo
- * to the API, never straight to the bucket, so what is stored is always a checked JPEG (docs/decisions.md).
+ * to the API, never straight to the bucket, so what is stored is always a checked JPEG (docs/architecture.md).
  */
 export type PhotoStorage = {
 	/** Stores `bytes` under `key`, served with `contentType`. */

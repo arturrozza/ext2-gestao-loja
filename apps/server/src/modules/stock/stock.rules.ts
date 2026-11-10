@@ -5,7 +5,7 @@ import { divideRounded, MAX_CENTS } from "../../lib/money";
 /**
  * Stock math (docs/product/compras.md, "Custo médio"). A product's stock is a quantity and a value in cents; the
  * average cost is value ÷ quantity, worked out when needed and rounded only for showing. An entry only adds, so no
- * rounding error builds up (R$ 10 in 3 units stays 1000 cents ÷ 3, never 333 × 3; docs/decisions.md).
+ * rounding error builds up (R$ 10 in 3 units stays 1000 cents ÷ 3, never 333 × 3; docs/architecture.md).
  */
 export type StockBalance = { quantity: number; value: number };
 
@@ -31,7 +31,7 @@ export function afterEntry(
 }
 
 /**
- * Value that leaves with `units` at `unitCost` each (docs/decisions.md): the average cost rounded to the cent for a
+ * Value that leaves with `units` at `unitCost` each (docs/architecture.md): the average cost rounded to the cent for a
  * sale or an adjustment, its own cost for a canceled purchase line. The whole value leaves
  * when the stock goes to zero, and never more than the value left (4 units worth 2 cents round to 1 cent each: 3 of
  * them can't take 3 cents), so the stock is never worth less than zero.
@@ -216,7 +216,7 @@ export type SaleExitPlan = {
 };
 
 /**
- * `units` leaving with a sale (estoque.md, "Saída na venda"): from the lots in the order given (soonest expiry first,
+ * `units` leaving with a sale (estoque.md, RN-EST-12): from the lots in the order given (soonest expiry first,
  * then the oldest), never an expired one, at the average cost (`exitValue`). `null` when the lots don't have them all.
  */
 export function planSaleExit(
@@ -249,7 +249,7 @@ export type CanceledEntry = PlannedEntry & {
  * The movements that undo these purchase lines (compras.md, "Cancelamento"), applied in order over the current
  * balances; two lines of the same product chain. Each takes back exactly the value it brought, so a purchase with only
  * other purchases after it leaves the stock as if it never existed; a sale or a cost correction in between already
- * moved value at the average cost, so `exitValue` keeps the stock from going below zero (docs/decisions.md). `null`
+ * moved value at the average cost, so `exitValue` keeps the stock from going below zero (docs/architecture.md). `null`
  * when a unit of some line already left its lot (`lotUnits`: the units in each lot now), sold, adjusted or discarded:
  * it can't be canceled then.
  */

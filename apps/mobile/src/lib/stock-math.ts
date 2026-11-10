@@ -9,7 +9,7 @@ export const MAX_ADJUST_UNITS = 100_000;
 export type StockBalance = { quantity: number; value: number };
 
 /**
- * Value an adjustment of `delta` units moves, as the API records it (docs/decisions.md, MUN-13): units come in at the
+ * Value an adjustment of `delta` units moves, as the API records it (docs/architecture.md, "Estoque"): units come in at the
  * exact average, which stays, and leave at the rounded average × units, never more than there is, all of it at zero.
  * `null` when the API would refuse the change for its size (no stock, too many units or past what the ledger holds).
  */

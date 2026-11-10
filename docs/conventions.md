@@ -71,9 +71,8 @@ apps/mobile/src/
 
 ### Mobile: design system
 
-Referência visual: app de loja com fundo branco, superfícies cinza claro preenchidas e ações em laranja (Dribbble,
-enviada pelo mantenedor em 2026-11-04), revista na tela inicial (MUN-9) com o Inter Empresas como referência: **fundo
-cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A tela inicial é o modelo, e todas as telas seguem as regras abaixo.
+Linha visual: **fundo cinza claro, cards brancos, laranja só em ações e detalhes, nada de bloco preto**. A tela inicial
+é o modelo, e todas as telas seguem as regras abaixo.
 
 - Os tokens ficam em `apps/mobile/src/global.css` (variáveis CSS em HSL) e são mapeados no `tailwind.config.js`.
   `src/lib/theme.ts` espelha as cores para APIs sem `className`; mudou um token no CSS, mude lá também.
@@ -85,7 +84,7 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
     sem card em volta. `bg-field-raised` (branco) é o que fica dentro deles (botões − e +, alternância R$/%). A folha
     não troca esses dois.
   - `bg-primary`: laranja (`#EA580C`), para a ação principal e a seleção.
-  - `bg-secondary`: preto. **Não use em cards ou blocos** (o mantenedor vetou card preto); só em texto forte ou no
+  - `bg-secondary`: preto. **Não use em cards ou blocos**; só em texto forte ou no
     véu de fundo (`BACKDROP`).
   - `text-muted-foreground`: texto secundário.
   - `text-destructive`: erro, remoção e prejuízo.
@@ -156,7 +155,7 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
     contra o mês anterior, barrinhas dos últimos 7 dias (hoje em laranja cheio) e três números de apoio.
   - Seções com título e um carrossel horizontal de cards quadrados brancos (ícone solto, nome, resumo).
   - Badge vermelho (`bg-destructive`) com número só onde há pendência real: hoje, só em Alertas.
-  - Estado vazio (loja começando): tudo zerado, barras cinza baixinhas, Margem "—", resumos "Nenhuma ainda". Sem
+  - Estado vazio (loja começando): tudo zerado, barras cinza baixinhas, Margem sem valor, resumos "Nenhuma ainda". Sem
     passo a passo de onboarding (fora do MVP).
 - Toda tela monta em cima do `ScreenLayout` (`@/components/screen-layout`): header, o conteúdo (aparece direto, sem fade), uma
   linha finíssima e bem clara sob o header que só aparece quando o conteúdo rola por baixo, e um degradê branco embaixo
@@ -181,7 +180,7 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   sistema, que sobe o fundo escuro junto com a folha. Nos formulários, qualquer saída (fechar, arrastar, voltar do
   sistema, `router.back()` ou `replace` depois de salvar) espera a folha descer; quem segura é o `RouteSheet`, e o
   `DiscardGuard` pergunta por ele.
-- **Animações suaves, sem bounce:** Reanimated com `withTiming` (120–320 ms; a abertura das folhas, 450 ms, é a
+- **Animações suaves, sem bounce:** Reanimated com `withTiming` (de 120 a 320 ms; a abertura das folhas, 450 ms, é a
   exceção). `LinearTransition` quando itens entram,
   saem ou expandem, e `FadeIn` só para pedaços pequenos que surgem dentro da tela (erro de campo, detalhe
   expandido), nunca na tela inteira. Nada de `springify()`. Não ponha `className` em
@@ -228,7 +227,7 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   ele, nunca um `TextInput` puro; `Input`, `AmountField`, `QuantityStepper` e `SearchField` já usam). Gavetas (`BottomSheet`) continuam subindo com o teclado.
   Nas folhas fora da navegação (`SheetModal`: escolher produto, "Nova categoria") o rodapé também sobe, porque a folha
   inteira encolhe com o teclado.
-- **Nada de card em volta de campos** (o mantenedor vetou card dentro de card): os campos ficam direto na folha branca.
+- **Nada de card em volta de campos** (nem card dentro de card): os campos ficam direto na folha branca.
   Para separar grupos, use o título da `FormSection`; para separar itens repetidos (produtos de uma venda ou compra,
   custos), um fio (`border-border border-b`). Blocos só de leitura (resultado da venda, custo atual, prévia do ajuste)
   continuam como bloco cinza.
@@ -281,7 +280,7 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
   (America/Sao_Paulo) acontece no app. Dia do calendário (data da compra) é `date` e trafega como `"YYYY-MM-DD"`;
   validade trafega como mês, `"YYYY-MM"`, e é guardada como o primeiro dia do mês. Regra que depende de "hoje" usa o
   dia da loja (`storeToday()`, `apps/server/src/lib/dates.ts`), nunca o do servidor.
-- IDs: definir na primeira feature que criar uma tabela e registrar aqui.
+- IDs: UUID gerado pelo banco (`uuid().primaryKey().defaultRandom()`), em minúsculas na API (`idField`).
 - Mudança de schema vai junto com a migration gerada (`bun run db:generate`), no mesmo commit. Nunca use
   `drizzle-kit push` em banco compartilhado ou de produção.
 
@@ -326,6 +325,10 @@ Ver [`testing.md`](testing.md).
 
 - Os `AGENTS.md` (raiz e de cada app) têm as regras que os agentes seguem. Cada `CLAUDE.md` só importa o `AGENTS.md`
   ao lado (`@AGENTS.md`).
-- `docs/architecture.md`, `docs/stack.md`, `docs/testing.md` e este arquivo descrevem o sistema. Atualize no mesmo PR
-  da mudança.
-- Decisões (de produto ou técnicas) com o porquê vão em `docs/decisions.md`, a mais recente no topo.
+- `docs/product/` descreve o que o sistema faz: regras funcionais (`RF-XXX-NN`), regras de negócio (`RN-XXX-NN`),
+  cálculos e modelo de dados. Descreve o estado atual, sem histórico nem opinião. Código de regra não é reaproveitado:
+  regra removida deixa o número vago, regra nova recebe o próximo número do módulo.
+- `docs/architecture.md`, `docs/stack.md`, `docs/testing.md` e este arquivo descrevem a parte técnica. O porquê de uma
+  escolha técnica que não fica óbvia no código vai junto da descrição dela, em uma ou duas frases.
+- Atualize os docs no mesmo PR da mudança.
+- Docs em pt-BR, em tom neutro e descritivo. Sem travessão: use dois-pontos, vírgula ou parênteses.

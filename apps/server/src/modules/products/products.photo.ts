@@ -1,6 +1,6 @@
 import { httpError } from "../../lib/http-error";
 
-/** The only format stored: the app shrinks every photo to a JPEG before sending it (docs/decisions.md). */
+/** The only format stored: the app shrinks every photo to a JPEG before sending it (docs/architecture.md). */
 export const PHOTO_CONTENT_TYPE = "image/jpeg";
 
 /** Way above the ~150 KB the app sends; anything bigger didn't come from the app. */

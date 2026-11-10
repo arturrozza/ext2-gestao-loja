@@ -58,7 +58,7 @@ function toMovement({
 	return { ...row, createdAt: createdAt.toISOString(), origin };
 }
 
-/** Locks the product for a stock write (products first, docs/decisions.md) and reads its balance under the lock. */
+/** Locks the product for a stock write (products first, docs/architecture.md) and reads its balance under the lock. */
 async function lockForStock(tx: Transaction, storeId: string, id: string) {
 	const product = (await lockProducts(tx, storeId, [id])).get(id);
 	if (!product) throw notFound();
@@ -151,7 +151,7 @@ export const ProductStockService = {
 		return ProductsService.get(scope.storeId, productId);
 	},
 
-	/** Sets the right average cost of the units in stock, with why (estoque.md, "Corrigir custo"). */
+	/** Sets the right average cost of the units in stock, with why (estoque.md, "Correção de custo"). */
 	async correctCost(
 		session: AuthSession,
 		productId: string,

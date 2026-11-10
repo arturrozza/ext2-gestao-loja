@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { stockStatus } from "@/lib/stock-status";
 import type { Product } from "@/queries/products/products.types";
 
-/** Price and where it is. Cost and stock value are on the product screen (docs/product/estoque.md, "Na lista"). */
+/** Price and where it is. Cost and stock value are on the product screen (docs/product/estoque.md, RF-EST-02). */
 function detailLine(product: Product) {
 	return [formatMoney(product.basePrice), product.location]
 		.filter(Boolean)

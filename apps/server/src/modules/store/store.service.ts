@@ -17,8 +17,6 @@ const settingsColumns = {
 	defaultTaxPercent: stores.defaultTaxPercent,
 	mercadoLivreFeePercent: stores.mercadoLivreFeePercent,
 	expiryWarningDays: stores.expiryWarningDays,
-	staleProductDays: stores.staleProductDays,
-	lowMarginPercent: stores.lowMarginPercent,
 };
 
 /** The one row a query on the session's store must find; its absence is a broken session, not a user error. */
@@ -28,7 +26,7 @@ function single<T>(rows: T[]): T {
 	return row;
 }
 
-/** Data and settings of the session's store (docs/product/acesso-e-loja.md). */
+/** Data and settings of the session's store (docs/product/loja.md). */
 export const StoreService = {
 	async profile(storeId: string): Promise<StoreModel["profile"]> {
 		return single(
@@ -69,13 +67,8 @@ export const StoreService = {
 		input: StoreModel["settings"],
 	): Promise<StoreModel["settings"]> {
 		// Field by field, so the update can never reach another column whatever the body carries.
-		const {
-			defaultTaxPercent,
-			mercadoLivreFeePercent,
-			expiryWarningDays,
-			staleProductDays,
-			lowMarginPercent,
-		} = input;
+		const { defaultTaxPercent, mercadoLivreFeePercent, expiryWarningDays } =
+			input;
 		return single(
 			await audited(session.user.id, (tx) =>
 				tx
@@ -84,8 +77,6 @@ export const StoreService = {
 						defaultTaxPercent,
 						mercadoLivreFeePercent,
 						expiryWarningDays,
-						staleProductDays,
-						lowMarginPercent,
 					})
 					.where(eq(stores.id, session.store.id))
 					.returning(settingsColumns),

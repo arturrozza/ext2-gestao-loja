@@ -17,7 +17,7 @@ import {
 } from "./stock.rules";
 
 /*
- * Stock corrections (docs/product/estoque.md, "Ajuste" and "Corrigir custo"): pure rules, so the service only reads,
+ * Stock corrections (docs/product/estoque.md, "Ajuste" and "Correção de custo"): pure rules, so the service only reads,
  * plans and records. Every refusal is a 422 on the field to fix.
  */
 

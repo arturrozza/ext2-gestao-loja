@@ -142,7 +142,7 @@ const adjustmentBody = t.Object({
 	expiry: t.Optional(t.Union([t.Null(), expiryMonthField])),
 });
 
-/** Cost correction (estoque.md, "Corrigir custo"): the right average cost, in cents, and why. */
+/** Cost correction (estoque.md, "Correção de custo"): the right average cost, in cents, and why. */
 const costCorrectionBody = t.Object({
 	newCost: moneyField,
 	note: t.String({ minLength: 1, maxLength: 500, pattern: "\\S" }),
@@ -162,7 +162,7 @@ export const ProductsModel = {
 			t.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
 		),
 	}),
-	/** In cents: all the store's stock (estoque.md, "valor total em estoque"). */
+	/** In cents: all the store's stock (estoque.md, RN-EST-05). */
 	stockValue: t.Object({ value: nonNegativeMoneyTotalField }),
 	body,
 	photoUpload,

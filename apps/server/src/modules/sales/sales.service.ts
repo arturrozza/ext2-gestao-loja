@@ -244,7 +244,7 @@ export const SalesService = {
 
 	/**
 	 * Enters a sale: the sale, its lines and costs, and the exit of every unit, all or nothing. Each line costs the
-	 * average cost of now, whatever its date (docs/decisions.md). Not enough sellable stock blocks it.
+	 * average cost of now, whatever its date (docs/product/vendas.md). Not enough sellable stock blocks it.
 	 */
 	create(session: AuthSession, input: Body): Promise<SalesModel["detail"]> {
 		const storeId = session.store.id;

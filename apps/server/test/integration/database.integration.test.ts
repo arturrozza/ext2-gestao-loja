@@ -225,8 +225,6 @@ describe("schema checks", () => {
 			stock_movements_stock_after_non_negative: "CHECK ((stock_after >= 0))",
 			stores_default_tax_percent_range:
 				"CHECK (((default_tax_percent >= 0) AND (default_tax_percent <= 10000)))",
-			stores_low_margin_percent_range:
-				"CHECK (((low_margin_percent >= 0) AND (low_margin_percent <= 10000)))",
 			stores_mercado_livre_fee_percent_range:
 				"CHECK (((mercado_livre_fee_percent >= 0) AND (mercado_livre_fee_percent <= 10000)))",
 		});

@@ -5,13 +5,11 @@ import { createStore, signedIn } from "../support/factories/accounts";
 
 useTestDatabase();
 
-/** Percentages in basis points: 6%, 16,5% and 12,25%. */
+/** Percentages in basis points: 6% and 16,5%. */
 const settings = {
 	defaultTaxPercent: 600,
 	mercadoLivreFeePercent: 1650,
 	expiryWarningDays: 15,
-	staleProductDays: 90,
-	lowMarginPercent: 1225,
 };
 
 describe("StoreService", () => {
@@ -22,8 +20,6 @@ describe("StoreService", () => {
 			defaultTaxPercent: 0,
 			mercadoLivreFeePercent: 0,
 			expiryWarningDays: 30,
-			staleProductDays: 60,
-			lowMarginPercent: 1000,
 		});
 		expect(await StoreService.profile(store.id)).toEqual({
 			name: "Loja Teste",
@@ -60,7 +56,6 @@ describe("StoreService", () => {
 		const constraints = {
 			defaultTaxPercent: "stores_default_tax_percent_range",
 			mercadoLivreFeePercent: "stores_mercado_livre_fee_percent_range",
-			lowMarginPercent: "stores_low_margin_percent_range",
 		} as const;
 		for (const [field, constraint] of Object.entries(constraints)) {
 			for (const value of [-1, 10_001]) {

@@ -63,7 +63,7 @@ export function BreakdownRows({ data }: { data: SaleBreakdownData }) {
 }
 
 /**
- * Where the money of a sale goes (vendas.md, "Lucro real"): the live preview of a new sale and the stored numbers of a
+ * Where the money of a sale goes (vendas.md, "Cálculos"): the live preview of a new sale and the stored numbers of a
  * registered one. `warnLoss`: a sale still being typed warns about the loss but lets it through.
  */
 export function SaleBreakdown({

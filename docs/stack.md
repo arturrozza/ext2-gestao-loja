@@ -27,8 +27,8 @@ juntas.
 | expo-image-picker | ~58.0 | mobile: foto do produto (tirar ou escolher) | https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/ |
 | expo-image-manipulator | ~58.0 | mobile: reduz a foto do produto antes do upload (`PhotoField`) | https://docs.expo.dev/versions/v58.0.0/sdk/imagemanipulator/ |
 | expo-file-system | ~58.0 | mobile: envia a foto do produto para a API (`uploadFile` em `src/lib/api.ts`) | https://docs.expo.dev/versions/v58.0.0/sdk/filesystem/ |
-| Cloudflare R2 | — (API S3, pelo `S3Client` do Bun) | server: fotos dos produtos (`src/lib/photo-storage.ts`) | https://developers.cloudflare.com/r2/ |
-| expo-notifications | ~58.1 | mobile: instalada para push, ainda sem uso (MUN-7) | https://docs.expo.dev/versions/v58.0.0/sdk/notifications/ |
+| Cloudflare R2 | API S3, pelo `S3Client` do Bun | server: fotos dos produtos (`src/lib/photo-storage.ts`) | https://developers.cloudflare.com/r2/ |
+| expo-notifications | ~58.1 | mobile: instalada para push, sem uso no app | https://docs.expo.dev/versions/v58.0.0/sdk/notifications/ |
 | expo-secure-store | ~58.0 | mobile: token da sessão no Keychain/Keystore (`src/lib/session-token.ts`) | https://docs.expo.dev/versions/v58.0.0/sdk/securestore/ |
 | @react-native-community/datetimepicker | 9.2.1 | mobile: calendário dos campos de data (`DateField`) | https://docs.expo.dev/versions/v58.0.0/sdk/date-time-picker/ |
 | react-native-gesture-handler | ~3.3 | mobile: arrastar gavetas e folhas para fechar (`useDragToClose`) e zoom da foto (`PhotoViewer`) | https://docs.swmansion.com/react-native-gesture-handler/ |
@@ -38,7 +38,7 @@ juntas.
 | Biome | 2.5.15 (versão exata) | raiz | https://biomejs.dev |
 | Husky | ^9 | raiz (pre-commit, commit-msg) | https://typicode.github.io/husky |
 | commitlint | ^21 (config-conventional) | raiz | https://commitlint.js.org |
-| Docker Compose | — | infra local (postgres + server) | https://docs.docker.com/compose/ |
+| Docker Compose | | infra local (postgres + server) | https://docs.docker.com/compose/ |
 | GitHub Actions | `setup-bun@v2`, `checkout@v7`, `cache@v6` | CI (`.github/workflows/ci.yml`) | https://docs.github.com/actions |
 | Railway | CLI 5.70, SDK `railway` ^3.16 (IaC), action `railwayapp/config` (fixada num commit da `main`) | deploy do server + Postgres (production), infra em `.railway/railway.ts` | https://docs.railway.com/infrastructure-as-code |
 
@@ -51,10 +51,8 @@ Fica em `package.json` → `workspaces.catalog`, e os workspaces referenciam com
 ## Libs nativas
 
 Lib com código nativo só chega ao aparelho num **binário novo**: atualização OTA (EAS Update) leva só JS e assets. Por
-isso as libs nativas do MVP entraram todas de uma vez, na versão 1.2.0 do app (MUN-23), e as features seguintes saem
-por OTA. O que está instalado é o que está nas `dependencies` de `apps/mobile/package.json`. O `expo-file-system` virou
-dependência direta na MUN-11, mas já estava no binário 1.2.0 como dependência do `expo` (mesma versão), então não pediu
-binário novo.
+isso as libs nativas do app ficam todas no binário, e as features saem por OTA. O que está instalado é o que está nas
+`dependencies` de `apps/mobile/package.json`.
 
 Antes de adicionar uma lib, veja se dá para resolver só com JS ou com uma lib que já está instalada. Se ela for nativa
 (tem config plugin ou não roda no Expo Go), ela exige subir o `version` do app e gerar binários novos, como explica
@@ -79,8 +77,7 @@ Coisas que parecem "consertáveis", mas que só devem mudar depois de testar de 
   a pasta não existir, mesmo sem nenhuma migration, e isso derrubava o pre-deploy no Railway. Localmente não aparece,
   porque o `drizzle-kit migrate` dos testes cria a pasta: para validar a imagem, builde a partir de um clone limpo.
 - **Railway: Infrastructure as Code, não `railway.json`.** O Config as Code (`railway.json`/`railway.toml`) foi
-  depreciado: services criados depois de 2026-08-28 ignoram o arquivo (o build caiu no Railpack) e os antigos param de
-  lê-lo em 2026-12-01. Use só `.railway/railway.ts`. O `.railway/` tem `export default` liberado no Biome, porque o
+  depreciado pelo Railway. Use só `.railway/railway.ts`. O `.railway/` tem `export default` liberado no Biome, porque o
   SDK exige.
 - **Action `railwayapp/config` fixada por SHA.** A release `v1` (1.2.0) só instala dependências com npm, que não
   entende o `catalog:` do Bun. O suporte a Bun (`package-manager: bun`) está só na `main` dela (commit `f1f0c71`).

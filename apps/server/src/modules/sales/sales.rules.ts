@@ -128,8 +128,8 @@ export type PlannedLine = ItemInput & {
 };
 
 /**
- * Where every line's units leave from (estoque.md, "Saída na venda"). A line with more units than the product can sell
- * blocks the whole sale with what's available (vendas.md, "Estoque insuficiente"). One line per product
+ * Where every line's units leave from (estoque.md, RN-EST-12). A line with more units than the product can sell
+ * blocks the whole sale with what's available (vendas.md, RN-VEN-14). One line per product
  * (`assertItems`), so each plans against its product's own balance.
  */
 export function planLines(
@@ -158,7 +158,7 @@ export function planLines(
 	});
 }
 
-/** The numbers of a sale (vendas.md, "Lucro real"), all in cents, with the amount of each cost. */
+/** The numbers of a sale (vendas.md, "Cálculos"), all in cents, with the amount of each cost. */
 export type SaleTotals<C> = {
 	revenue: number;
 	productsCost: number;

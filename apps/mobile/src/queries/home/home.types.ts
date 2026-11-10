@@ -1,7 +1,7 @@
 import type { ISODate } from "@/lib/dates";
 import type { Money } from "@/lib/money";
 
-/** What the home screen shows: the month summary and the number on the Alerts shortcut (docs/product/README.md). */
+/** What the home screen shows: the month summary and the number on the Alerts shortcut (docs/product/inicio.md). */
 export type HomeSummary = {
 	month: {
 		/** First day of the month these numbers are about. */

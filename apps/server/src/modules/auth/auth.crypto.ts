@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 
-/** 30 days without use ends a session (docs/product/acesso-e-loja.md). */
+/** 30 days without use ends a session (docs/product/acesso.md). */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** The expiry only moves forward once a day, so a busy session doesn't write on every request. */

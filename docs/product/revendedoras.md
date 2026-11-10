@@ -1,44 +1,44 @@
 # Revendedoras
 
-## Objetivo
+Cadastro das revendedoras, vendas feitas por elas e cálculo da comissão. A revendedora é um cadastro e não acessa o
+app.
 
-Controlar as vendas feitas por revendedoras e calcular a comissão sem conta manual. A revendedora é um cadastro: ela não
-acessa o app.
+## Regras funcionais
 
-## Funcionalidades
+- **RF-REV-01.** O usuário pode ver a lista de revendedoras em ordem alfabética, com nome, comissão padrão, telefone e
+  totais de todas as vendas.
+- **RF-REV-02.** O usuário pode buscar revendedoras por nome ou telefone, com ou sem máscara.
+- **RF-REV-03.** O usuário pode alternar entre revendedoras ativas e arquivadas.
+- **RF-REV-04.** O usuário pode cadastrar e editar uma revendedora com nome, telefone, comissão padrão e observação.
+- **RF-REV-05.** A tela da revendedora mostra o total vendido, o número de vendas, a comissão e a lista das vendas
+  dela, filtrados por período: hoje, últimos 7 dias, mês atual ou tudo. O período inicial é o mês atual.
+- **RF-REV-06.** O usuário pode arquivar e reativar uma revendedora.
 
-- Cadastrar e editar revendedora.
-- Arquivar e reativar.
-- Ver as vendas e as comissões de cada uma, por período.
-- Buscar por nome ou telefone, com ou sem a máscara.
+## Regras de negócio
 
-## Regras
+- **RN-REV-01.** Obrigatórios: nome (até 120 caracteres) e comissão padrão. Telefone e observação (até 500 caracteres)
+  são opcionais.
+- **RN-REV-02.** A comissão padrão vai de 0% a 100%, com até duas casas decimais.
+- **RN-REV-03.** O nome pode se repetir. Na lista e na escolha da revendedora na venda, a comissão e o telefone
+  aparecem abaixo do nome.
+- **RN-REV-04.** Na venda pelo canal Revendedora, a comissão padrão da revendedora escolhida é sugerida como custo e
+  pode ser alterada só naquela venda.
+- **RN-REV-05.** A comissão incide sobre a receita da venda e entra como custo no lucro real.
+- **RN-REV-06.** Mudar a comissão padrão não altera vendas já registradas.
+- **RN-REV-07.** Revendedora não é excluída, é arquivada. Só revendedoras ativas podem ser escolhidas em novas vendas.
+  Revendedoras arquivadas continuam nas vendas já registradas e nos relatórios e podem ser reativadas.
+- **RN-REV-08.** Revendedora arquivada não é editada. Para alterar, o usuário reativa a revendedora antes.
+- **RN-REV-09.** Total vendido, número de vendas e comissão consideram só as vendas não canceladas do canal
+  Revendedora. A comissão é a soma dos custos de comissão dessas vendas.
 
-- Dados: nome, telefone, comissão padrão (%) e observação.
-- Obrigatórios: nome e comissão padrão. Telefone e observação são opcionais.
-- O nome pode se repetir. Na lista e na escolha da venda, a comissão e o telefone aparecem embaixo do nome para
-  diferenciar.
-- O telefone, quando informado, tem DDD.
-- A comissão padrão vai de 0% a 100%, com até duas casas decimais.
-- Ao escolher o canal Revendedora na venda, a pessoa seleciona quem vendeu e a comissão padrão vem preenchida, editável só
-  naquela venda.
-- A comissão incide sobre o valor final da venda e entra como custo no lucro real.
-- Mudar a comissão padrão não altera vendas antigas.
-- Revendedora não é excluída, só arquivada. Só revendedoras ativas entram em novas vendas. Arquivadas continuam no
-  histórico e nos relatórios, e dá para reativar.
-- Revendedora arquivada não se edita: para mudar algo, primeiro reativa.
-- Vendas canceladas não entram no total de comissões.
-- Na tela dela, os números (vendido, número de vendas e comissão) e a lista de vendas seguem um período: hoje, últimos
-  7 dias, mês atual ou tudo. Começa no mês atual, para acertar o mês com ela. Na lista de revendedoras, os totais são
-  de todas as vendas.
+## Cálculos
 
-Exemplo: venda de R$ 200 com comissão de 10% = R$ 20 de custo.
+```
+comissão = receita da venda × percentual de comissão
+```
+
+Exemplo: venda com receita de R$ 200 e comissão de 10% gera R$ 20 de custo de comissão.
 
 ## Fora do escopo
 
-Consignado e registro de acerto, até a resposta do cliente.
-
-## Em aberto
-
-- A revendedora leva o produto e acerta depois? Se sim, este módulo e o estoque mudam:
-  [validar com o cliente](README.md#validar-com-o-cliente).
+Consignado (revendedora que leva produtos e acerta depois), registro de acerto e acesso da revendedora ao app.

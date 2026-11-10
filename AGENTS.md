@@ -81,7 +81,8 @@ App-specific commands (migrations, e2e, expo install...) are in each app's `AGEN
 - **Validation:** Elysia `t` for API HTTP contracts; Zod for env, domain rules `t` doesn't cover, and app forms.
 - **Features:** read the module in [`docs/product/`](docs/product/README.md) before implementing; it is the source of
   truth for features and business rules. If a requirement is missing or unclear, ask; don't invent requirements. If a
-  rule changes, update the module in the same change and record why in `docs/decisions.md`.
+  rule changes, update the module in the same change. Product docs describe the current state only: rules carry fixed
+  ids (`RF-VEN-03`, `RN-VEN-03`), never reused; no history, rationale or open questions; no em dashes.
 - **Language:** code, commits and `AGENTS.md` in English. Docs (`docs/`, `README.md`) and user-facing app text
   in pt-BR.
 - **Conventional Commits, always**, scoped by module/feature: `feat(products): add product listing`,
@@ -117,10 +118,9 @@ Skills: `/start-mundomadam` lists open tasks easiest first, `/pr-main` ships a b
 
 ## Docs
 
-- [`docs/product/`](docs/product/README.md) — what the system does: modules, features, business rules, open questions
+- [`docs/product/`](docs/product/README.md) — what the system does: modules, functional and business rules, data model
 - [`docs/getting-started.md`](docs/getting-started.md) — onboarding: fork, tool install, running everything locally
 - [`docs/architecture.md`](docs/architecture.md) — how the pieces fit, env, Docker
 - [`docs/stack.md`](docs/stack.md) — tools, versions, official docs links, known constraints
 - [`docs/conventions.md`](docs/conventions.md) — naming, code style, validation, data, git
 - [`docs/testing.md`](docs/testing.md) — test strategy
-- [`docs/decisions.md`](docs/decisions.md) — decision log (what was decided and why), newest first

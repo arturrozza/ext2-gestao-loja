@@ -281,7 +281,7 @@ export const ProductsService = {
 
 	/**
 	 * Stores one photo the app sent (a JPEG it already shrank) under a new key, which the product form then saves. A
-	 * photo sent for a form that is never saved stays in the bucket unused (~150 KB; see docs/decisions.md).
+	 * photo sent for a form that is never saved stays in the bucket unused (~150 KB; see docs/architecture.md).
 	 */
 	async uploadPhoto(
 		session: AuthSession,
