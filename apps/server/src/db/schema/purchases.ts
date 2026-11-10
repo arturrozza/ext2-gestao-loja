@@ -32,7 +32,6 @@ export const purchases = snakeCase.table(
 		/** The day the user says it happened ("2026-11-09"). The cost follows the order purchases are entered in. */
 		date: date().notNull(),
 		note: text(),
-		/** Who entered it. */
 		userId: uuid()
 			.notNull()
 			.references(() => users.id),

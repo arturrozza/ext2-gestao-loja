@@ -1,6 +1,5 @@
 import type { ExpiryMonth, ISODate } from "@/lib/dates";
 import type { Money } from "@/lib/money";
-import type { Page } from "@/queries/pagination";
 import type { ItemPreview } from "@/queries/products/products.types";
 
 export type PurchaseStatus = "active" | "canceled";
@@ -21,9 +20,7 @@ export type PurchaseSummary = {
 	productCount: number;
 };
 
-export type PurchasePage = Page<PurchaseSummary>;
-
-export type PurchaseItem = {
+type PurchaseItem = {
 	id: string;
 	productId: string;
 	productName: string;

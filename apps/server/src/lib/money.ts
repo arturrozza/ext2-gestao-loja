@@ -7,7 +7,6 @@
 /** Largest value of an `integer` column: R$ 21.474.836,47 in cents. */
 export const MAX_CENTS = 2_147_483_647;
 
-/** 100% in basis points. */
 export const FULL_PERCENT = 10_000;
 
 function assertInteger(name: string, value: number): void {

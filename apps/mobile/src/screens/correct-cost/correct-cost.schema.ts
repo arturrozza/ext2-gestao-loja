@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { parseMoneyInput } from "@/lib/money";
 
-/** Cost correction (estoque.md): the right cost and why. */
 export const correctCostSchema = z.object({
 	newCost: z.string().transform((text, ctx) => {
 		const cents = parseMoneyInput(text);

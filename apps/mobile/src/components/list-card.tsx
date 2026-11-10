@@ -47,7 +47,6 @@ type ListRowProps = {
 	subtitle?: string;
 	/** Loose gray icon on the left (no tile). */
 	icon?: IconType;
-	/** Value or pill on the right. */
 	right?: ReactNode;
 	/** Extra line(s) under the subtitle. */
 	children?: ReactNode;

@@ -13,7 +13,6 @@ export type Percent = number;
 /** Largest amount the API takes: what an `integer` column holds (R$ 21.474.836,47). */
 export const MAX_CENTS = 2_147_483_647;
 
-/** 100% in basis points. */
 export const FULL_PERCENT = 10_000;
 
 const currency = new Intl.NumberFormat("pt-BR", {

@@ -162,10 +162,7 @@ function Details({ sale }: { sale: SaleDetail }) {
 	);
 }
 
-/**
- * Sale details (vendas.md): what was sold and the real profit on top, the products, where the money went, the details
- * and the cancel action. A canceled sale stays readable, crossed out, with when and why.
- */
+/** A canceled sale stays readable, crossed out, with when and why. */
 export function SaleScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = useSale(id);

@@ -124,11 +124,6 @@ export function ProductsScreen() {
 	);
 }
 
-/**
- * The product list (docs/product/produtos.md): search by name/code/barcode (camera too), stock, category and status filters
- * in a sheet, each row with its stock, and the store's total stock value on top.
- * New products start at the tab bar's "+". Virtualized and paginated: the catalog can be huge.
- */
 function ProductList({ initialStock }: { initialStock: StockState[] }) {
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<Status>("active");

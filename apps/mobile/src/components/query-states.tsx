@@ -64,10 +64,7 @@ export type QueryLike<T> = {
 	refetch: () => unknown;
 };
 
-/**
- * Renders the loading and error states of a query and calls `children` with the data once it's there, so every
- * screen handles the three states the same way. `skeleton` is what shows while loading: rows, unless it says otherwise.
- */
+/** Loading and error states of a query, then `children` with the data. */
 export function QueryView<T>({
 	query,
 	skeleton = <RowsSkeleton />,

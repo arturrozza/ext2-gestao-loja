@@ -1,8 +1,4 @@
-/**
- * Error the API returns for a business rule (insufficient stock, duplicate code...) or a network failure. `code` lets
- * screens react to a specific rule (e.g. offer "Lançar compra" on `insufficient_stock`); `message` is pt-BR, ready to
- * show; `details` carries extra data such as the field the error belongs to.
- */
+/** A business-rule or network failure. `message` is pt-BR, ready to show; `details.field` names the field. */
 export class ApiError extends Error {
 	readonly code: string;
 	readonly details: Record<string, unknown>;

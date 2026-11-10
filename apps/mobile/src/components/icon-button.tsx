@@ -13,7 +13,6 @@ type IconButtonProps = {
 	dot?: boolean;
 };
 
-/** Round icon-only button (header actions). */
 export function IconButton({
 	icon,
 	label,

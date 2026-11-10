@@ -5,7 +5,7 @@ import { useInvalidateBusinessData } from "@/queries/invalidate";
 import type { SalePeriod } from "@/queries/sales/sales.types";
 import type { ResellerInput, ResellerListFilters } from "./resellers.types";
 
-export const resellersKeys = {
+const resellersKeys = {
 	all: ["resellers"] as const,
 	list: (filters: ResellerListFilters) =>
 		[...resellersKeys.all, "list", filters] as const,

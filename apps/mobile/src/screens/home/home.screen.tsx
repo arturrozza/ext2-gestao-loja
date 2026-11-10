@@ -48,9 +48,6 @@ function HomeGreeting() {
 	);
 }
 
-/**
- * Home (light-gray page, white cards): month summary on top, then one carousel of shortcuts per group of modules.
- */
 export function HomeScreen() {
 	const summary = useHomeSummary();
 	const home = useHomeShortcuts(summary.data?.alerts);

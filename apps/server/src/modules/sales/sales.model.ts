@@ -13,10 +13,8 @@ import {
 import { cursorQuery, pageOf } from "../../lib/pagination";
 import { previewField } from "../../lib/preview";
 
-/** Most lines one sale takes. */
 const MAX_SALE_ITEMS = 100;
 
-/** Most costs one sale takes. */
 const MAX_SALE_COSTS = 20;
 
 const CHANNELS = ["store", "mercado_livre", "reseller"] as const;
@@ -62,14 +60,12 @@ const costOf = <F extends TProperties>(fields: F) =>
 
 const status = t.Union([t.Literal("active"), t.Literal("canceled")]);
 
-/** A sale in a list. */
 const summary = t.Object({
 	id: t.String(),
 	/** "Venda #12". */
 	number: t.Integer(),
 	/** "2026-11-09": the day the user said. */
 	date: t.String(),
-	/** When it was entered (ISO). */
 	createdAt: t.String(),
 	channel,
 	status,
@@ -79,7 +75,6 @@ const summary = t.Object({
 	revenue: nonNegativeMoneyTotalField,
 	/** In cents: the real profit; negative is a loss. */
 	profit: signedMoneyTotalField,
-	/** Distinct products in it. */
 	productCount: t.Integer(),
 	/** The first products, in the order they were entered. */
 	preview: t.Array(previewField),
@@ -91,7 +86,6 @@ const item = t.Object({
 	productName: t.String(),
 	photoUrl: t.Union([t.Null(), t.String()]),
 	quantity: t.Integer(),
-	/** In cents. */
 	unitPrice: moneyField,
 	/** In cents: the average cost when the sale was entered. Never changes. */
 	unitCost: moneyField,
@@ -122,7 +116,6 @@ const detail = t.Object({
 	paymentMethod,
 	customerId: t.Union([t.Null(), t.String()]),
 	resellerId: t.Union([t.Null(), t.String()]),
-	/** Who entered it. */
 	author: t.String(),
 	canceledAt: t.Union([t.Null(), t.String()]),
 	cancelReason: t.Union([t.Null(), t.String()]),

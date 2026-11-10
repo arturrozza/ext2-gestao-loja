@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api, request } from "@/lib/api";
 import type { ReportPeriod } from "./reports.types";
 
-export const reportsKeys = {
+const reportsKeys = {
 	all: ["reports"] as const,
 	report: (period: ReportPeriod) => [...reportsKeys.all, period] as const,
 };

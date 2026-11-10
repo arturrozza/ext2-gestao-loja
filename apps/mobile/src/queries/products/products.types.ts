@@ -1,8 +1,6 @@
 import type { ExpiryMonth } from "@/lib/dates";
 import type { Money } from "@/lib/money";
-import type { Page } from "@/queries/pagination";
 
-/** The stock states of a product (estoque.md). */
 export type StockFlags = {
 	/** Quantity at or below the minimum (and not zero). */
 	lowStock: boolean;
@@ -56,8 +54,6 @@ export type ProductListFilters = {
 	stock: StockState[];
 };
 
-export type ProductPage = Page<Product>;
-
 /** What the product form edits. Stock and cost never: they only come from purchases (produtos.md). */
 export type ProductInput = {
 	name: string;
@@ -95,8 +91,6 @@ export type ItemPreview = {
 	name: string;
 	photoUrl: string | null;
 };
-
-/* Stock (estoque.md): quantity by expiry, the ledger, adjustments and cost corrections. */
 
 /** Units in stock with the same expiry (`null`: no expiry). Lots stay hidden from the user. */
 export type ExpiryBalance = {

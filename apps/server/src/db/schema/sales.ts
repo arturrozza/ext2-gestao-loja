@@ -82,7 +82,6 @@ export const sales = snakeCase.table(
 		saleCosts: moneyTotalColumn().notNull(),
 		/** Revenue − products cost − sale costs, in cents; negative is a loss. */
 		profit: moneyTotalColumn().notNull(),
-		/** Who entered it. */
 		userId: uuid()
 			.notNull()
 			.references(() => users.id),

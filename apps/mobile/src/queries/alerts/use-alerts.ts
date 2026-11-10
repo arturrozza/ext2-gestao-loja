@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, request } from "@/lib/api";
 
-export const alertsKeys = { all: ["alerts"] as const };
+const alertsKeys = { all: ["alerts"] as const };
 
 /** The count of each alert. They come from the data, so any purchase, sale or adjustment refetches them. */
 export function useAlerts() {

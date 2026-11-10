@@ -4,7 +4,7 @@ import { timingSafeEqual } from "node:crypto";
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** The expiry only moves forward once a day, so a busy session doesn't write on every request. */
-export const SESSION_RENEW_AFTER_MS = 24 * 60 * 60 * 1000;
+const SESSION_RENEW_AFTER_MS = 24 * 60 * 60 * 1000;
 
 /** Login is by e-mail without the store, so e-mails are compared trimmed and lowercased. */
 export function normalizeEmail(email: string): string {

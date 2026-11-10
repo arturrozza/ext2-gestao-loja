@@ -11,12 +11,10 @@ import {
 import { cursorQuery, pageOf } from "../../lib/pagination";
 import { previewField } from "../../lib/preview";
 
-/** Most lines one purchase takes. */
-export const MAX_PURCHASE_ITEMS = 100;
+const MAX_PURCHASE_ITEMS = 100;
 
 const status = t.Union([t.Literal("active"), t.Literal("canceled")]);
 
-/** A purchase in the history. */
 const summary = t.Object({
 	id: t.String(),
 	/** "Compra #12". */
@@ -24,13 +22,11 @@ const summary = t.Object({
 	/** "2026-11-09". */
 	date: t.String(),
 	status,
-	/** Lines in it. */
 	itemCount: t.Integer(),
 	/** Units over every line. */
 	unitCount: t.Integer(),
 	/** In cents: the sum of quantity × unit cost. */
 	total: nonNegativeMoneyTotalField,
-	/** Distinct products in it. */
 	productCount: t.Integer(),
 	/** The first products, in the order they were entered. */
 	preview: t.Array(previewField),
@@ -42,7 +38,6 @@ const item = t.Object({
 	productName: t.String(),
 	photoUrl: t.Union([t.Null(), t.String()]),
 	quantity: t.Integer(),
-	/** In cents. */
 	unitCost: moneyField,
 	/** In cents: quantity × unit cost. */
 	total: nonNegativeMoneyTotalField,
@@ -52,9 +47,7 @@ const item = t.Object({
 const detail = t.Object({
 	...summary.properties,
 	note: t.Union([t.Null(), t.String()]),
-	/** Who entered it. */
 	author: t.String(),
-	/** When it was entered (ISO). */
 	createdAt: t.String(),
 	canceledAt: t.Union([t.Null(), t.String()]),
 	/** Why it was canceled, when the person said. */

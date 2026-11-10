@@ -14,7 +14,7 @@ import { Text } from "@/components/ui/text";
 import { GLASS, HEADER_BORDER } from "@/lib/theme";
 
 /** Height of the bar below the status bar. */
-export const COMPACT_HEIGHT = 44;
+const COMPACT_HEIGHT = 44;
 /** Scroll range (px) over which the bar appears. */
 const RANGE = [24, 56];
 const MAX_BLUR = 80;

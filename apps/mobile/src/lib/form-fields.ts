@@ -14,7 +14,6 @@ export const optionalAddress = optionalText.refine(
 	"O endereço pode ter no máximo 300 caracteres.",
 );
 
-/** Optional phone with area code. */
 export const optionalPhone = optionalText.refine(
 	(value) => value === null || [10, 11].includes(onlyDigits(value).length),
 	"Informe o telefone com DDD.",

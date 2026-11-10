@@ -16,7 +16,6 @@ function percentCost(kind: SaleCostKind, percent: Percent): SaleCostDraft {
 	};
 }
 
-/** Empty cost the user adds by hand. */
 export function manualCost(kind: SaleCostKind): SaleCostDraft {
 	return {
 		key: nextDraftKey(),

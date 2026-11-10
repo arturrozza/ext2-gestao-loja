@@ -80,7 +80,6 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 	);
 }
 
-/** Sale defaults (tax, Mercado Livre fee) and alert thresholds. */
 export function StoreSettingsScreen() {
 	const query = useStoreSettings();
 	return (

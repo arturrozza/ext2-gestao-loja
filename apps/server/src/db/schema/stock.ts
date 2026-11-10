@@ -114,7 +114,6 @@ export const stockMovements = snakeCase.table(
 		purchaseItemId: uuid().references(() => purchaseItems.id),
 		/** Origin, when it came from a sale: the line whose units left (the lots they left are in `sale_item_lots`). */
 		saleItemId: uuid().references(() => saleItems.id),
-		/** Who did it. */
 		userId: uuid()
 			.notNull()
 			.references(() => users.id),

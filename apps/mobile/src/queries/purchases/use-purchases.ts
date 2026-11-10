@@ -4,14 +4,13 @@ import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
 import type { PurchaseInput, PurchaseListFilters } from "./purchases.types";
 
-export const purchasesKeys = {
+const purchasesKeys = {
 	all: ["purchases"] as const,
 	list: (filters: PurchaseListFilters) =>
 		[...purchasesKeys.all, "list", filters] as const,
 	detail: (id: string) => [...purchasesKeys.all, "detail", id] as const,
 };
 
-/** Purchase history, newest first, paginated. */
 export function usePurchases(filters: PurchaseListFilters) {
 	return useInfiniteQuery({
 		queryKey: purchasesKeys.list(filters),
@@ -41,10 +40,7 @@ export function useCreatePurchase() {
 	});
 }
 
-/**
- * Canceling takes the units and their cost back out of the stock: refetch everything, like entering one. Also after a
- * refusal (already canceled, units already gone): the screen shows the purchase as it is now. A blank reason is none.
- */
+/** Refetches everything, also after a refusal, so the screen shows the purchase as it is now. */
 export function useCancelPurchase(id: string) {
 	const invalidate = useInvalidateBusinessData();
 	return useMutation({

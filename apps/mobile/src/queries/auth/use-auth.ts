@@ -19,8 +19,7 @@ export const authKeys = {
  * screen), then the store data, so nothing stays in memory for the next login.
  */
 export function clearSession(queryClient: QueryClient) {
-	// Not awaited: the memory copy is cleared at once (no request sends it again) and the keychain follows. If the
-	// keychain fails, the API still answers 401 for this session next time, so there's nothing better to do here.
+	// Not awaited: the memory copy clears at once. A keychain failure is harmless, the API answers 401 next time.
 	sessionToken.clear().catch(() => undefined);
 	queryClient.setQueryData(authKeys.session, null);
 	queryClient.removeQueries({

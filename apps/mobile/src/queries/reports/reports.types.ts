@@ -6,14 +6,14 @@ export type ReportPeriod =
 	| { kind: "today" | "7d" | "month" | "last_month" }
 	| { kind: "custom"; from: ISODate; to: ISODate };
 
-export type ReportBucket = {
+type ReportBucket = {
 	/** First day of the bar: the day itself, the first of 7 days from the period's start, or the first of the month. */
 	date: ISODate;
 	revenue: Money;
 	profit: Money;
 };
 
-export type ReportProduct = {
+type ReportProduct = {
 	productId: string;
 	name: string;
 	quantity: number;

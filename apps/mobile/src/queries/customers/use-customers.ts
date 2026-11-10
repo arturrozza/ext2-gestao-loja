@@ -10,7 +10,7 @@ import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
 import type { CustomerInput, CustomerListFilters } from "./customers.types";
 
-export const customersKeys = {
+const customersKeys = {
 	all: ["customers"] as const,
 	list: (filters: CustomerListFilters) =>
 		[...customersKeys.all, "list", filters] as const,

@@ -87,10 +87,8 @@ function parseBody(body: string): unknown {
 const UPLOAD_TIMEOUT_MS = 60_000;
 
 /**
- * Sends a local file (a `file://` URI) to an API route as multipart, with the session, throwing the same `ApiError`s as
- * `request()`. The one call outside Eden: Eden only sends a file that is a `Blob`, and an Expo file isn't one. So the
- * route, the field and the answer aren't checked by the compiler: `read` turns the answer into `T`, or returns `null`
- * when it isn't one (a captive portal's page, say), which fails the call instead of passing on something else.
+ * Sends a local `file://` as multipart, outside Eden (Eden only sends a `Blob`, and an Expo file isn't one). The
+ * answer isn't typed, so `read` checks it and returns `null` to fail the call.
  */
 export async function uploadFile<T>(
 	path: string,

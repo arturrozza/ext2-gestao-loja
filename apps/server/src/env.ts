@@ -25,7 +25,6 @@ const PHOTO_KEYS = [
 /** Secrets travel in these URLs (signed requests, the bucket's address): never over plain http. */
 const httpsUrl = z.url({ protocol: /^https$/ });
 
-/** Every field of the group is set. */
 function isComplete<T extends Record<string, unknown>>(
 	group: {
 		[K in keyof T]: T[K] | undefined;

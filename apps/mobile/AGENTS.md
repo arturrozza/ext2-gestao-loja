@@ -103,14 +103,14 @@ Alias: `@/*` → `src/*`.
 - Every API call goes through the `api` client (`src/lib/api.ts`), typed with the server's `type App`. No raw `fetch`.
   The one exception is sending a local file (`uploadFile` there, used for the product photo): Eden only sends a `Blob`
   as multipart and an Expo file isn't one. It keeps the session header and the `ApiError`s; give it a `read` guard.
-- No fake data: every screen reads the API through its module's hooks, and there is no "under construction" stand-in.
+- No fake data: every screen reads the API through its module's hooks.
   Screens rely on errors being an `ApiError` (`code`, pt-BR `message`, `details.field`) and on `unauthorized` ending the
   session: wrap every Eden call with `request()` from `src/lib/api.ts`, which returns the data or throws that `ApiError`
   (`network` when the server can't be reached). The session token lives in `src/lib/session-token.ts` (SecureStore) and
   `api` sends it as a Bearer header.
 - Server state lives **only** in TanStack Query. Don't copy API data into `useState`/context.
 - Each module in `src/queries/<module>/` exposes hooks (`useProducts`, `useCreateSale`...) and a query key factory
-  (`productsKeys.all`, `productsKeys.detail(id)`), like `src/queries/health/use-health.ts`.
+  (`productsKeys.all`, `productsKeys.detail(id)`), like `src/queries/products/use-products.ts`.
 - In `queryFn`/`mutationFn`, call `request(api.x.get())`: it throws the `ApiError` so Query treats it as an error.
 - After mutations, invalidate the affected keys.
 - `onlineManager` (expo-network) and `focusManager` (AppState) are already wired in `src/lib/query-client.ts`.

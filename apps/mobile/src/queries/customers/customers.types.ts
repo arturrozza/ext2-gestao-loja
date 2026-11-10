@@ -7,7 +7,6 @@ export type Customer = {
 	name: string;
 	/** Digits only ("11999998888"); shown with `formatPhone`. */
 	phone: string | null;
-	/** Free text. */
 	address: string | null;
 	note: string | null;
 	archived: boolean;

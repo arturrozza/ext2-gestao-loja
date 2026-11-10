@@ -14,7 +14,6 @@ import type { AlertCounts } from "@/queries/alerts/alerts.types";
 import type { StockState } from "@/queries/products/products.types";
 
 type AlertView = {
-	/** Its count in the API. */
 	count: keyof AlertCounts;
 	/** The product list filter that shows these products; its label is the title. */
 	filter: StockState;

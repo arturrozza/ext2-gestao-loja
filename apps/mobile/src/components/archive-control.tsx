@@ -19,7 +19,6 @@ export function ArchiveControl<T>({
 }: {
 	noun: string;
 	archived: boolean;
-	/** Shown while archived. */
 	archivedText: string;
 	/** What archiving does, in the confirmation. */
 	confirmText: string;

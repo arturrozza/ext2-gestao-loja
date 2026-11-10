@@ -23,7 +23,6 @@ type Report = ReportsModel["report"];
 type Channel = Report["channels"][number]["channel"];
 type CostKind = (typeof saleCostKind.enumValues)[number];
 
-/** How many products each ranking shows. */
 export const RANKING_SIZE = 5;
 
 const NO_CATEGORY = "Sem categoria";

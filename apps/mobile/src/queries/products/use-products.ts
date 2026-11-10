@@ -23,7 +23,7 @@ import type {
 	StockAdjustmentInput,
 } from "./products.types";
 
-export const productsKeys = {
+const productsKeys = {
 	all: ["products"] as const,
 	lists: () => [...productsKeys.all, "list"] as const,
 	list: (filters: ProductListFilters) =>
@@ -45,11 +45,7 @@ function listQuery(filters: ProductListFilters, cursor: number) {
 	};
 }
 
-/**
- * Paginated product list with stock (the catalog can be huge): next pages load as the list scrolls. Keeps the previous
- * result while a new search or filter loads, so the list doesn't flash. Only fetches while `enabled` (the picker of
- * sales and purchases stays mounted closed).
- */
+/** Keeps the previous result while a new filter loads, so the list doesn't flash. `enabled`: the pickers stay mounted. */
 export function useProducts(filters: ProductListFilters, enabled = true) {
 	return useInfiniteQuery({
 		queryKey: productsKeys.list(filters),
@@ -78,10 +74,7 @@ function readUploadedPhoto(value: unknown): string | null {
 	return typeof key === "string" && key ? key : null;
 }
 
-/**
- * Keys of photos already sent, by local file: saving again after a refused save (a repeated code, no internet) reuses
- * the key instead of sending the same photo once more. A shrunk photo gets a new file each time it is picked.
- */
+/** Keys of photos already sent, by local file: a retry after a refused save doesn't upload the photo again. */
 const sentPhotos = new Map<string, string>();
 
 /** The photo the app already shrank goes to the API first; its key goes in the save. */
@@ -100,10 +93,7 @@ async function photoKeyOf(
 	return key;
 }
 
-/**
- * A save with its photo: a new photo is sent first, then the product points at it. The key is kept for a retry until
- * the product is saved, or until the API refuses it (the next save sends the photo again).
- */
+/** Uploads a new photo first, then saves the product pointing at it. */
 async function saveWithPhoto<T>(
 	{ photo, ...rest }: ProductSave,
 	send: (input: ProductInput) => Promise<T>,

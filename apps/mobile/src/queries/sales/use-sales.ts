@@ -10,7 +10,7 @@ import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
 import type { SaleInput, SaleListFilters } from "./sales.types";
 
-export const salesKeys = {
+const salesKeys = {
 	all: ["sales"] as const,
 	list: (filters: SaleListFilters) =>
 		[...salesKeys.all, "list", filters] as const,

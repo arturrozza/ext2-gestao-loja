@@ -4,7 +4,6 @@ import { formatPhone } from "@/lib/masks";
 import { percentToInput } from "@/lib/money";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 
-/** Reseller data (revendedoras.md): name, phone, default commission and note. */
 export const resellerFormSchema = z.object({
 	name: z.string().trim().min(1, "Informe o nome."),
 	phone: optionalPhone,

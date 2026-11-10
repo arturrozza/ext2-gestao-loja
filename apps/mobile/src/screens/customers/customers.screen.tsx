@@ -92,7 +92,6 @@ function NoCustomers({
 	);
 }
 
-/** Regular customers (clientes.md), searchable, paginated. */
 export function CustomersScreen() {
 	const [search, setSearch] = useState("");
 	const [view, setView] = useState<ListView>("active");

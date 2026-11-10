@@ -94,10 +94,7 @@ function NewSaleForm({ settings }: { settings: StoreSettings }) {
 	);
 }
 
-/**
- * New sale (vendas.md): channel, products and payment in sight; discount, costs, customer and date one tap away, since
- * they usually keep their defaults. The real profit is computed live. Insufficient stock blocks with shortcuts; a loss warns and lets it through.
- */
+/** Discount, costs, customer and date sit one tap away: they usually keep their defaults. */
 export function NewSaleScreen() {
 	const query = useStoreSettings();
 	return (

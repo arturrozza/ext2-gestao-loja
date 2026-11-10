@@ -5,7 +5,7 @@
  */
 
 /** The store's time zone. One store in the MVP; per store when there are more (docs/architecture.md). */
-export const STORE_TIME_ZONE = "America/Sao_Paulo";
+const STORE_TIME_ZONE = "America/Sao_Paulo";
 
 /** "YYYY-MM-DD". */
 export type ISODate = string;

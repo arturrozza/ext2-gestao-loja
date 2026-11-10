@@ -1,7 +1,7 @@
 import { t, type UnwrapSchema } from "elysia";
 
 /** How many products a purchase or sale row shows as thumbs. */
-export const PREVIEW_SIZE = 3;
+const PREVIEW_SIZE = 3;
 
 /** A product shown as a thumb in a purchase or sale row. */
 export const previewField = t.Object({

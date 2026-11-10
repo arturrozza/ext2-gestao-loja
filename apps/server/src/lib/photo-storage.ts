@@ -7,9 +7,7 @@ import { httpError, loggable } from "./http-error";
  * to the API, never straight to the bucket, so what is stored is always a checked JPEG (docs/architecture.md).
  */
 export type PhotoStorage = {
-	/** Stores `bytes` under `key`, served with `contentType`. */
 	write(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
-	/** Whether something is stored under `key`. */
 	exists(key: string): Promise<boolean>;
 	/** The address the app loads the photo from; null while photos are off. */
 	publicUrl(key: string): string | null;

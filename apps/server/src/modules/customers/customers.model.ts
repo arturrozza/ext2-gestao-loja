@@ -7,13 +7,11 @@ const customer = t.Object({
 	name: t.String(),
 	/** Digits only ("11999998888"). */
 	phone: t.Union([t.Null(), t.String()]),
-	/** Free text. */
 	address: t.Union([t.Null(), t.String()]),
 	note: t.Union([t.Null(), t.String()]),
 	archived: t.Boolean(),
 	/** Active (not canceled) sales with this customer. */
 	purchasesCount: t.Integer(),
-	/** In cents. */
 	totalSpent: nonNegativeMoneyTotalField,
 	/** Day of the last active sale ("2026-11-08"), `null` before the first. */
 	lastPurchaseAt: t.Union([t.Null(), t.String()]),

@@ -59,7 +59,6 @@ export function CustomerFields({ form }: { form: CustomerFormState }) {
 	);
 }
 
-/** Create or edit a customer. */
 export function CustomerForm({
 	title,
 	submitLabel,

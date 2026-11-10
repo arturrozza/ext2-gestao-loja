@@ -66,11 +66,7 @@ function ReportBody({ report, view }: { report: Report; view: ReportView }) {
 	);
 }
 
-/**
- * One report per period (relatorios.md), split in three views so it isn't one endless page: summary (with evolution
- * and costs), products (with categories), channels (with resellers).
- * Canceled sales don't count; the period follows the sale date.
- */
+/** Split in three views so the report isn't one endless page. */
 export function ReportsScreen() {
 	const { period, applyCustom, group } = useReportPeriod();
 	const [view, setView] = useState<ReportView>("summary");

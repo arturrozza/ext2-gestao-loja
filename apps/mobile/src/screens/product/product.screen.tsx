@@ -16,10 +16,7 @@ import { MovementHistory } from "./partials/movement-history";
 import { ProductSummary } from "./partials/product-summary";
 import { StockCard } from "./partials/stock-card";
 
-/**
- * Product screen (produtos.md, estoque.md): its data, stock and average cost, quantity by expiry, the stock actions, the
- * ledger and the archive control. An archived product isn't edited, only reactivated.
- */
+/** An archived product isn't edited, only reactivated. */
 export function ProductScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = useProduct(id);

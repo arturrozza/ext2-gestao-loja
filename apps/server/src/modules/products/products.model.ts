@@ -31,7 +31,6 @@ const product = t.Object({
 	sellableStock: t.Integer(),
 	/** In cents: stock value ÷ units, rounded to the cent; zero without stock. */
 	averageCost: moneyField,
-	/** In cents. */
 	stockValue: moneyField,
 	flags: t.Object({
 		lowStock: t.Boolean(),
@@ -80,7 +79,6 @@ const movement = t.Object({
 		}),
 	]),
 	createdAt: t.String(),
-	/** Name of who did it. */
 	author: t.String(),
 });
 

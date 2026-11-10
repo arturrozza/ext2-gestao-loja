@@ -71,7 +71,6 @@ function Summary({ purchase }: { purchase: PurchaseDetail }) {
 	);
 }
 
-/** Purchase details (compras.md): items with cost and expiry, who entered it, and the cancel action. */
 export function PurchaseScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = usePurchase(id);

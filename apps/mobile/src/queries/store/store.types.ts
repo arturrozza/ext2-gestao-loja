@@ -1,6 +1,5 @@
 import type { Percent } from "@/lib/money";
 
-/** Store data (docs/product/loja.md). */
 export type StoreProfile = {
 	name: string;
 	document: string | null;

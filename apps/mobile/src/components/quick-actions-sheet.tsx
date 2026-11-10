@@ -67,7 +67,7 @@ function ActionRow({
 	);
 }
 
-/** Bottom sheet opened by the "+" button: every "create something" action in one place. Slides up from the bottom. */
+/** Bottom sheet opened by the "+" button: every "create something" action in one place. */
 export function QuickActionsSheet({
 	open,
 	onClose,

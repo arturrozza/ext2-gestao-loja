@@ -133,7 +133,7 @@ export type StockState = (typeof STOCK_STATES)[number];
 export type QuantityFlags = { lowStock: boolean; outOfStock: boolean };
 
 /** Whether some units expire within the store's warning days, and whether some already expired (read in SQL). */
-export type ExpiryFlags = { nearExpiry: boolean; expired: boolean };
+type ExpiryFlags = { nearExpiry: boolean; expired: boolean };
 
 /**
  * Low: at or below the minimum, while there's some (none at all is "out", not also low). Without a minimum, never low

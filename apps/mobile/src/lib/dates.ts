@@ -42,12 +42,6 @@ export function fromISODate(value: ISODate): Date {
 	return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1);
 }
 
-export function addDays(value: ISODate, days: number): ISODate {
-	const date = fromISODate(value);
-	date.setDate(date.getDate() + days);
-	return toISODate(date);
-}
-
 /** Whole days from `from` to `to` (negative when `to` is earlier). */
 export function daysBetween(from: ISODate, to: ISODate): number {
 	return Math.round(
@@ -142,14 +136,9 @@ export function formatExpiry(value: ExpiryMonth): string {
 }
 
 /** Last day of the expiry month ("2027-08" → "2027-08-31"). */
-export function expiryLastDay(value: ExpiryMonth): ISODate {
+function expiryLastDay(value: ExpiryMonth): ISODate {
 	const [year, month] = value.split("-").map(Number);
 	return toISODate(new Date(year ?? 1970, month ?? 1, 0));
-}
-
-/** Expired: today is after the last day of the expiry month. */
-export function isExpired(value: ExpiryMonth, today = todayISODate()): boolean {
-	return daysBetween(expiryLastDay(value), today) > 0;
 }
 
 /** Days left until the last day of the expiry month (0 on that day, negative once expired). */

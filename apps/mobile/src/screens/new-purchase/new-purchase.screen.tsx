@@ -95,10 +95,6 @@ function usePrefill(add: (item: PurchaseItemDraft) => void) {
 	}, [failed]);
 }
 
-/**
- * New purchase (compras.md): date (today by default, editable), one or more items with quantity, unit cost and
- * expiry when the product has one, and an optional note. Stock and average cost update when it's saved.
- */
 export function NewPurchaseScreen() {
 	const create = useCreatePurchase();
 	const [picking, setPicking] = useState(false);

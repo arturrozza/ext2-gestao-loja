@@ -82,7 +82,6 @@ function StoreForm({ store }: { store: StoreProfile }) {
 	);
 }
 
-/** Edit the store data (name, document, phone, address). */
 export function StoreEditScreen() {
 	const query = useStoreProfile();
 	return (

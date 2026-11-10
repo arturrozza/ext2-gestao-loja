@@ -13,7 +13,7 @@ export type SaleCostKind =
 	| "platform_fee"
 	| "commission"
 	| "other";
-export type SaleStatus = "active" | "canceled";
+type SaleStatus = "active" | "canceled";
 
 /** A sale cost (vendas.md): in reais (cents) or a percentage of the revenue (basis points, lib/money.ts). */
 export type SaleCostInput = {

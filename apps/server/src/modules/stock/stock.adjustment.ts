@@ -22,7 +22,7 @@ import {
  */
 
 /** Reasons that can add units: losses, damage, discards and gifts only take units away. */
-export const INCREASE_REASONS: readonly AdjustmentReason[] = ["count", "other"];
+const INCREASE_REASONS: readonly AdjustmentReason[] = ["count", "other"];
 
 export type AdjustmentInput = {
 	newQuantity: number;

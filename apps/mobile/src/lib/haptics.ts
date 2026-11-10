@@ -1,9 +1,8 @@
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
-// Haptic feedback presets. On Android, Expo recommends `performAndroidHapticsAsync` (system haptics) over the
-// Vibrator-based methods. Feedback is best-effort: iOS skips it in Low Power Mode, so never rely on it.
-// Errors are swallowed on purpose: a missing vibration must never break a tap.
+// Android uses `performAndroidHapticsAsync`, as Expo recommends. Errors are swallowed: a missing vibration must never
+// break a tap.
 
 const ignore = () => {};
 

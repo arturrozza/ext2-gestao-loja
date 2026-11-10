@@ -29,13 +29,11 @@ import { cn } from "@/lib/utils";
  * Long, paginated list rendered as a virtualized `FlatList` under the screen content (`children` becomes the list
  * header). Rows are drawn as one white card split by hairlines, like `ListCard`.
  */
-export type ScreenList<T> = {
+type ScreenList<T> = {
 	data: readonly T[];
 	keyExtractor: (item: T) => string;
 	renderItem: (item: T) => ReactNode;
-	/** Load the next page. */
 	onEndReached?: () => void;
-	/** Pull to refresh: fetch the list again. */
 	onRefresh?: () => unknown;
 	/**
 	 * Splits the rows into titled cards, one per value. Rows of a section must come together. Without it, one card.
@@ -65,7 +63,6 @@ type ScreenLayoutProps<T> = {
 	 * so the user always knows where they are. Content then starts under the status bar.
 	 */
 	compactTitle?: string;
-	/** Long list under the content, virtualized (products, sales...). */
 	list?: ScreenList<T>;
 	/** Pull to refresh on a screen without `list` (a list brings its own). */
 	onRefresh?: () => unknown;
@@ -266,11 +263,7 @@ function scrollPropsFor(
 	};
 }
 
-/**
- * Screen shell: header (or a compact glass bar that appears on scroll), scroll content (or a virtualized list), a
- * hairline under a fixed header once scrolled, and a gradient at the bottom so content melts behind the tab bar instead
- * of being cut. Content shows up right away: the stack's slide is the only screen transition. No scroll indicator.
- */
+/** Screen shell. Content shows up right away: the stack's slide is the only screen transition. */
 export function ScreenLayout<T = never>({
 	header,
 	children,

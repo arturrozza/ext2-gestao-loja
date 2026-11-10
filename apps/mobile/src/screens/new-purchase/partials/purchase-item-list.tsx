@@ -11,7 +11,6 @@ type Update = (
 	change: (items: PurchaseItemDraft[]) => PurchaseItemDraft[],
 ) => void;
 
-/** The lines of the purchase and the button that opens the product picker. */
 export function PurchaseItemList({
 	items,
 	errors,

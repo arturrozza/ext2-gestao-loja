@@ -89,10 +89,6 @@ function Totals({ totals }: { totals: SalePage["totals"] }) {
 	);
 }
 
-/**
- * Vendas tab (vendas.md): totals of the filter, then the sales, newest first. Canceled ones stay in the list, marked,
- * but don't count. Period and channel filters live in a sheet. New sales start at the tab bar's "+".
- */
 export function SalesScreen() {
 	const [period, setPeriod] = useState<SalePeriod>("month");
 	const [channels, setChannels] = useState<SaleChannel[]>([]);

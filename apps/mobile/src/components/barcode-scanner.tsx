@@ -36,10 +36,7 @@ function PermissionAsk({
 	);
 }
 
-/**
- * Full-screen camera that reads one barcode (EAN/UPC/Code 128) and hands it to `onScanned`. Used in the product
- * form, the product search, sales and purchases (docs/product/produtos.md). The camera only mounts while open (and while it slides away).
- */
+/** Full-screen camera that reads one barcode. It only mounts while open (and while it slides away). */
 export function BarcodeScanner({
 	open,
 	onClose,

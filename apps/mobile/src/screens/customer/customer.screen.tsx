@@ -97,10 +97,7 @@ function CustomerContent({ customer }: { customer: Customer }) {
 	);
 }
 
-/**
- * A customer (clientes.md): their numbers and data, what they bought (canceled sales marked, out of the totals) and the
- * archive control. Archived ones aren't edited, only reactivated.
- */
+/** Archived customers aren't edited, only reactivated. */
 export function CustomerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const query = useCustomer(id);

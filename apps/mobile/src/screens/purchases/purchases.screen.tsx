@@ -50,7 +50,6 @@ function PurchaseRow({ purchase }: { purchase: PurchaseSummary }) {
 	);
 }
 
-/** Purchase history (compras.md), newest first. Canceled ones stay, marked. */
 export function PurchasesScreen() {
 	const [view, setView] = useState<StatusView>("all");
 	const query = usePurchases({ status: view === "all" ? null : view });

@@ -7,7 +7,6 @@ import {
 import { formatPhone } from "@/lib/masks";
 import type { Customer } from "@/queries/customers/customers.types";
 
-/** Customer data (clientes.md): name, phone, address and note. */
 export const customerFormSchema = z.object({
 	name: z.string().trim().min(1, "Informe o nome."),
 	phone: optionalPhone,

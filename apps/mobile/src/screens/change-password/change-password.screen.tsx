@@ -8,7 +8,6 @@ import { useZodForm } from "@/lib/use-zod-form";
 import { useChangePassword } from "@/queries/auth/use-auth";
 import { changePasswordSchema } from "./change-password.schema";
 
-/** Change the password while signed in: current password, new one twice. */
 export function ChangePasswordScreen() {
 	const change = useChangePassword();
 	const form = useZodForm(changePasswordSchema, {

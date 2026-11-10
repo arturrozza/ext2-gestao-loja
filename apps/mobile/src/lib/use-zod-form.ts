@@ -5,9 +5,8 @@ import { errorMessage } from "@/lib/errors";
 import { formErrors } from "@/lib/form-errors";
 
 /**
- * Form state validated by a Zod schema. Errors show up only after the first submit attempt (docs/conventions.md,
- * "Formulários"). API errors about a field (`details.field`) go under that field (`applyApiError` in the mutation's
- * `onError`); the others go to the footer (`footerError`).
+ * Zod-validated form state. Errors show only after the first submit; API errors about a field go under it, the
+ * others to the footer (`footerError`).
  */
 export function useZodForm<
 	S extends z.ZodType<unknown, Record<string, unknown>>,

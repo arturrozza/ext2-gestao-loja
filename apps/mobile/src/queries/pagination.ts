@@ -6,7 +6,6 @@ export type Page<T> = {
 	total: number;
 };
 
-/** All loaded rows of an infinite query, in order. */
 export function flattenPages<T>(pages: Page<T>[] | undefined): T[] {
 	return pages?.flatMap((page) => page.items) ?? [];
 }

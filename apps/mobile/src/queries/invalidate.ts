@@ -3,12 +3,8 @@ import { authKeys } from "@/queries/auth/use-auth";
 import { storeKeys } from "@/queries/store/use-store";
 
 /**
- * Stock, purchases and sales feed each other, alerts, reports and the home, so a change in any of them refetches all
- * business data on screen. The session and the store data don't depend on them and stay put. Doesn't wait for the
- * refetch: the form that saved can leave right away.
- *
- * Paginated lists refetch every loaded page. Fine with small pages; with long scrolls, consider a keyset cursor
- * (name + id) instead of an offset.
+ * Stock, purchases and sales feed alerts, reports and the home, so any change refetches all business data (not the
+ * session or store). Not awaited, so the form can leave right away.
  */
 export function useInvalidateBusinessData() {
 	const queryClient = useQueryClient();

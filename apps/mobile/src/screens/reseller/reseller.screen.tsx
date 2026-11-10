@@ -105,10 +105,7 @@ function ResellerPage({
 	);
 }
 
-/**
- * A reseller (revendedoras.md): her sales and commission in a period (this month by default), her data, her sales and
- * the archive control. Archived ones aren't edited, only reactivated.
- */
+/** Archived resellers aren't edited, only reactivated. */
 export function ResellerScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const [period, setPeriod] = useState<SalePeriod>("month");

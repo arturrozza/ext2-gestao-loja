@@ -90,7 +90,6 @@ function stockState(
 	return { short, unknown };
 }
 
-/** State and rules of the new sale screen. */
 export function useNewSaleForm(settings: StoreSettings) {
 	const create = useCreateSale();
 	const form = useZodForm(newSaleSchema, {

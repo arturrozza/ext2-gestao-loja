@@ -35,7 +35,6 @@ export type SaleCostDraft = {
 	auto: boolean;
 };
 
-/** The reseller as the sale form keeps her. */
 export type SaleReseller = Pick<Reseller, "id" | "name" | "defaultCommission">;
 
 export type SaleAdjustment = "none" | "discount" | "surcharge";
