@@ -1,9 +1,14 @@
 ---
 name: task-flow
-description: Runs a task end to end in the maintainer's standard flow. Aligns it through grilling, then implements it in phases, each one reviewed twice by a Sonnet thermo-nuclear subagent and committed, followed by a final review of the whole change, checks, docs and /pr-main. Use when the maintainer runs /task-flow with a task (Linear id, GitHub issue or free text) or says "bora no fluxo de sempre" for a task.
+description: Runs a task end to end in the maintainer's standard flow (grilling, phased implementation with two Sonnet reviews each, final review, checks, docs, /pr-main and merge). ONLY runs when the maintainer types /task-flow themselves; never start it on your own, not even for "bora trabalhar na MUN-x" or similar.
+disable-model-invocation: true
 ---
 
 # Task flow
+
+**Manual only.** This skill runs only when the maintainer types `/task-flow` (the frontmatter blocks the model from
+invoking it). Never start this flow, or any phase of it, because a task was mentioned, a Linear id came up or the
+maintainer said "bora trabalhar na MUN-x". Without `/task-flow`, do only what was asked: read, answer, ask.
 
 The argument is the task. It can be a Linear id (`MUN-16`), a GitHub issue or PR (number or URL), or free text.
 Running this skill is the go-ahead for the whole flow, through `/pr-main` and its merge. Ask the maintainer only

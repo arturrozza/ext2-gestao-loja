@@ -1,5 +1,10 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { BarcodeIcon } from "phosphor-react-native/src/icons/Barcode";
+import { HashIcon } from "phosphor-react-native/src/icons/Hash";
+import { MapPinIcon } from "phosphor-react-native/src/icons/MapPin";
+import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
+import { PackageIcon } from "phosphor-react-native/src/icons/Package";
+import { TagIcon } from "phosphor-react-native/src/icons/Tag";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { BarcodeScanner } from "@/components/barcode-scanner";
@@ -35,6 +40,7 @@ function BarcodeField({
 			<View className="flex-1">
 				<FormField
 					label="Código de barras (opcional)"
+					icon={BarcodeIcon}
 					placeholder="Ex.: 7891000000004"
 					value={value}
 					onChangeText={onChange}
@@ -107,6 +113,7 @@ export function ProductForm({
 				/>
 				<FormField
 					label="Nome"
+					icon={TagIcon}
 					value={values.name}
 					onChangeText={(text) => set("name", text)}
 					error={errors.name}
@@ -114,6 +121,7 @@ export function ProductForm({
 				/>
 				<FormField
 					label="Preço de venda (R$)"
+					icon={MoneyIcon}
 					value={values.basePrice}
 					onChangeText={(text) => set("basePrice", text)}
 					error={errors.basePrice}
@@ -134,6 +142,7 @@ export function ProductForm({
 				/>
 				<FormField
 					label="Código interno (opcional)"
+					icon={HashIcon}
 					placeholder="Ex.: MM-0004"
 					value={values.internalCode}
 					onChangeText={(text) => set("internalCode", text)}
@@ -147,6 +156,7 @@ export function ProductForm({
 			>
 				<FormField
 					label="Estoque mínimo (opcional)"
+					icon={PackageIcon}
 					placeholder="Ex.: 3"
 					value={values.minStock}
 					onChangeText={(text) => set("minStock", text)}
@@ -156,6 +166,7 @@ export function ProductForm({
 				/>
 				<FormField
 					label="Localização (opcional)"
+					icon={MapPinIcon}
 					value={values.location}
 					onChangeText={(text) => set("location", text)}
 					error={errors.location}

@@ -1,3 +1,4 @@
+import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
 import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
 import { View } from "react-native";
 import { CollapsibleSection } from "@/components/collapsible-section";
@@ -112,6 +113,7 @@ export function AdjustmentSection({ sale }: { sale: Sale }) {
 			{values.adjustment !== "none" ? (
 				<FormField
 					label="Valor sobre a venda inteira (R$)"
+					icon={MoneyIcon}
 					value={values.adjustmentValue}
 					onChangeText={(text) => set("adjustmentValue", text)}
 					error={errors.adjustmentValue}

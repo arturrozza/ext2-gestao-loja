@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import { EnvelopeIcon } from "phosphor-react-native/src/icons/Envelope";
+import { LockIcon } from "phosphor-react-native/src/icons/Lock";
+import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { DiscardGuard } from "@/components/discard-guard";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
@@ -43,6 +46,7 @@ export function NewUserScreen() {
 			<FormSection>
 				<FormField
 					label="Nome"
+					icon={UserIcon}
 					placeholder="Como a pessoa se chama"
 					value={form.values.name}
 					onChangeText={(text) => form.set("name", text)}
@@ -52,6 +56,7 @@ export function NewUserScreen() {
 				/>
 				<FormField
 					label="E-mail"
+					icon={EnvelopeIcon}
 					placeholder="pessoa@email.com"
 					value={form.values.email}
 					onChangeText={(text) => form.set("email", text)}
@@ -63,22 +68,24 @@ export function NewUserScreen() {
 				/>
 				<FormField
 					label="Senha"
+					icon={LockIcon}
 					placeholder="A senha que ela vai usar"
 					value={form.values.password}
 					onChangeText={(text) => form.set("password", text)}
 					error={form.errors.password}
 					hint="Pelo menos 8 caracteres. A pessoa pode trocar depois."
-					secureTextEntry
+					password
 					autoComplete="new-password"
 					textContentType="newPassword"
 				/>
 				<FormField
 					label="Repita a senha"
+					icon={LockIcon}
 					placeholder="A mesma senha de novo"
 					value={form.values.confirmPassword}
 					onChangeText={(text) => form.set("confirmPassword", text)}
 					error={form.errors.confirmPassword}
-					secureTextEntry
+					password
 					autoComplete="new-password"
 					textContentType="newPassword"
 				/>

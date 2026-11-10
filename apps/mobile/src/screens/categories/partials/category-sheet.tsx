@@ -1,3 +1,4 @@
+import { TagIcon } from "phosphor-react-native/src/icons/Tag";
 import { useState } from "react";
 import { View } from "react-native";
 import { BottomSheet } from "@/components/bottom-sheet";
@@ -67,6 +68,7 @@ export function CategorySheet({
 			<View className="gap-3 px-3 pt-1">
 				<FormField
 					label="Nome"
+					icon={TagIcon}
 					value={name}
 					onChangeText={setName}
 					error={rename.error ? errorMessage(rename.error) : undefined}

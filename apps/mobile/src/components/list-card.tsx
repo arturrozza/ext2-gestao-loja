@@ -54,6 +54,8 @@ type ListRowProps = {
 	href?: Href;
 	onPress?: () => void;
 	muted?: boolean;
+	/** The height and text size of an `InfoRow`, for action rows that share a card with them. */
+	dense?: boolean;
 };
 
 function RowBody({
@@ -63,6 +65,7 @@ function RowBody({
 	right,
 	children,
 	muted,
+	dense,
 	pressable,
 }: ListRowProps & { pressable: boolean }) {
 	return (
@@ -73,7 +76,9 @@ function RowBody({
 			<View className="flex-1 gap-1">
 				<Text
 					className={cn(
-						"font-sans-semibold text-[15px]",
+						dense
+							? "font-sans-medium text-sm"
+							: "font-sans-semibold text-[15px]",
 						muted && "text-muted-foreground",
 					)}
 					numberOfLines={1}
@@ -96,10 +101,12 @@ function RowBody({
 }
 
 const ROW = "flex-row items-center gap-3 px-4 py-4";
+const DENSE_ROW = "flex-row items-center gap-3 px-4 py-3";
 
 /** Row of a `ListCard`. With `href` or `onPress` it's tappable and gets a chevron. */
 export function ListRow(props: ListRowProps) {
-	const { href, onPress, title } = props;
+	const { href, onPress, title, dense } = props;
+	const row = dense ? DENSE_ROW : ROW;
 
 	if (href) {
 		return (
@@ -108,7 +115,7 @@ export function ListRow(props: ListRowProps) {
 					onPress={hapticTap}
 					accessibilityRole="button"
 					accessibilityLabel={title}
-					className={cn(ROW, "active:bg-card")}
+					className={cn(row, "active:bg-card")}
 				>
 					<RowBody {...props} pressable />
 				</Pressable>
@@ -121,14 +128,14 @@ export function ListRow(props: ListRowProps) {
 				onPress={withHaptic(hapticTap, onPress)}
 				accessibilityRole="button"
 				accessibilityLabel={title}
-				className={cn(ROW, "active:bg-card")}
+				className={cn(row, "active:bg-card")}
 			>
 				<RowBody {...props} pressable />
 			</Pressable>
 		);
 	}
 	return (
-		<View className={ROW}>
+		<View className={row}>
 			<RowBody {...props} pressable={false} />
 		</View>
 	);

@@ -1,3 +1,5 @@
+import { LockIcon } from "phosphor-react-native/src/icons/Lock";
+import { TagIcon } from "phosphor-react-native/src/icons/Tag";
 import { ScrollView, View } from "react-native";
 import { ScreenHeader } from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
@@ -65,9 +67,16 @@ export function DesignSystemScreen() {
 						<Label nativeID="product-name">Nome do produto</Label>
 						<Input
 							aria-labelledby="product-name"
+							icon={TagIcon}
 							placeholder="Ex.: Camiseta básica"
 						/>
 					</View>
+					<Input
+						icon={LockIcon}
+						password
+						placeholder="Senha"
+						accessibilityLabel="Senha"
+					/>
 					<Input editable={false} placeholder="Desabilitado" />
 				</ShowcaseSection>
 

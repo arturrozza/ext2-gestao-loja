@@ -1,4 +1,6 @@
 import type { UseMutationResult } from "@tanstack/react-query";
+import { PhoneIcon } from "phosphor-react-native/src/icons/Phone";
+import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { AddressField } from "@/components/address-field";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
@@ -26,6 +28,7 @@ export function CustomerFields({ form }: { form: CustomerFormState }) {
 		<>
 			<FormField
 				label="Nome"
+				icon={UserIcon}
 				placeholder="Nome do cliente"
 				value={values.name}
 				onChangeText={(text) => set("name", text)}
@@ -33,6 +36,7 @@ export function CustomerFields({ form }: { form: CustomerFormState }) {
 			/>
 			<FormField
 				label="Telefone (opcional)"
+				icon={PhoneIcon}
 				placeholder="(11) 90000-0000"
 				value={values.phone}
 				onChangeText={(text) => set("phone", maskPhone(text))}

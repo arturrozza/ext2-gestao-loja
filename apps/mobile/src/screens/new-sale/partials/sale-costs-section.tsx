@@ -1,3 +1,4 @@
+import { TextAaIcon } from "phosphor-react-native/src/icons/TextAa";
 import { TrashIcon } from "phosphor-react-native/src/icons/Trash";
 import { Pressable, View } from "react-native";
 import { AmountField } from "@/components/amount-field";
@@ -43,6 +44,7 @@ function CostRow({
 			{cost.kind === "other" ? (
 				<FormField
 					label="Descrição"
+					icon={TextAaIcon}
 					value={cost.label}
 					onChangeText={(label) => onChange({ label })}
 					placeholder="Ex.: taxa da maquininha"

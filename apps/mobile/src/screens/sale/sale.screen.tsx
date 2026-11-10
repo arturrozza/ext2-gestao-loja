@@ -1,4 +1,9 @@
 import { useLocalSearchParams } from "expo-router";
+import { CreditCardIcon } from "phosphor-react-native/src/icons/CreditCard";
+import { StorefrontIcon } from "phosphor-react-native/src/icons/Storefront";
+import { UserIcon } from "phosphor-react-native/src/icons/User";
+import { UserCircleIcon } from "phosphor-react-native/src/icons/UserCircle";
+import { UsersThreeIcon } from "phosphor-react-native/src/icons/UsersThree";
 import { View } from "react-native";
 import { CanceledNote } from "@/components/canceled-note";
 import { Figure, FigurePair } from "@/components/figure-pair";
@@ -130,16 +135,29 @@ function SaleItemRow({ item }: { item: SaleItem }) {
 function Details({ sale }: { sale: SaleDetail }) {
 	return (
 		<ListCard title="Detalhes">
-			<InfoRow label="Canal" value={SALE_CHANNELS[sale.channel]} />
+			<InfoRow
+				label="Canal"
+				icon={StorefrontIcon}
+				value={SALE_CHANNELS[sale.channel]}
+			/>
 			{sale.resellerName ? (
-				<InfoRow label="Revendedora" value={sale.resellerName} />
+				<InfoRow
+					label="Revendedora"
+					icon={UsersThreeIcon}
+					value={sale.resellerName}
+				/>
 			) : null}
-			<InfoRow label="Cliente" value={sale.customerName} />
+			<InfoRow label="Cliente" icon={UserIcon} value={sale.customerName} />
 			<InfoRow
 				label="Pagamento"
+				icon={CreditCardIcon}
 				value={`${PAYMENT_METHODS[sale.paymentMethod]} · ${PAYMENT_CONDITIONS[sale.paymentCondition]}`}
 			/>
-			<InfoRow label="Registrada por" value={sale.author} />
+			<InfoRow
+				label="Registrada por"
+				icon={UserCircleIcon}
+				value={sale.author}
+			/>
 		</ListCard>
 	);
 }

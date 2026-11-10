@@ -1,5 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { NoteIcon } from "phosphor-react-native/src/icons/Note";
 import { PencilSimpleIcon } from "phosphor-react-native/src/icons/PencilSimple";
+import { PhoneIcon } from "phosphor-react-native/src/icons/Phone";
 import { useState } from "react";
 import { View } from "react-native";
 import { ArchiveControl } from "@/components/archive-control";
@@ -39,9 +41,13 @@ function Numbers({ reseller, stale }: { reseller: Reseller; stale: boolean }) {
 				</FigurePair>
 			</View>
 			<View className="border-border border-t">
-				<InfoRow label="Telefone" value={formatPhone(reseller.phone)} />
+				<InfoRow
+					label="Telefone"
+					icon={PhoneIcon}
+					value={formatPhone(reseller.phone)}
+				/>
 				{reseller.note ? (
-					<InfoRow label="Observação" value={reseller.note} />
+					<InfoRow label="Observação" icon={NoteIcon} value={reseller.note} />
 				) : null}
 			</View>
 		</View>

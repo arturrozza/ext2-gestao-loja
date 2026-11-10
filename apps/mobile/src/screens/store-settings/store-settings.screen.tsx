@@ -1,4 +1,6 @@
 import { router } from "expo-router";
+import { ClockIcon } from "phosphor-react-native/src/icons/Clock";
+import { PercentIcon } from "phosphor-react-native/src/icons/Percent";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
 import { FormSection } from "@/components/form-section";
@@ -54,6 +56,7 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 			>
 				<FormField
 					label="Imposto padrão (%)"
+					icon={PercentIcon}
 					placeholder="Ex.: 6"
 					value={form.values.defaultTaxPercent}
 					onChangeText={(text) => form.set("defaultTaxPercent", text)}
@@ -62,6 +65,7 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 				/>
 				<FormField
 					label="Taxa do Mercado Livre (%)"
+					icon={PercentIcon}
 					placeholder="Ex.: 16"
 					value={form.values.mercadoLivreFeePercent}
 					onChangeText={(text) => form.set("mercadoLivreFeePercent", text)}
@@ -72,6 +76,7 @@ function SettingsForm({ settings }: { settings: StoreSettings }) {
 			<FormSection title="Alertas">
 				<FormField
 					label="Avisar vencimento com quantos dias"
+					icon={ClockIcon}
 					placeholder="Ex.: 30"
 					value={form.values.expiryWarningDays}
 					onChangeText={(text) => form.set("expiryWarningDays", text)}

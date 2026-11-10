@@ -1,3 +1,4 @@
+import { TagIcon } from "phosphor-react-native/src/icons/Tag";
 import { type ComponentRef, useRef, useState } from "react";
 import { Keyboard, ScrollView, type TextInput } from "react-native";
 import { z } from "zod";
@@ -69,6 +70,7 @@ export function NewCategorySheet({
 				<FormField
 					ref={nameRef}
 					label="Nome"
+					icon={TagIcon}
 					placeholder="Ex.: Perfumes"
 					value={form.values.name}
 					onChangeText={(text) => form.set("name", text)}

@@ -30,6 +30,20 @@ a transição do navegador não escurecia a tela de trás; nenhum dos dois deixa
 tudo, o valor é ajustado em um lugar. Segurar a saída dos formulários foi o preço: sem isso a tela sumiria seca ao
 fechar. Encolher a tela de trás, como no iPhone, ficou de fora por exigir mexer na raiz do app. Foto e leitor de código
 não fecham arrastando: na foto o arrasto já move o zoom.
+
+## 2026-11-09: Ícones nos campos dos formulários e olho nas senhas (MUN-27)
+
+**Decisão:** todo campo de texto de uma linha ganha um ícone à esquerda, no mesmo estilo dos campos que já tinham
+(tamanho, cinza suave, cor fixa mesmo com erro). Campos de senha ganham um olho à direita para mostrar e esconder o que
+foi digitado, cada campo com o seu. Observação e motivo ficam sem ícone; o endereço leva o pino de mapa. As telas de
+visualização (produto, cliente, revendedora, loja, detalhes da venda) também mostram um ícone antes de cada rótulo; as
+linhas de contas (resultado da venda, custos dos relatórios) ficam sem. O campo de
+custos da venda (com a chave R$/%) fica como está, com o "R$"/"%" escrito dentro; preço e custo comuns ganham o ícone
+de dinheiro.
+**Por quê:** formulários mais fáceis de ler e com a mesma cara dos campos de busca, data e seleção. Texto longo fica sem
+ícone porque o ícone no alto de um campo grande pesa e não ajuda a achar o campo; no custo da venda o "R$"/"%" já faz o
+papel do ícone, e um segundo ao lado ficaria carregado.
+
 ## 2026-11-09: Alertas só de estoque e validade, e resumo do mês na tela inicial (MUN-18)
 
 **Decisão:** os alertas ficam em quatro: sem estoque, estoque baixo, vencido e perto de vencer. Margem baixa, margem

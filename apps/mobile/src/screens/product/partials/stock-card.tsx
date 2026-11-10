@@ -1,3 +1,5 @@
+import { MapPinIcon } from "phosphor-react-native/src/icons/MapPin";
+import { PackageIcon } from "phosphor-react-native/src/icons/Package";
 import { InfoRow } from "@/components/info-row";
 import { ListCard } from "@/components/list-card";
 import type { Product } from "@/queries/products/products.types";
@@ -8,9 +10,10 @@ export function StockCard({ product }: { product: Product }) {
 		<ListCard title="Local e mínimo">
 			<InfoRow
 				label="Estoque mínimo"
+				icon={PackageIcon}
 				value={product.minStock === null ? null : String(product.minStock)}
 			/>
-			<InfoRow label="Localização" value={product.location} />
+			<InfoRow label="Localização" icon={MapPinIcon} value={product.location} />
 		</ListCard>
 	);
 }

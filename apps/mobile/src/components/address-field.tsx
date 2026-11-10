@@ -1,3 +1,4 @@
+import { MapPinIcon } from "phosphor-react-native/src/icons/MapPin";
 import { FormField } from "@/components/form-field";
 
 /** The optional free-text address of the store or a customer: grows with the lines typed. */
@@ -13,6 +14,7 @@ export function AddressField({
 	return (
 		<FormField
 			label="Endereço (opcional)"
+			icon={MapPinIcon}
 			placeholder="Rua, número – bairro, cidade/UF"
 			value={value}
 			onChangeText={onChangeText}

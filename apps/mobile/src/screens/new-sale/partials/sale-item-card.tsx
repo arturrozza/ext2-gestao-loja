@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
 import { TrashIcon } from "phosphor-react-native/src/icons/Trash";
 import { Pressable, View } from "react-native";
 import { FormField } from "@/components/form-field";
@@ -112,6 +113,7 @@ export function SaleItemCard({
 				<View className="flex-1">
 					<FormField
 						label="Preço (R$)"
+						icon={MoneyIcon}
 						value={item.unitPrice}
 						onChangeText={(unitPrice) => onChange({ unitPrice })}
 						error={errors.unitPrice}

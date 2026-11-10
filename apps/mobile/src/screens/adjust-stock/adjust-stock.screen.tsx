@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { PackageIcon } from "phosphor-react-native/src/icons/Package";
 import { View } from "react-native";
 import { DateField } from "@/components/date-field";
 import { FormField } from "@/components/form-field";
@@ -136,6 +137,7 @@ function AdjustForm({ product }: { product: ProductDetail }) {
 			<FormSection>
 				<FormField
 					label="Quantidade certa"
+					icon={PackageIcon}
 					placeholder="Ex.: 8"
 					value={values.newQuantity}
 					onChangeText={(text) => set("newQuantity", text.replace(/\D/g, ""))}

@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
 import { View } from "react-native";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
@@ -73,6 +74,7 @@ function CostForm({ product }: { product: ProductDetail }) {
 			<FormSection>
 				<FormField
 					label="Custo certo por unidade (R$)"
+					icon={MoneyIcon}
 					value={form.values.newCost}
 					onChangeText={(text) => form.set("newCost", text)}
 					error={form.errors.newCost}

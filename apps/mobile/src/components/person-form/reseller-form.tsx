@@ -1,4 +1,7 @@
 import type { UseMutationResult } from "@tanstack/react-query";
+import { PercentIcon } from "phosphor-react-native/src/icons/Percent";
+import { PhoneIcon } from "phosphor-react-native/src/icons/Phone";
+import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
 import { FormSection } from "@/components/form-section";
@@ -25,6 +28,7 @@ export function ResellerFields({ form }: { form: ResellerFormState }) {
 		<>
 			<FormField
 				label="Nome"
+				icon={UserIcon}
 				placeholder="Nome da revendedora"
 				value={values.name}
 				onChangeText={(text) => set("name", text)}
@@ -32,6 +36,7 @@ export function ResellerFields({ form }: { form: ResellerFormState }) {
 			/>
 			<FormField
 				label="Telefone (opcional)"
+				icon={PhoneIcon}
 				placeholder="(11) 90000-0000"
 				value={values.phone}
 				onChangeText={(text) => set("phone", maskPhone(text))}
@@ -40,6 +45,7 @@ export function ResellerFields({ form }: { form: ResellerFormState }) {
 			/>
 			<FormField
 				label="Comissão padrão (%)"
+				icon={PercentIcon}
 				value={values.defaultCommission}
 				onChangeText={(text) => set("defaultCommission", text)}
 				error={errors.defaultCommission}

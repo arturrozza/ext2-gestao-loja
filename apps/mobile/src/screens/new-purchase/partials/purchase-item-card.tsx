@@ -1,4 +1,5 @@
 import { CopyIcon } from "phosphor-react-native/src/icons/Copy";
+import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
 import { TrashIcon } from "phosphor-react-native/src/icons/Trash";
 import { Pressable, View } from "react-native";
 import { DateField } from "@/components/date-field";
@@ -94,6 +95,7 @@ export function PurchaseItemCard({
 				<View className="flex-1">
 					<FormField
 						label="Custo un. (R$)"
+						icon={MoneyIcon}
 						value={item.unitCost}
 						onChangeText={(unitCost) => onChange({ unitCost })}
 						keyboardType="decimal-pad"

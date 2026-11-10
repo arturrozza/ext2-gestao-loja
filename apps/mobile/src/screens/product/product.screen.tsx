@@ -1,4 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { BarcodeIcon } from "phosphor-react-native/src/icons/Barcode";
+import { CalendarCheckIcon } from "phosphor-react-native/src/icons/CalendarCheck";
+import { HashIcon } from "phosphor-react-native/src/icons/Hash";
 import { PencilSimpleIcon } from "phosphor-react-native/src/icons/PencilSimple";
 import { IconButton } from "@/components/icon-button";
 import { InfoRow } from "@/components/info-row";
@@ -45,10 +48,19 @@ export function ProductScreen() {
 					<ExpiryList expiries={product.expiries} />
 					<StockCard product={product} />
 					<ListCard title="Códigos">
-						<InfoRow label="Código interno" value={product.internalCode} />
-						<InfoRow label="Código de barras" value={product.barcode} />
+						<InfoRow
+							label="Código interno"
+							icon={HashIcon}
+							value={product.internalCode}
+						/>
+						<InfoRow
+							label="Código de barras"
+							icon={BarcodeIcon}
+							value={product.barcode}
+						/>
 						<InfoRow
 							label="Tem validade"
+							icon={CalendarCheckIcon}
 							value={product.hasExpiry ? "Sim" : "Não"}
 						/>
 					</ListCard>

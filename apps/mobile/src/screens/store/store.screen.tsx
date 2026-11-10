@@ -1,6 +1,14 @@
 import { Link } from "expo-router";
+import { ClockIcon } from "phosphor-react-native/src/icons/Clock";
+import { EnvelopeIcon } from "phosphor-react-native/src/icons/Envelope";
+import { IdentificationCardIcon } from "phosphor-react-native/src/icons/IdentificationCard";
 import { KeyIcon } from "phosphor-react-native/src/icons/Key";
+import { MapPinIcon } from "phosphor-react-native/src/icons/MapPin";
+import { PercentIcon } from "phosphor-react-native/src/icons/Percent";
+import { PhoneIcon } from "phosphor-react-native/src/icons/Phone";
 import { SignOutIcon } from "phosphor-react-native/src/icons/SignOut";
+import { StorefrontIcon } from "phosphor-react-native/src/icons/Storefront";
+import { UserIcon } from "phosphor-react-native/src/icons/User";
 import { UsersIcon } from "phosphor-react-native/src/icons/Users";
 import { useState } from "react";
 import { Pressable } from "react-native";
@@ -36,10 +44,14 @@ function StoreData() {
 					title="Dados da loja"
 					action={<EditLink href="/store/edit" />}
 				>
-					<InfoRow label="Nome" value={store.name} />
-					<InfoRow label="Documento" value={store.document} />
-					<InfoRow label="Telefone" value={store.phone} />
-					<InfoRow label="Endereço" value={store.address} />
+					<InfoRow label="Nome" icon={StorefrontIcon} value={store.name} />
+					<InfoRow
+						label="Documento"
+						icon={IdentificationCardIcon}
+						value={store.document}
+					/>
+					<InfoRow label="Telefone" icon={PhoneIcon} value={store.phone} />
+					<InfoRow label="Endereço" icon={MapPinIcon} value={store.address} />
 				</ListCard>
 			)}
 		</QueryView>
@@ -57,14 +69,17 @@ function StoreSettingsCard() {
 				>
 					<InfoRow
 						label="Imposto padrão"
+						icon={PercentIcon}
 						value={formatPercent(settings.defaultTaxPercent)}
 					/>
 					<InfoRow
 						label="Taxa do Mercado Livre"
+						icon={PercentIcon}
 						value={formatPercent(settings.mercadoLivreFeePercent)}
 					/>
 					<InfoRow
 						label="Avisar vencimento"
+						icon={ClockIcon}
 						value={`${settings.expiryWarningDays} dias antes`}
 					/>
 				</ListCard>
@@ -83,11 +98,25 @@ export function StoreScreen() {
 			<StoreData />
 			<StoreSettingsCard />
 			<ListCard title="Conta">
-				<InfoRow label="Usuário" value={session.data?.user.name} />
-				<InfoRow label="E-mail" value={session.data?.user.email} />
-				<ListRow title="Usuários" icon={UsersIcon} href="/store/users" />
-				<ListRow title="Trocar senha" icon={KeyIcon} href="/store/password" />
+				<InfoRow
+					label="Usuário"
+					icon={UserIcon}
+					value={session.data?.user.name}
+				/>
+				<InfoRow
+					label="E-mail"
+					icon={EnvelopeIcon}
+					value={session.data?.user.email}
+				/>
+				<ListRow dense title="Usuários" icon={UsersIcon} href="/store/users" />
 				<ListRow
+					dense
+					title="Trocar senha"
+					icon={KeyIcon}
+					href="/store/password"
+				/>
+				<ListRow
+					dense
 					title="Sair"
 					icon={SignOutIcon}
 					onPress={() => setSigningOut(true)}

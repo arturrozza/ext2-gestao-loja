@@ -1,3 +1,5 @@
+import { EnvelopeIcon } from "phosphor-react-native/src/icons/Envelope";
+import { LockIcon } from "phosphor-react-native/src/icons/Lock";
 import { type ComponentRef, useRef } from "react";
 import type { TextInput } from "react-native";
 import { FormField } from "@/components/form-field";
@@ -32,6 +34,7 @@ export function LoginScreen() {
 			<FormSection>
 				<FormField
 					label="E-mail"
+					icon={EnvelopeIcon}
 					placeholder="voce@email.com"
 					value={form.values.email}
 					onChangeText={(text) => form.set("email", text)}
@@ -48,11 +51,12 @@ export function LoginScreen() {
 				<FormField
 					ref={passwordRef}
 					label="Senha"
+					icon={LockIcon}
 					placeholder="Sua senha"
 					value={form.values.password}
 					onChangeText={(text) => form.set("password", text)}
 					error={form.errors.password}
-					secureTextEntry
+					password
 					autoComplete="current-password"
 					textContentType="password"
 					returnKeyType="go"

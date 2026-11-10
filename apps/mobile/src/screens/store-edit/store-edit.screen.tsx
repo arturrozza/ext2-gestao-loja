@@ -1,4 +1,7 @@
 import { router } from "expo-router";
+import { IdentificationCardIcon } from "phosphor-react-native/src/icons/IdentificationCard";
+import { PhoneIcon } from "phosphor-react-native/src/icons/Phone";
+import { StorefrontIcon } from "phosphor-react-native/src/icons/Storefront";
 import { AddressField } from "@/components/address-field";
 import { FormField } from "@/components/form-field";
 import { FormScreen } from "@/components/form-screen";
@@ -45,6 +48,7 @@ function StoreForm({ store }: { store: StoreProfile }) {
 			<FormSection>
 				<FormField
 					label="Nome"
+					icon={StorefrontIcon}
 					placeholder="Ex.: Mundo Madam Cosméticos"
 					value={form.values.name}
 					onChangeText={(text) => form.set("name", text)}
@@ -52,6 +56,7 @@ function StoreForm({ store }: { store: StoreProfile }) {
 				/>
 				<FormField
 					label="CPF ou CNPJ (opcional)"
+					icon={IdentificationCardIcon}
 					placeholder="00.000.000/0000-00"
 					value={form.values.document}
 					onChangeText={(text) => form.set("document", maskDocument(text))}
@@ -60,6 +65,7 @@ function StoreForm({ store }: { store: StoreProfile }) {
 				/>
 				<FormField
 					label="Telefone (opcional)"
+					icon={PhoneIcon}
 					placeholder="(11) 90000-0000"
 					value={form.values.phone}
 					onChangeText={(text) => form.set("phone", maskPhone(text))}

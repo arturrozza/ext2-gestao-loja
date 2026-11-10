@@ -107,6 +107,19 @@ cinza claro, cards brancos, laranja só em detalhes, nada de bloco preto**. A te
 - Campo de texto (`TextInput`) usa `text-[16px]`, nunca `text-base`/`text-sm`: essas classes também fixam a altura da
   linha, e no iPhone isso empurra o texto para baixo do centro.
 - Todo campo tem placeholder: um exemplo do que vai nele ("Ex.: Perfumes", "(11) 90000-0000").
+- Campo de texto de uma linha tem ícone à esquerda combinando com o que pede (`icon` no `FormField`/`Input`: pessoa
+  para nome de gente, etiqueta para nome de produto e categoria, telefone, envelope, cadeado, dinheiro, porcentagem,
+  código de barras...): tamanho 18, cinza suave `text-foreground/45`, como na busca. O ícone não muda de cor com foco
+  ou erro; só a borda muda. Ficam sem ícone os textos longos (observação, motivo) e o `AmountField`, que já tem o
+  "R$"/"%" dentro do campo; o endereço leva o pino de mapa, no alto, ao lado da primeira linha. O ícone é opcional no
+  componente.
+- Telas de visualização: `InfoRow` (linha "rótulo ... valor") leva `icon`, um ícone solto cinza (`text-foreground/50`,
+  tamanho 20) antes do rótulo, igual ao da `ListRow`. Põe-se em todas as linhas de um card ou em nenhuma, para os rótulos
+  alinharem: produto, cliente, revendedora, loja e detalhes da venda têm; as linhas de contas (resultado da venda,
+  custos dos relatórios) não.
+- Campo de senha usa `password` no `FormField`/`Input` (nunca `secureTextEntry`): vem escondido, com um olho à direita
+  que mostra e esconde (olho riscado = escondida, olho aberto = visível), e nunca capitaliza nem corrige o texto. Cada
+  campo tem o seu olho.
 - Escolha única em formulário (canal, pagamento, tipo): `SelectField`, um campo que abre a lista numa gaveta. Chips
   ficam para filtros e alternâncias curtas, como R$/%.
 - Sucesso de uma ação (venda registrada, dados salvos): `showToast`, um aviso que desce do topo e some sozinho.
