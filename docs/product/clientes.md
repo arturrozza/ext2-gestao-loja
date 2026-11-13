@@ -29,4 +29,4 @@ Cadastro dos clientes da loja e histórico de compras de cada um.
 
 ## Fora do escopo
 
-Fiado, limite de crédito e CPF.
+Limite de crédito e CPF.

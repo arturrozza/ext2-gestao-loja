@@ -83,7 +83,7 @@ reaproveitado: uma regra removida deixa o número vago, e uma regra nova recebe 
 ## Fora do escopo do sistema
 
 - Integração com o Mercado Livre. Mercado Livre é só um canal escolhido na venda.
-- Contas a receber, fiado e parcelas controladas.
+- Parcelas, juros, cobrança e pagamento parcial das vendas a prazo.
 - Consignado e acerto com revendedora.
 - Uso offline.
 - Várias lojas no app, cadastro de loja pelo app e cobrança.
