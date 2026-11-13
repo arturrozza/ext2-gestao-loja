@@ -215,9 +215,11 @@ variações de valor das suas movimentações. O custo médio é o valor dividid
 | Data | data | sim | Não pode ser futura |
 | Canal | opção | sim | Loja, Mercado Livre ou Revendedora |
 | Revendedora | referência | depende | Obrigatória no canal Revendedora e vazia nos outros |
-| Cliente | referência | não | |
+| Cliente | referência | depende | Obrigatório na venda a prazo |
 | Condição de pagamento | opção | sim | À vista ou A prazo |
-| Forma de pagamento | opção | sim | Pix, dinheiro, crédito ou débito |
+| Forma de pagamento | opção | depende | Pix, dinheiro, crédito ou débito. Obrigatória na venda à vista; na venda a prazo, preenchida ao pagar |
+| Data prevista de pagamento | data | depende | Obrigatória na venda a prazo e vazia na à vista. Não pode ser anterior à data da venda |
+| Paga em | data | não | Data do pagamento. Na venda à vista é a data da venda; vazia enquanto a venda a prazo não é paga |
 | Desconto | dinheiro | sim | Maior ou igual a zero. Zero quando não há |
 | Acréscimo | dinheiro | sim | Maior ou igual a zero. Zero quando não há |
 | Receita | dinheiro | sim | Calculada. Maior ou igual a zero |

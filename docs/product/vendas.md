@@ -7,7 +7,8 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
 ### Nova venda
 
 - **RF-VEN-01.** O usuário pode registrar uma venda com data, canal, produtos, desconto ou acréscimo, custos,
-  condição de pagamento, forma de pagamento, cliente e, no canal Revendedora, a revendedora.
+  condição de pagamento, forma de pagamento (venda à vista) ou data de pagamento (venda a prazo), cliente e, no canal
+  Revendedora, a revendedora.
 - **RF-VEN-02.** A data vem preenchida com hoje e pode ser alterada.
 - **RF-VEN-03.** O usuário pode adicionar produtos pela busca ou lendo o código de barras. Cada produto entra com
   quantidade 1 e com o preço base, e o usuário pode alterar quantidade e preço.
@@ -20,8 +21,9 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
   custos.
 - **RF-VEN-07.** O usuário pode adicionar custos de frete, imposto, taxa de plataforma, comissão e outros, em reais ou
   em percentual, com um nome opcional (por exemplo, "Embalagem").
-- **RF-VEN-08.** A condição de pagamento vem como "À vista" e pode ser trocada para "A prazo". A forma de pagamento
-  (Pix, dinheiro, crédito ou débito) começa sem seleção.
+- **RF-VEN-08.** A condição de pagamento vem como "À vista" e pode ser trocada para "A prazo" (fiado). Na venda à
+  vista, a forma de pagamento (Pix, dinheiro, crédito ou débito) começa sem seleção. Na venda a prazo, o usuário
+  informa a data prevista de pagamento, e a forma de pagamento fica para quando a venda for paga.
 - **RF-VEN-09.** O usuário pode buscar um cliente ou criar um na própria venda, informando só o nome.
 - **RF-VEN-10.** Enquanto a venda é preenchida, o app mostra a receita, os custos e o lucro ou prejuízo.
 - **RF-VEN-11.** Se a venda dá prejuízo, o app avisa e permite concluir.
@@ -40,12 +42,20 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
   - **resultado:** com lucro ou com prejuízo.
 - **RF-VEN-16.** A venda cancelada aparece na lista riscada.
 - **RF-VEN-17.** O usuário pode ver os detalhes de uma venda: produtos, preços, receita, composição dos custos, custo
-  dos produtos, lucro real, margem, pagamento, cliente, revendedora, autor e, quando cancelada, data e motivo do
-  cancelamento.
+  dos produtos, lucro real, margem, pagamento e sua situação, cliente, revendedora, autor e, quando cancelada, data e
+  motivo do cancelamento.
 
 ### Cancelamento
 
 - **RF-VEN-18.** O usuário pode cancelar uma venda, depois de confirmar, informando o motivo.
+
+### Pagamento a prazo
+
+- **RF-VEN-19.** O usuário pode marcar uma venda a prazo como paga, informando a data do pagamento (hoje, por padrão)
+  e a forma de pagamento.
+- **RF-VEN-20.** O usuário pode voltar uma venda a prazo paga para não paga.
+- **RF-VEN-21.** A lista e os detalhes mostram a situação das vendas a prazo: paga, não paga ou vencida. O usuário pode
+  filtrar a lista por situação de pagamento: não paga, vencida ou paga.
 
 ## Regras de negócio
 
@@ -62,9 +72,11 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
 - **RN-VEN-07.** O desconto não passa do valor dos produtos. Um desconto igual ao valor dos produtos deixa a receita em
   zero.
 - **RN-VEN-08.** Uma venda tem até 20 custos. Custo em percentual vai de 0% a 100%.
-- **RN-VEN-09.** A condição de pagamento (À vista ou A prazo) e a forma de pagamento são obrigatórias e apenas
-  informativas: o sistema não controla recebimentos.
-- **RN-VEN-10.** O cliente é opcional.
+- **RN-VEN-09.** A condição de pagamento (À vista ou A prazo) é obrigatória. A venda à vista exige a forma de
+  pagamento e já nasce paga. A venda a prazo exige a data prevista de pagamento, nasce não paga e só tem forma de
+  pagamento quando é paga. O sistema controla apenas se a venda foi paga: não há parcelas, juros, cobrança nem
+  pagamento parcial.
+- **RN-VEN-10.** O cliente é opcional na venda à vista e obrigatório na venda a prazo.
 - **RN-VEN-11.** Só produtos, clientes e revendedoras ativos entram em uma venda.
 - **RN-VEN-12.** A taxa da maquininha, quando considerada, é lançada como taxa de plataforma ou como outro custo.
 - **RN-VEN-13.** O número da venda ("Venda #12") é sequencial na loja e nunca se repete, nem quando a venda é
@@ -82,7 +94,8 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
   lista e os relatórios.
 - **RN-VEN-18.** Receita, custos e lucro real são calculados pelo sistema no registro e ficam gravados. Uma compra,
   ajuste ou correção de custo posterior não altera vendas já registradas.
-- **RN-VEN-19.** Venda não é editada nem apagada. Uma venda lançada errada é cancelada e lançada de novo.
+- **RN-VEN-19.** Venda não é editada nem apagada, exceto a situação de pagamento da venda a prazo (RN-VEN-30 e
+  RN-VEN-31). Uma venda lançada errada é cancelada e lançada de novo.
 
 ### Lista
 
@@ -101,6 +114,19 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
 - **RN-VEN-26.** A venda cancelada continua visível, com data e motivo do cancelamento, e deixa de contar em vendas,
   lucro, comissões, relatórios e totais de clientes e revendedoras.
 - **RN-VEN-27.** Uma venda cancelada não pode ser cancelada de novo.
+
+### Pagamento a prazo
+
+- **RN-VEN-28.** A data prevista de pagamento não pode ser anterior à data da venda.
+- **RN-VEN-29.** A venda a prazo não paga cuja data prevista já passou é vencida. A situação de vencida é calculada a
+  cada consulta e não fica gravada.
+- **RN-VEN-30.** Ao marcar como paga, o usuário informa a data do pagamento, que não pode ser futura nem anterior à
+  data da venda, e a forma de pagamento. Só venda a prazo não cancelada pode ser marcada como paga.
+- **RN-VEN-31.** Uma venda a prazo paga pode voltar a ser não paga. A data e a forma do pagamento são apagadas e a
+  alteração fica no registro de auditoria.
+- **RN-VEN-32.** O pagamento não altera receita, custos, lucro nem relatórios, que seguem a data da venda.
+- **RN-VEN-33.** A venda cancelada não tem mais situação de pagamento: não pode ser marcada como paga, deixa de
+  aparecer como vencida e não entra nos filtros por situação de pagamento.
 
 ## Cálculos
 
@@ -124,5 +150,5 @@ Exemplo: 2 unidades a R$ 100, desconto de R$ 20, custo médio de R$ 40, frete de
 
 ## Fora do escopo
 
-Edição de venda, controle do que falta receber, parcelas, fiado, devolução parcial e importação de vendas do Mercado
+Edição de venda, parcelas, juros, cobrança, pagamento parcial, devolução parcial e importação de vendas do Mercado
 Livre.
