@@ -7,6 +7,7 @@ import {
 	gt,
 	gte,
 	inArray,
+	isNotNull,
 	isNull,
 	lt,
 	lte,
@@ -24,13 +25,18 @@ import {
 	sales,
 	users,
 } from "../../db/schema";
-import type { ISODate } from "../../lib/dates";
+import { type ISODate, storeToday } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { nextCursor, PAGE_SIZE } from "../../lib/pagination";
 import { photoUrlOf } from "../../lib/photo-storage";
 import { previewOf } from "../../lib/preview";
 import type { SalesModel } from "./sales.model";
-import { type DayTotals, marginOf, periodStart } from "./sales.rules";
+import {
+	type DayTotals,
+	marginOf,
+	paymentStatusOf,
+	periodStart,
+} from "./sales.rules";
 
 /* Sales read back (docs/product/vendas.md): the numbers kept when each was entered, never recomputed. */
 
@@ -104,6 +110,9 @@ const summaryColumns = {
 	createdAt: sales.createdAt,
 	channel: sales.channel,
 	canceledAt: sales.canceledAt,
+	paymentCondition: sales.paymentCondition,
+	dueDate: sales.dueDate,
+	paidAt: sales.paidAt,
 	customerName: customers.name,
 	resellerName: resellers.name,
 	revenue: sales.revenue,
@@ -112,12 +121,19 @@ const summaryColumns = {
 
 type SummaryRow = Omit<
 	SalesModel["summary"],
-	"createdAt" | "status" | "productCount" | "preview"
-> & { createdAt: Date; canceledAt: Date | null };
+	"createdAt" | "status" | "paymentStatus" | "productCount" | "preview"
+> & {
+	createdAt: Date;
+	canceledAt: Date | null;
+	paymentCondition: "cash" | "term";
+	dueDate: string | null;
+	paidAt: string | null;
+};
 
 function toSummary(
 	row: SummaryRow,
 	items: SalesModel["item"][],
+	today: ISODate,
 ): SalesModel["summary"] {
 	return {
 		id: row.id,
@@ -126,6 +142,15 @@ function toSummary(
 		createdAt: row.createdAt.toISOString(),
 		channel: row.channel,
 		status: row.canceledAt ? "canceled" : "active",
+		paymentStatus: paymentStatusOf(
+			{
+				paymentCondition: row.paymentCondition,
+				canceled: row.canceledAt !== null,
+				dueDate: row.dueDate,
+				paidAt: row.paidAt,
+			},
+			today,
+		),
 		customerName: row.customerName,
 		resellerName: row.resellerName,
 		revenue: row.revenue,
@@ -146,7 +171,6 @@ export async function findSale(
 			cancelReason: sales.cancelReason,
 			customerId: sales.customerId,
 			resellerId: sales.resellerId,
-			paymentCondition: sales.paymentCondition,
 			paymentMethod: sales.paymentMethod,
 			discount: sales.discount,
 			surcharge: sales.surcharge,
@@ -166,7 +190,7 @@ export async function findSale(
 	]);
 	const items = rows.map(({ saleId: _, ...line }) => line);
 	return {
-		...toSummary(sale, items),
+		...toSummary(sale, items, storeToday()),
 		items,
 		costs,
 		discount: sale.discount,
@@ -176,12 +200,33 @@ export async function findSale(
 		margin: marginOf(sale.profit, sale.revenue),
 		paymentCondition: sale.paymentCondition,
 		paymentMethod: sale.paymentMethod,
+		dueDate: sale.dueDate,
+		paidAt: sale.paidAt,
 		customerId: sale.customerId,
 		resellerId: sale.resellerId,
 		author: sale.author,
 		canceledAt: sale.canceledAt?.toISOString() ?? null,
 		cancelReason: sale.cancelReason,
 	};
+}
+
+/**
+ * The term sales (not canceled) in a payment status, the same three `paymentStatusOf` gives: overdue is unpaid past
+ * the due date, and unpaid is the rest of the ones not paid.
+ */
+function paymentFilter(
+	status: SalesModel["paymentStatus"],
+	today: ISODate,
+): SQL | undefined {
+	const term = and(
+		eq(sales.paymentCondition, "term"),
+		isNull(sales.canceledAt),
+	);
+	if (status === "paid") return and(term, isNotNull(sales.paidAt));
+	const unpaid = and(term, isNull(sales.paidAt));
+	return status === "overdue"
+		? and(unpaid, lt(sales.dueDate, today))
+		: and(unpaid, gte(sales.dueDate, today));
 }
 
 /** Where clause of a sales list: the store's sales that match the filters. */
@@ -200,6 +245,7 @@ function listFilter(
 		query.result === "loss" ? lt(sales.profit, 0) : undefined,
 		query.customerId ? eq(sales.customerId, query.customerId) : undefined,
 		query.resellerId ? eq(sales.resellerId, query.resellerId) : undefined,
+		query.payment ? paymentFilter(query.payment, today) : undefined,
 	);
 }
 
@@ -260,7 +306,7 @@ export async function listSales(
 		),
 	);
 	return {
-		items: rows.map((row) => toSummary(row, lines(row.id))),
+		items: rows.map((row) => toSummary(row, lines(row.id), today)),
 		nextCursor: nextCursor(cursor, total),
 		total,
 		totals,

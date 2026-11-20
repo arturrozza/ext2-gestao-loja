@@ -22,9 +22,16 @@ import {
 	monthName,
 	todayISODate,
 } from "@/lib/dates";
-import { plural, SALE_CHANNELS, SALE_PERIODS, toOptions } from "@/lib/labels";
+import {
+	PAYMENT_STATUSES,
+	plural,
+	SALE_CHANNELS,
+	SALE_PERIODS,
+	toOptions,
+} from "@/lib/labels";
 import { divideRounded, formatMoney, formatRatio } from "@/lib/money";
 import type {
+	PaymentStatus,
 	SaleChannel,
 	SalePage,
 	SalePeriod,
@@ -33,6 +40,8 @@ import type {
 import { useSales } from "@/queries/sales/use-sales";
 
 type ResultView = "all" | SaleResult;
+
+type PaymentView = "all" | PaymentStatus;
 
 const RESULTS: { value: ResultView; label: string }[] = [
 	{ value: "profit", label: "Com lucro" },
@@ -47,6 +56,7 @@ function periodDescription(
 	period: SalePeriod,
 	channels: SaleChannel[],
 	result: ResultView,
+	payment: PaymentView,
 ) {
 	const today = fromISODate(todayISODate());
 	const month = monthName(today.getMonth());
@@ -58,7 +68,10 @@ function periodDescription(
 	};
 	const names = channels.map((channel) => SALE_CHANNELS[channel]);
 	const outcome = RESULTS.find((option) => option.value === result)?.label;
-	return [words[period], ...names, outcome].filter(Boolean).join(" · ");
+	const situation = payment === "all" ? null : PAYMENT_STATUSES[payment];
+	return [words[period], ...names, outcome, situation]
+		.filter(Boolean)
+		.join(" · ");
 }
 
 /** What the period sold and what was left: the two numbers side by side, with the count and the margin under them. */
@@ -93,14 +106,19 @@ export function SalesScreen() {
 	const [period, setPeriod] = useState<SalePeriod>("month");
 	const [channels, setChannels] = useState<SaleChannel[]>([]);
 	const [result, setResult] = useState<ResultView>("all");
+	const [payment, setPayment] = useState<PaymentView>("all");
 	const query = useSales({
 		period,
 		channels,
 		result: result === "all" ? null : result,
+		payment: payment === "all" ? null : payment,
 	});
 	// Off on the default view, so a store with no sales sees "Nenhuma venda ainda" and not "try another filter".
 	const filtered =
-		period !== "month" || channels.length > 0 || result !== "all";
+		period !== "month" ||
+		channels.length > 0 ||
+		result !== "all" ||
+		payment !== "all";
 	const newSale = () => router.push("/sales/new");
 	const list = useInfiniteList(
 		query,
@@ -145,6 +163,14 @@ export function SalesScreen() {
 			defaultValue: "all",
 			onChange: setResult,
 		}),
+		filterGroup({
+			key: "payment",
+			title: "Pagamento a prazo",
+			options: toOptions(PAYMENT_STATUSES),
+			value: payment,
+			defaultValue: "all",
+			onChange: setPayment,
+		}),
 	];
 
 	return (
@@ -161,7 +187,7 @@ export function SalesScreen() {
 		>
 			<PageTitle
 				title="Vendas"
-				subtitle={periodDescription(period, channels, result)}
+				subtitle={periodDescription(period, channels, result, payment)}
 				right={<FilterControl variant="icon" groups={filters} />}
 			/>
 			{totals ? <Totals totals={totals} /> : null}

@@ -4,13 +4,19 @@ import { MAX_CENTS } from "../../lib/money";
 import type { LockedProduct } from "../products/products.lock";
 import type { SalesModel } from "./sales.model";
 import {
+	assertCanPay,
+	assertCanUnpay,
 	assertChannel,
 	assertItems,
 	assertParty,
+	assertPayment,
 	assertSaleDate,
 	assertUniqueProducts,
 	computeTotals,
 	marginOf,
+	type PayableSale,
+	type PaymentFacts,
+	paymentStatusOf,
 	periodStart,
 	planLines,
 } from "./sales.rules";
@@ -314,5 +320,198 @@ describe("periodStart", () => {
 	it("crosses months and years for the last 7 days", () => {
 		expect(periodStart("7d", "2026-03-02")).toBe("2026-02-24");
 		expect(periodStart("7d", "2027-01-03")).toBe("2026-12-28");
+	});
+});
+
+describe("assertPayment", () => {
+	const term = (overrides: Partial<SalesModel["body"]> = {}) =>
+		body({
+			paymentCondition: "term",
+			paymentMethod: null,
+			customerId: "c1",
+			dueDate: "2026-11-30",
+			...overrides,
+		});
+
+	it("takes a cash sale with a method, and a term sale with a customer and a due date", () => {
+		expect(thrown(() => assertPayment(body()))).toBeUndefined();
+		expect(thrown(() => assertPayment(term()))).toBeUndefined();
+		expect(
+			thrown(() => assertPayment(term({ dueDate: "2026-11-09" }))),
+		).toBeUndefined();
+	});
+
+	it("asks a cash sale for the method and refuses a due date on it", () => {
+		const noMethod = thrown(() => assertPayment(body({ paymentMethod: null })));
+		const withDue = thrown(() =>
+			assertPayment(body({ dueDate: "2026-11-30" })),
+		);
+
+		expect(noMethod).toMatchObject({
+			code: 422,
+			response: { field: "paymentMethod" },
+		});
+		expect(withDue).toMatchObject({
+			code: 422,
+			response: { field: "dueDate" },
+		});
+	});
+
+	it("asks a term sale for the customer and the due date, and leaves the method for the payment", () => {
+		const noCustomer = thrown(() => assertPayment(term({ customerId: null })));
+		const withMethod = thrown(() =>
+			assertPayment(term({ paymentMethod: "pix" })),
+		);
+		const noDue = thrown(() => assertPayment(term({ dueDate: null })));
+		const noDueSent = thrown(() => assertPayment(term({ dueDate: undefined })));
+
+		expect(noCustomer).toMatchObject({
+			code: 422,
+			response: { field: "customerId" },
+		});
+		expect(withMethod).toMatchObject({
+			code: 422,
+			response: { field: "paymentMethod" },
+		});
+		expect(noDue).toMatchObject({ code: 422, response: { field: "dueDate" } });
+		expect(noDueSent).toMatchObject({
+			code: 422,
+			response: { field: "dueDate" },
+		});
+	});
+
+	it("refuses a due date that isn't a day or comes before the sale", () => {
+		const notADay = thrown(() =>
+			assertPayment(term({ dueDate: "2026-02-30" })),
+		);
+		const before = thrown(() => assertPayment(term({ dueDate: "2026-11-08" })));
+
+		expect(notADay).toMatchObject({
+			code: 422,
+			response: { field: "dueDate" },
+		});
+		expect(before).toMatchObject({ code: 422, response: { field: "dueDate" } });
+	});
+});
+
+describe("paymentStatusOf", () => {
+	const facts = (overrides: Partial<PaymentFacts> = {}): PaymentFacts => ({
+		paymentCondition: "term",
+		canceled: false,
+		dueDate: "2026-11-20",
+		paidAt: null,
+		...overrides,
+	});
+
+	it("is unpaid up to the due date and overdue the day after", () => {
+		expect(paymentStatusOf(facts(), "2026-11-19")).toBe("unpaid");
+		expect(paymentStatusOf(facts(), "2026-11-20")).toBe("unpaid");
+		expect(paymentStatusOf(facts(), "2026-11-21")).toBe("overdue");
+	});
+
+	it("is paid once it has a payment day, however late", () => {
+		expect(paymentStatusOf(facts({ paidAt: "2026-11-25" }), "2026-12-30")).toBe(
+			"paid",
+		);
+	});
+
+	it("has no status for a cash sale or a canceled one", () => {
+		const cash = facts({ paymentCondition: "cash", dueDate: null });
+
+		expect(paymentStatusOf(cash, "2026-11-21")).toBeNull();
+		expect(paymentStatusOf(facts({ canceled: true }), "2026-11-21")).toBeNull();
+	});
+});
+
+describe("assertCanPay and assertCanUnpay", () => {
+	const sale = (overrides: Partial<PayableSale> = {}): PayableSale => ({
+		paymentCondition: "term",
+		date: "2026-11-09",
+		canceled: false,
+		paidAt: null,
+		...overrides,
+	});
+	const pay = { paidAt: "2026-11-12", paymentMethod: "pix" } as const;
+	const today = "2026-11-15";
+
+	it("pays an unpaid term sale on a day from the sale to today", () => {
+		expect(thrown(() => assertCanPay(sale(), pay, today))).toBeUndefined();
+		expect(
+			thrown(() =>
+				assertCanPay(sale(), { ...pay, paidAt: "2026-11-09" }, today),
+			),
+		).toBeUndefined();
+		expect(
+			thrown(() => assertCanPay(sale(), { ...pay, paidAt: today }, today)),
+		).toBeUndefined();
+	});
+
+	it("refuses a payment day in the future, before the sale or that isn't a day", () => {
+		const at = (paidAt: string) =>
+			thrown(() => assertCanPay(sale(), { ...pay, paidAt }, today));
+
+		expect(at("2026-11-16")).toMatchObject({
+			code: 422,
+			response: { field: "paidAt" },
+		});
+		expect(at("2026-11-08")).toMatchObject({
+			code: 422,
+			response: { field: "paidAt" },
+		});
+		expect(at("2026-02-30")).toMatchObject({
+			code: 422,
+			response: { field: "paidAt" },
+		});
+	});
+
+	it("answers 409 for a canceled, cash or already paid sale", () => {
+		const canceled = thrown(() =>
+			assertCanPay(sale({ canceled: true }), pay, today),
+		);
+		const cash = thrown(() =>
+			assertCanPay(sale({ paymentCondition: "cash" }), pay, today),
+		);
+		const paid = thrown(() =>
+			assertCanPay(sale({ paidAt: "2026-11-10" }), pay, today),
+		);
+
+		expect(canceled).toMatchObject({
+			code: 409,
+			response: { code: "sale_canceled" },
+		});
+		expect(cash).toMatchObject({
+			code: 409,
+			response: { code: "sale_not_term" },
+		});
+		expect(paid).toMatchObject({
+			code: 409,
+			response: { code: "sale_already_paid" },
+		});
+	});
+
+	it("takes a paid term sale back to unpaid, and refuses an unpaid, cash or canceled one", () => {
+		const unpaid = thrown(() => assertCanUnpay(sale()));
+		const cash = thrown(() =>
+			assertCanUnpay(sale({ paymentCondition: "cash", paidAt: "2026-11-09" })),
+		);
+		const canceled = thrown(() =>
+			assertCanUnpay(sale({ canceled: true, paidAt: "2026-11-10" })),
+		);
+
+		expect(thrown(() => assertCanUnpay(sale({ paidAt: "2026-11-10" })))).toBe(
+			undefined,
+		);
+		expect(unpaid).toMatchObject({
+			code: 409,
+			response: { code: "sale_not_paid" },
+		});
+		expect(cash).toMatchObject({
+			code: 409,
+			response: { code: "sale_not_term" },
+		});
+		expect(canceled).toMatchObject({
+			code: 409,
+			response: { code: "sale_canceled" },
+		});
 	});
 });

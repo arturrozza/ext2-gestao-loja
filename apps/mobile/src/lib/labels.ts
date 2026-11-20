@@ -7,6 +7,7 @@ import type {
 import type {
 	PaymentCondition,
 	PaymentMethod,
+	PaymentStatus,
 	SaleChannel,
 	SaleCostKind,
 	SalePeriod,
@@ -65,6 +66,13 @@ export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
 export const PAYMENT_CONDITIONS: Record<PaymentCondition, string> = {
 	cash: "À vista",
 	term: "A prazo",
+};
+
+/** The situation of a term sale (vendas.md, RF-VEN-21). */
+export const PAYMENT_STATUSES: Record<PaymentStatus, string> = {
+	unpaid: "Não paga",
+	overdue: "Vencida",
+	paid: "Paga",
 };
 
 export const SALE_COST_KINDS: Record<SaleCostKind, string> = {

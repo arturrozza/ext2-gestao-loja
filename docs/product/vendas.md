@@ -55,7 +55,7 @@ Registro das vendas com seus custos, baixa no estoque e cálculo do lucro real.
   e a forma de pagamento.
 - **RF-VEN-20.** O usuário pode voltar uma venda a prazo paga para não paga.
 - **RF-VEN-21.** A lista e os detalhes mostram a situação das vendas a prazo: paga, não paga ou vencida. O usuário pode
-  filtrar a lista por situação de pagamento: não paga, vencida ou paga.
+  filtrar a lista por situação de pagamento: não paga, vencida ou paga. O filtro mostra só vendas a prazo.
 
 ## Regras de negócio
 

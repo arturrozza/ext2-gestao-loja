@@ -3,7 +3,14 @@ import { treaty } from "@elysia/eden";
 import { app } from "../../src/app";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
+import { createProduct } from "../support/factories/catalog";
+import {
+	createPurchase,
+	purchaseItem,
+	storeDayFrom,
+} from "../support/factories/purchases";
 import { createReseller, resellerBody } from "../support/factories/resellers";
+import { createSale, saleItem } from "../support/factories/sales";
 
 useTestDatabase();
 
@@ -175,6 +182,31 @@ describe("resellers routes", () => {
 		expect(results.map((result) => result.error?.status)).toEqual([
 			401, 401, 401, 401, 401, 401,
 		]);
+	});
+
+	it("counts every sale of hers when the query leaves the period out", async () => {
+		const { headers, session } = await signedIn();
+		const reseller = await createReseller(session.store.id);
+		const product = await createProduct(session.store.id, { name: "Perfume" });
+		await createPurchase(session, [
+			purchaseItem(product.id, { quantity: 10, unitCost: 4000 }),
+		]);
+		const sell = (date: string) =>
+			createSale(session, [saleItem(product.id)], {
+				channel: "reseller",
+				resellerId: reseller.id,
+				date,
+			});
+		await sell(storeDayFrom(0));
+		await sell(storeDayFrom(-40));
+
+		const all = await api.resellers({ id: reseller.id }).get({ headers });
+		const today = await api
+			.resellers({ id: reseller.id })
+			.get({ headers, query: { period: "today" } });
+
+		expect(all.data).toMatchObject({ salesCount: 2 });
+		expect(today.data).toMatchObject({ salesCount: 1 });
 	});
 
 	it("takes the period of her numbers in the query", async () => {

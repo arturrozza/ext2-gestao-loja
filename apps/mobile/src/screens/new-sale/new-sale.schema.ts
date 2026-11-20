@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseDateInput, todayISODate } from "@/lib/dates";
+import { type ISODate, parseDateInput, todayISODate } from "@/lib/dates";
 import { parseMoneyInput, parsePercentInput } from "@/lib/money";
 import type { Reseller } from "@/queries/resellers/resellers.types";
 import type {
@@ -49,7 +49,10 @@ export type SaleFormValues = {
 	adjustmentValue: string;
 	costs: SaleCostDraft[];
 	paymentCondition: PaymentCondition;
+	/** Asked on a cash sale only: a term sale gets its method when it's paid. */
 	paymentMethod: PaymentMethod | undefined;
+	/** "dd/mm/aaaa"; asked on a term sale only. */
+	dueDate: string;
 	customer: { id: string; name: string } | null;
 };
 
@@ -145,8 +148,36 @@ function checkRequired(values: SaleFormValues, ctx: Ctx) {
 		fail(ctx, ["items"], "Adicione pelo menos um produto.");
 	if (values.channel === "reseller" && !values.reseller)
 		fail(ctx, ["resellerId"], "Escolha a revendedora.");
-	if (!values.paymentMethod)
-		fail(ctx, ["paymentMethod"], "Escolha a forma de pagamento.");
+}
+
+/** A cash sale needs the method; a term sale needs the customer who'll pay (vendas.md, RN-VEN-09 and RN-VEN-10). */
+function checkPayment(values: SaleFormValues, ctx: Ctx) {
+	if (values.paymentCondition === "cash") {
+		if (!values.paymentMethod)
+			fail(ctx, ["paymentMethod"], "Escolha a forma de pagamento.");
+		return;
+	}
+	if (!values.customer)
+		fail(ctx, ["customer"], "Escolha o cliente da venda a prazo.");
+}
+
+/** The due date of a term sale: a real day, not before the sale. `null` on a cash sale, or with an issue. */
+function parseDueDate(
+	values: SaleFormValues,
+	saleDate: ISODate | null,
+	ctx: Ctx,
+) {
+	if (values.paymentCondition !== "term") return null;
+	const due = parseDateInput(values.dueDate);
+	if (!due) {
+		fail(ctx, ["dueDate"], "Informe a data prevista (dd/mm/aaaa).");
+		return null;
+	}
+	if (saleDate && due < saleDate) {
+		fail(ctx, ["dueDate"], "A data prevista não pode ser antes da venda.");
+		return null;
+	}
+	return due;
 }
 
 /** New sale form → API input. All money/percent text is parsed here; the rules follow docs/product/vendas.md. */
@@ -154,7 +185,9 @@ export const newSaleSchema = z
 	.custom<SaleFormValues>()
 	.transform((values, ctx) => {
 		checkRequired(values, ctx);
+		checkPayment(values, ctx);
 		const date = parseDate(values.date, ctx);
+		const dueDate = parseDueDate(values, date, ctx);
 		const adjustment = parseAdjustment(values, ctx);
 		checkDiscount(values, adjustment, ctx);
 		const items = values.items.map((item, index) =>
@@ -163,13 +196,7 @@ export const newSaleSchema = z
 		const costs = values.costs.map((cost, index) =>
 			parseCost(cost, index, ctx),
 		);
-		if (
-			ctx.issues.length > 0 ||
-			!date ||
-			adjustment === null ||
-			!values.paymentMethod
-		)
-			return z.NEVER;
+		if (ctx.issues.length > 0 || !date || adjustment === null) return z.NEVER;
 		return {
 			date,
 			channel: values.channel,
@@ -178,7 +205,11 @@ export const newSaleSchema = z
 			surcharge: values.adjustment === "surcharge" ? adjustment : 0,
 			costs: costs.filter((cost) => cost !== null),
 			paymentCondition: values.paymentCondition,
-			paymentMethod: values.paymentMethod,
+			paymentMethod:
+				values.paymentCondition === "cash"
+					? (values.paymentMethod ?? null)
+					: null,
+			dueDate,
 			customerId: values.customer?.id ?? null,
 			resellerId:
 				values.channel === "reseller" ? (values.reseller?.id ?? null) : null,

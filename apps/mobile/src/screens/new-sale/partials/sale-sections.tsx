@@ -2,6 +2,7 @@ import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
 import { PlusIcon } from "phosphor-react-native/src/icons/Plus";
 import { View } from "react-native";
 import { CollapsibleSection } from "@/components/collapsible-section";
+import { DateField } from "@/components/date-field";
 import { FormField } from "@/components/form-field";
 import { FormFooter } from "@/components/form-footer";
 import { FormSection } from "@/components/form-section";
@@ -9,6 +10,7 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { fromISODate, parseDateInput, todayISODate } from "@/lib/dates";
 import { formatMoney, parseMoneyInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { useNewSaleForm } from "../use-new-sale-form";
@@ -125,7 +127,15 @@ export function AdjustmentSection({ sale }: { sale: Sale }) {
 	);
 }
 
-/** How the sale happened: channel (and reseller), payment condition and method. */
+/** A term sale is due from the day of the sale on (vendas.md, RN-VEN-28). */
+function dueDateMinimum(saleDate: string) {
+	return fromISODate(parseDateInput(saleDate) ?? todayISODate());
+}
+
+/**
+ * How the sale happened: channel (and reseller), payment condition and, by it, the method (cash: how it was paid) or
+ * the day the payment is expected (term: the method comes when it's paid).
+ */
 export function PaymentSection({ sale }: { sale: Sale }) {
 	const { values, errors, set } = sale.form;
 	return (
@@ -142,14 +152,24 @@ export function PaymentSection({ sale }: { sale: Sale }) {
 					/>
 				</View>
 				<View className="flex-1">
-					<SelectField
-						label="Forma de pagamento"
-						options={METHOD_OPTIONS}
-						value={values.paymentMethod}
-						onChange={(method) => set("paymentMethod", method)}
-						placeholder="Escolher"
-						error={errors.paymentMethod}
-					/>
+					{values.paymentCondition === "cash" ? (
+						<SelectField
+							label="Forma de pagamento"
+							options={METHOD_OPTIONS}
+							value={values.paymentMethod}
+							onChange={(method) => set("paymentMethod", method)}
+							placeholder="Escolher"
+							error={errors.paymentMethod}
+						/>
+					) : (
+						<DateField
+							label="Data prevista"
+							value={values.dueDate}
+							onChange={(dueDate) => set("dueDate", dueDate)}
+							error={errors.dueDate}
+							minimumDate={dueDateMinimum(values.date)}
+						/>
+					)}
 				</View>
 			</View>
 		</FormSection>

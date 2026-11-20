@@ -39,6 +39,37 @@ export const salesController = new Elysia({ prefix: "/sales" })
 		},
 	)
 	.post(
+		"/:id/pay",
+		({ session, params, body }) => SalesService.pay(session, params.id, body),
+		{
+			auth: true,
+			params: SalesModel.params,
+			body: SalesModel.payBody,
+			response: {
+				200: SalesModel.detail,
+				401: ErrorModel,
+				404: ErrorModel,
+				409: ErrorModel,
+				422: ErrorModel,
+			},
+		},
+	)
+	.post(
+		"/:id/unpay",
+		({ session, params }) => SalesService.unpay(session, params.id),
+		{
+			auth: true,
+			params: SalesModel.params,
+			response: {
+				200: SalesModel.detail,
+				401: ErrorModel,
+				404: ErrorModel,
+				409: ErrorModel,
+				422: ErrorModel,
+			},
+		},
+	)
+	.post(
 		"/:id/cancel",
 		({ session, params, body }) =>
 			SalesService.cancel(session, params.id, body),

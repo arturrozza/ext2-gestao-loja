@@ -12,7 +12,12 @@ import {
 	storeDayFrom,
 } from "../support/factories/purchases";
 import { createReseller } from "../support/factories/resellers";
-import { createSale, saleBody, saleItem } from "../support/factories/sales";
+import {
+	createSale,
+	saleBody,
+	saleItem,
+	termSale,
+} from "../support/factories/sales";
 
 useTestDatabase();
 
@@ -195,6 +200,34 @@ describe("sales routes", () => {
 		expect(none.data?.total).toBe(0);
 	});
 
+	it("lists every sale when the query leaves the period and the result out", async () => {
+		const { headers, session, product } = await stocked();
+		await createSale(session, [saleItem(product.id)]);
+		await createSale(session, [saleItem(product.id, { unitPrice: 1000 })]);
+		await createSale(session, [saleItem(product.id)], {
+			date: storeDayFrom(-40),
+		});
+
+		const all = await api.sales.get({ headers, query: {} });
+		const losses = await api.sales.get({
+			headers,
+			query: { result: "loss" },
+		});
+		const profits = await api.sales.get({
+			headers,
+			query: { period: "all", result: "profit" },
+		});
+		const today = await api.sales.get({
+			headers,
+			query: { period: "today" },
+		});
+
+		expect(all.data?.total).toBe(3);
+		expect(losses.data?.total).toBe(1);
+		expect(profits.data?.total).toBe(2);
+		expect(today.data?.total).toBe(2);
+	});
+
 	it("answers 422 for a bad list query", async () => {
 		const { headers } = await signedIn();
 		// What the typed client wouldn't let through.
@@ -327,5 +360,163 @@ describe("POST /sales/:id/cancel", () => {
 
 		expect(canceled.error?.status).toBe(404);
 		expect(canceled.error?.value).toMatchObject({ code: "sale_not_found" });
+	});
+});
+
+/** Eden hands a "YYYY-MM-DD" back as a `Date` at midnight UTC. */
+const asDay = (day: string) => new Date(`${day}T00:00:00.000Z`);
+
+describe("term sales", () => {
+	async function termSaleEntered() {
+		const stock = await stocked();
+		const customer = await createCustomer(stock.storeId);
+		const sale = await createSale(
+			stock.session,
+			[saleItem(stock.product.id)],
+			termSale(customer.id),
+		);
+		return { ...stock, customer, sale };
+	}
+
+	const payBody = { paidAt: storeDayFrom(0), paymentMethod: "pix" } as const;
+
+	it("enters a term sale with a due date, unpaid and with no method", async () => {
+		const { headers, storeId, product } = await stocked();
+		const customer = await createCustomer(storeId);
+
+		const created = await api.sales.post(
+			saleBody([saleItem(product.id)], termSale(customer.id, 3)),
+			{ headers },
+		);
+
+		expect(created.error).toBeNull();
+		expect(created.data).toMatchObject({
+			paymentCondition: "term",
+			paymentStatus: "unpaid",
+			paymentMethod: null,
+			paidAt: null,
+			dueDate: asDay(storeDayFrom(3)),
+		});
+	});
+
+	it("answers 422 for the payment fields a sale breaks", async () => {
+		const { headers, storeId, product } = await stocked();
+		const customer = await createCustomer(storeId);
+		const post = (overrides: Partial<ReturnType<typeof saleBody>>) =>
+			api.sales.post(saleBody([saleItem(product.id)], overrides), { headers });
+
+		const noCustomer = await post({
+			...termSale(customer.id),
+			customerId: null,
+		});
+		const noDue = await post({ ...termSale(customer.id), dueDate: null });
+		const withMethod = await post({
+			...termSale(customer.id),
+			paymentMethod: "pix",
+		});
+		const cashWithDue = await post({ dueDate: storeDayFrom(3) });
+		const cashNoMethod = await post({ paymentMethod: null });
+
+		expect(noCustomer.error?.value).toMatchObject({ field: "customerId" });
+		expect(noDue.error?.value).toMatchObject({ field: "dueDate" });
+		expect(withMethod.error?.value).toMatchObject({ field: "paymentMethod" });
+		expect(cashWithDue.error?.value).toMatchObject({ field: "dueDate" });
+		expect(cashNoMethod.error?.value).toMatchObject({ field: "paymentMethod" });
+	});
+
+	it("pays and unpays a sale, and filters the list by payment status", async () => {
+		const { headers, sale } = await termSaleEntered();
+
+		const paid = await api
+			.sales({ id: sale.id })
+			.pay.post(payBody, { headers });
+		const listedPaid = await api.sales.get({
+			headers,
+			query: { payment: "paid" },
+		});
+		const unpaid = await api.sales({ id: sale.id }).unpay.post({}, { headers });
+		const listedUnpaid = await api.sales.get({
+			headers,
+			query: { payment: "unpaid" },
+		});
+
+		expect(paid.data).toMatchObject({
+			paymentStatus: "paid",
+			paymentMethod: "pix",
+			paidAt: asDay(storeDayFrom(0)),
+		});
+		expect(listedPaid.data?.items.map((item) => item.id)).toEqual([sale.id]);
+		expect(unpaid.data).toMatchObject({
+			paymentStatus: "unpaid",
+			paymentMethod: null,
+			paidAt: null,
+		});
+		expect(listedUnpaid.data?.items.map((item) => item.id)).toEqual([sale.id]);
+	});
+
+	it("answers 422 for a bad payment body or filter", async () => {
+		const { headers, sale } = await termSaleEntered();
+		const pay = (body: unknown) =>
+			api.sales({ id: sale.id }).pay.post(body as typeof payBody, { headers });
+
+		const noMethod = await pay({ paidAt: storeDayFrom(0) });
+		const badMethod = await pay({ ...payBody, paymentMethod: "boleto" });
+		const noDay = await pay({ paymentMethod: "pix" });
+		const future = await pay({ ...payBody, paidAt: storeDayFrom(1) });
+		const filter = await api.sales.get({
+			headers,
+			query: { payment: "late" } as unknown as { payment: "paid" },
+		});
+
+		expect(noMethod.error?.status).toBe(422);
+		expect(badMethod.error?.status).toBe(422);
+		expect(noDay.error?.status).toBe(422);
+		expect(future.error?.value).toMatchObject({ field: "paidAt" });
+		expect(filter.error?.status).toBe(422);
+	});
+
+	it("answers 409 for a sale that can't take the change", async () => {
+		const { headers, session, product, sale } = await termSaleEntered();
+		const cash = await createSale(session, [saleItem(product.id)]);
+
+		const paid = await api
+			.sales({ id: sale.id })
+			.pay.post(payBody, { headers });
+		const twice = await api
+			.sales({ id: sale.id })
+			.pay.post(payBody, { headers });
+		const cashPay = await api
+			.sales({ id: cash.id })
+			.pay.post(payBody, { headers });
+		const cashUnpay = await api
+			.sales({ id: cash.id })
+			.unpay.post({}, { headers });
+		await api.sales({ id: sale.id }).unpay.post({}, { headers });
+		const notPaid = await api
+			.sales({ id: sale.id })
+			.unpay.post({}, { headers });
+
+		expect(paid.error).toBeNull();
+		expect(twice.error?.value).toMatchObject({ code: "sale_already_paid" });
+		expect(cashPay.error?.value).toMatchObject({ code: "sale_not_term" });
+		expect(cashUnpay.error?.value).toMatchObject({ code: "sale_not_term" });
+		expect(notPaid.error?.value).toMatchObject({ code: "sale_not_paid" });
+	});
+
+	it("answers 404 for a sale of another store and 401 without a session", async () => {
+		const { sale } = await termSaleEntered();
+		const other = await signedIn();
+
+		const pay = await api
+			.sales({ id: sale.id })
+			.pay.post(payBody, { headers: other.headers });
+		const unpay = await api
+			.sales({ id: sale.id })
+			.unpay.post({}, { headers: other.headers });
+		const anonymous = await api.sales({ id: sale.id }).pay.post(payBody);
+
+		expect(pay.error?.status).toBe(404);
+		expect(unpay.error?.status).toBe(404);
+		expect(anonymous.error?.status).toBe(401);
 	});
 });
