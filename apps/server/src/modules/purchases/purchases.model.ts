@@ -42,6 +42,8 @@ const item = t.Object({
 	/** In cents: quantity × unit cost. */
 	total: nonNegativeMoneyTotalField,
 	expiry: t.Union([t.Null(), expiryMonthField]),
+	lotCode: t.Union([t.Null(), t.String()]),
+	manufacturedOn: t.Union([t.Null(), expiryMonthField]),
 });
 
 const detail = t.Object({
@@ -68,6 +70,10 @@ const body = t.Object({
 			unitCost: moneyField,
 			/** Required when the product has expiry, refused when it hasn't; never a month already gone. */
 			expiry: t.Union([t.Null(), expiryMonthField]),
+			/** Only on a product with expiry; blank counts as none. Left out counts as `null`. */
+			lotCode: t.Optional(t.Union([t.Null(), t.String({ maxLength: 40 })])),
+			/** The month it was made, "YYYY-MM"; not in the future, not after the expiry. Left out counts as `null`. */
+			manufacturedOn: t.Optional(t.Union([t.Null(), expiryMonthField])),
 		}),
 		{ minItems: 1, maxItems: MAX_PURCHASE_ITEMS },
 	),

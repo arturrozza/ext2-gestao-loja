@@ -5,13 +5,14 @@ Entrada de mercadoria na loja. A compra aumenta a quantidade em estoque e recalc
 ## Regras funcionais
 
 - **RF-COM-01.** O usuário pode lançar uma compra com data, observação e um ou mais itens. Cada item tem produto,
-  quantidade, custo unitário e, quando o produto tem validade, a validade.
+  quantidade, custo unitário e, quando o produto tem validade, a validade e o número do lote. Qualquer item pode
+  ter a data de fabricação.
 - **RF-COM-02.** O usuário pode adicionar produtos à compra pela busca ou lendo o código de barras.
 - **RF-COM-03.** A data da compra vem preenchida com hoje e pode ser alterada.
 - **RF-COM-04.** O usuário pode ver a lista de compras, da mais recente para a mais antiga, com número, data, valor e
   situação.
-- **RF-COM-05.** O usuário pode ver os detalhes de uma compra: itens, quantidades, custos, validades, observação,
-  autor e, quando cancelada, data e motivo do cancelamento.
+- **RF-COM-05.** O usuário pode ver os detalhes de uma compra: itens, quantidades, custos, validades, números de lote,
+  fabricações, observação, autor e, quando cancelada, data e motivo do cancelamento.
 - **RF-COM-06.** O usuário pode cancelar uma compra, depois de confirmar, informando um motivo opcional.
 
 ## Regras de negócio
@@ -24,13 +25,22 @@ Entrada de mercadoria na loja. A compra aumenta a quantidade em estoque e recalc
   diferentes.
 - **RN-COM-05.** A validade é informada como mês e ano. É obrigatória quando o produto tem validade e recusada quando
   não tem. A validade não pode ser de um mês que já passou.
-- **RN-COM-06.** Cada item gera um lote e uma movimentação de entrada no estoque ([Estoque](estoque.md)).
+- **RN-COM-06.** Cada item gera um lote e uma movimentação de entrada no estoque ([Estoque](estoque.md)). O lote
+  guarda a validade, o número do lote e a fabricação do item.
 - **RN-COM-07.** Toda compra aumenta a quantidade e recalcula o custo médio de cada produto, na ordem em que as compras
   são lançadas, e não pela data informada. Uma compra lançada hoje com data passada entra no custo médio atual, e as
   vendas já registradas não mudam.
 - **RN-COM-08.** O número da compra ("Compra #12") é sequencial na loja e nunca se repete, nem quando a compra é
   cancelada.
 - **RN-COM-09.** Compra não é editada. Uma compra lançada errada é cancelada e lançada de novo.
+
+### Lote e fabricação
+
+- **RN-COM-15.** O número do lote é opcional, vale só para produto com validade e é um texto de até 40 caracteres.
+  Espaços nas pontas são removidos e um texto em branco vale como sem número. O mesmo número pode se repetir em
+  compras diferentes.
+- **RN-COM-16.** A data de fabricação é opcional, é informada como mês e ano e vale para qualquer produto. Não pode ser
+  de um mês futuro.
 
 ### Cancelamento
 

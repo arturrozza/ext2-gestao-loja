@@ -66,16 +66,19 @@ async function findItems(
 			quantity: purchaseItems.quantity,
 			unitCost: purchaseItems.unitCost,
 			expiry: purchaseItems.expiry,
+			lotCode: purchaseItems.lotCode,
+			manufacturedOn: purchaseItems.manufacturedOn,
 		})
 		.from(purchaseItems)
 		.innerJoin(products, eq(products.id, purchaseItems.productId))
 		.where(inArray(purchaseItems.purchaseId, purchaseIds))
 		.orderBy(asc(purchaseItems.purchaseId), asc(purchaseItems.position));
-	return rows.map(({ photoKey, expiry, ...row }) => ({
+	return rows.map(({ photoKey, expiry, manufacturedOn, ...row }) => ({
 		...row,
 		photoUrl: photoUrlOf(photoKey),
 		total: row.quantity * row.unitCost,
 		expiry: expiry ? monthOf(expiry) : null,
+		manufacturedOn: manufacturedOn ? monthOf(manufacturedOn) : null,
 	}));
 }
 
@@ -179,6 +182,10 @@ async function insertLines(
 				quantity: item.quantity,
 				unitCost: item.unitCost,
 				expiry: item.expiry ? expiryToDate(item.expiry) : null,
+				lotCode: blankToNull(item.lotCode ?? null),
+				manufacturedOn: item.manufacturedOn
+					? expiryToDate(item.manufacturedOn)
+					: null,
 			})),
 		)
 		.returning({
@@ -188,6 +195,8 @@ async function insertLines(
 			quantity: purchaseItems.quantity,
 			unitCost: purchaseItems.unitCost,
 			expiry: purchaseItems.expiry,
+			lotCode: purchaseItems.lotCode,
+			manufacturedOn: purchaseItems.manufacturedOn,
 		});
 	// RETURNING doesn't promise the order of the rows: the position puts them back in the order entered.
 	return lines

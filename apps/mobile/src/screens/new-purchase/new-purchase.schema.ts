@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { parseDateInput, parseExpiryInput } from "@/lib/dates";
+import { parseDateInput, parseExpiryInput, todayISODate } from "@/lib/dates";
 import { parseMoneyInput } from "@/lib/money";
 
-/** One line being typed: the product, how many, unit cost and expiry (compras.md). */
+/** One line being typed: the product, how many, unit cost, expiry, lot number and manufacture month (compras.md). */
 export type PurchaseItemDraft = {
 	key: string;
 	product: {
@@ -14,6 +14,10 @@ export type PurchaseItemDraft = {
 	quantity: number;
 	unitCost: string;
 	expiry: string;
+	/** Only for a product with expiry; blank is none. */
+	lotCode: string;
+	/** "mm/aaaa"; blank is none. */
+	manufacturedOn: string;
 };
 
 export type NewPurchaseValues = {
@@ -25,11 +29,43 @@ export type NewPurchaseValues = {
 /** The API's limits (`MAX_LINE_UNITS`, `MAX_PURCHASE_ITEMS` in the server): checked here to say it on the line. */
 const MAX_LINE_UNITS = 100_000;
 const MAX_PURCHASE_ITEMS = 100;
+const MAX_LOT_CODE = 40;
 
 type Ctx = z.RefinementCtx;
 
 function fail(ctx: Ctx, path: (string | number)[], message: string) {
 	ctx.addIssue({ code: "custom", path, message });
+}
+
+/** The manufacture month: optional, never in the future (compras.md, RN-COM-16). */
+function parseManufacture(
+	item: PurchaseItemDraft,
+	path: (string | number)[],
+	ctx: Ctx,
+) {
+	const made = parseExpiryInput(item.manufacturedOn);
+	if (made && made > todayISODate().slice(0, 7))
+		fail(
+			ctx,
+			[...path, "manufacturedOn"],
+			"A fabricação não pode ser de um mês futuro.",
+		);
+	return made;
+}
+
+/** The lot number (only with expiry on the product) and the manufacture month of a line. */
+function parseLot(
+	item: PurchaseItemDraft,
+	path: (string | number)[],
+	ctx: Ctx,
+) {
+	const lotCode = item.lotCode.trim();
+	if (lotCode.length > MAX_LOT_CODE)
+		fail(ctx, [...path, "lotCode"], "No máximo 40 caracteres.");
+	return {
+		lotCode: item.product.hasExpiry && lotCode ? lotCode : null,
+		manufacturedOn: parseManufacture(item, path, ctx),
+	};
 }
 
 /** Item in the shape the API takes. Reports every problem of the line at once. */
@@ -49,6 +85,7 @@ function parseItem(item: PurchaseItemDraft, index: number, ctx: Ctx) {
 		quantity: item.quantity,
 		unitCost: cents ?? 0,
 		expiry: item.product.hasExpiry ? expiry : null,
+		...parseLot(item, path, ctx),
 	};
 }
 

@@ -90,15 +90,28 @@ export function stockStateFilter(state: StockState, today: ISODate): SQL {
 	}
 }
 
-/** Units of a product with the same expiry (`null`: none), as the product screen shows them. */
+/** Units of one lot, as the product screen lists them under its expiry (estoque.md, RN-EST-27). */
+export type LotBalance = {
+	id: string;
+	lotCode: string | null;
+	manufacturedOn: ExpiryMonth | null;
+	quantity: number;
+};
+
+/** Units of a product with the same expiry (`null`: none), with the lots they come from. */
 export type ExpiryBalance = {
 	expiry: ExpiryMonth | null;
 	quantity: number;
 	expired: boolean;
 	nearExpiry: boolean;
+	/** In the order a sale takes them. */
+	lots: LotBalance[];
 };
 
-/** A product's units by expiry on `today`, soonest first and those without expiry last. Lots stay hidden. */
+/**
+ * A product's units by expiry on `today`, soonest first and those without expiry last, each with its lots in the order
+ * a sale takes them (estoque.md, RN-EST-12): the oldest manufacture first, lots without it after the others.
+ */
 export async function stockByExpiry(
 	executor: Executor,
 	productId: string,
@@ -106,24 +119,39 @@ export async function stockByExpiry(
 ): Promise<ExpiryBalance[]> {
 	const rows = await executor
 		.select({
+			id: stockLots.id,
 			expiry: stockLots.expiry,
-			quantity: sql`sum(${stockLots.quantity})`.mapWith(Number),
-			expired: sql`coalesce(bool_or(${lotExpired(today)}), false)`.mapWith(
+			lotCode: stockLots.lotCode,
+			manufacturedOn: stockLots.manufacturedOn,
+			quantity: stockLots.quantity,
+			expired: sql`coalesce(${lotExpired(today)}, false)`.mapWith(Boolean),
+			nearExpiry: sql`coalesce(${lotNearExpiry(today)}, false)`.mapWith(
 				Boolean,
 			),
-			nearExpiry:
-				sql`coalesce(bool_or(${lotNearExpiry(today)}), false)`.mapWith(Boolean),
 		})
 		.from(stockLots)
-		.where(
-			and(eq(stockLots.productId, productId), sql`${stockLots.quantity} > 0`),
-		)
-		.groupBy(stockLots.expiry)
-		.orderBy(asc(stockLots.expiry)); // Postgres puts nulls last going up.
-	return rows.map((row) => ({
-		...row,
-		expiry: row.expiry && monthOf(row.expiry),
-	}));
+		.where(and(eq(stockLots.productId, productId), gt(stockLots.quantity, 0)))
+		.orderBy(...EXIT_ORDER); // Postgres puts nulls last going up.
+	const byExpiry = new Map<string | null, ExpiryBalance>();
+	for (const row of rows) {
+		const expiry = row.expiry && monthOf(row.expiry);
+		const group = byExpiry.get(expiry) ?? {
+			expiry,
+			quantity: 0,
+			expired: row.expired,
+			nearExpiry: row.nearExpiry,
+			lots: [],
+		};
+		group.quantity += row.quantity;
+		group.lots.push({
+			id: row.id,
+			lotCode: row.lotCode,
+			manufacturedOn: row.manufacturedOn && monthOf(row.manufacturedOn),
+			quantity: row.quantity,
+		});
+		byExpiry.set(expiry, group);
+	}
+	return [...byExpiry.values()];
 }
 
 /**
@@ -152,8 +180,19 @@ export async function openLots(
 }
 
 /**
- * The lots of these products a sale can take from on `today`, by product, in the order it takes them (estoque.md,
- * RN-EST-12): soonest expiry first, those without expiry last, and the oldest first within the same expiry.
+ * The order a sale takes lots in (estoque.md, RN-EST-12): soonest expiry first and those without expiry last, then the
+ * oldest manufacture first and those without it last, then the one that came in first. Postgres puts nulls last going
+ * up, which is what the first two want.
+ */
+const EXIT_ORDER = [
+	asc(stockLots.expiry),
+	asc(stockLots.manufacturedOn),
+	asc(stockLots.createdAt),
+	asc(stockLots.id),
+] as const;
+
+/**
+ * The lots of these products a sale can take from on `today`, by product, in the order it takes them (`EXIT_ORDER`).
  * Expired lots never sell.
  */
 export async function sellableLots(
@@ -177,12 +216,7 @@ export async function sellableLots(
 				lotSellable(today),
 			),
 		)
-		// Postgres puts nulls last going up: lots without expiry come after every dated one.
-		.orderBy(
-			asc(stockLots.expiry),
-			asc(stockLots.createdAt),
-			asc(stockLots.id),
-		);
+		.orderBy(...EXIT_ORDER);
 	return Map.groupBy(rows, (row) => row.productId);
 }
 

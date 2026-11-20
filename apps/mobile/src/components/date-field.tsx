@@ -103,10 +103,13 @@ export function DateField({
 	error,
 	minimumDate,
 	maximumDate,
+	onClear,
 }: {
 	label: string;
 	value: string;
 	onChange: (value: string) => void;
+	/** For an optional date: an "x" takes the chosen one back. */
+	onClear?: () => void;
 	mode?: DateMode;
 	placeholder?: string;
 	error?: string;
@@ -145,6 +148,7 @@ export function DateField({
 				placeholder={placeholder ?? "Escolher"}
 				error={error}
 				onPress={show}
+				onClear={value ? onClear : undefined}
 			/>
 			{/* Always mounted on iOS, so the sheet slides down when it closes. */}
 			{Platform.OS === "ios" ? (

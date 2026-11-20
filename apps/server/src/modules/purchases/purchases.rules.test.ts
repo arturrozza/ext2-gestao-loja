@@ -16,7 +16,12 @@ const product = (overrides: Partial<LockedProduct> = {}): LockedProduct => ({
 });
 
 const item = (
-	overrides: { expiry?: string | null; productId?: string } = {},
+	overrides: {
+		expiry?: string | null;
+		productId?: string;
+		lotCode?: string | null;
+		manufacturedOn?: string | null;
+	} = {},
 ) => ({
 	productId: "p1",
 	quantity: 1,
@@ -110,6 +115,45 @@ describe("assertItems", () => {
 			response: { message: "Essa validade já passou." },
 		});
 		expect(check([item({ expiry: "2026-11" })], expiring)).toBe(undefined);
+	});
+});
+
+describe("assertItems: lot number and manufacture month", () => {
+	const withExpiry = [product({ hasExpiry: true })];
+
+	it("takes a lot number on a product with expiry, and a blank one on any product", () => {
+		expect(
+			check([item({ expiry: "2027-03", lotCode: "L2301" })], withExpiry),
+		).toBeUndefined();
+		expect(check([item({ lotCode: "   " })])).toBeUndefined();
+		expect(check([item({ lotCode: null })])).toBeUndefined();
+	});
+
+	it("refuses a lot number on a product without expiry, on the line's field", () => {
+		expect(check([item(), item({ lotCode: "L2301" })])).toMatchObject({
+			code: 422,
+			response: { field: "items.1.lotCode" },
+		});
+	});
+
+	it("takes a manufacture month up to the current one, with or without expiry on the product", () => {
+		expect(check([item({ manufacturedOn: "2026-11" })])).toBeUndefined();
+		expect(check([item({ manufacturedOn: "2020-01" })])).toBeUndefined();
+		expect(
+			check(
+				[item({ expiry: "2026-11", manufacturedOn: "2026-11" })],
+				withExpiry,
+			),
+		).toBeUndefined();
+	});
+
+	it("refuses a manufacture month in the future, on the line's field", () => {
+		const future = check([item(), item({ manufacturedOn: "2026-12" })]);
+
+		expect(future).toMatchObject({
+			code: 422,
+			response: { field: "items.1.manufacturedOn" },
+		});
 	});
 });
 

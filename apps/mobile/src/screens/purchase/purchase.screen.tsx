@@ -20,6 +20,9 @@ import { CancelPurchase } from "./partials/cancel-purchase";
 function itemLine(item: PurchaseDetail["items"][number]) {
 	const parts = [`${times(item.quantity)} ${formatMoney(item.unitCost)}`];
 	if (item.expiry) parts.push(`validade ${formatExpiry(item.expiry)}`);
+	if (item.lotCode) parts.push(`lote ${item.lotCode}`);
+	if (item.manufacturedOn)
+		parts.push(`fabricação ${formatExpiry(item.manufacturedOn)}`);
 	return parts.join(" · ");
 }
 

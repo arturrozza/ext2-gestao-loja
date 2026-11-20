@@ -310,3 +310,91 @@ describe("POST /purchases/:id/cancel", () => {
 		expect(canceled.error?.value).toMatchObject({ code: "purchase_not_found" });
 	});
 });
+
+describe("lot number and manufacture month", () => {
+	it("takes them on a line and gives them back in the detail and on the product's lots", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id, { hasExpiry: true });
+		const expiry = monthOf(storeDayFrom(300));
+		const made = monthOf(storeDayFrom(-70));
+
+		const created = await api.purchases.post(
+			purchaseBody([
+				purchaseItem(product.id, {
+					quantity: 4,
+					expiry,
+					lotCode: "L2301",
+					manufacturedOn: made,
+				}),
+			]),
+			{ headers },
+		);
+		const stock = await api.products({ id: product.id }).get({ headers });
+
+		expect(created.error).toBeNull();
+		expect(created.data?.items[0]).toMatchObject({
+			lotCode: "L2301",
+			manufacturedOn: made,
+			expiry,
+		});
+		expect(stock.data?.expiries).toMatchObject([
+			{
+				expiry,
+				quantity: 4,
+				lots: [
+					{
+						id: expect.any(String),
+						lotCode: "L2301",
+						manufacturedOn: made,
+						quantity: 4,
+					},
+				],
+			},
+		]);
+	});
+
+	it("still takes a line that leaves both out", async () => {
+		const { headers, session } = await signedIn();
+		const product = await createProduct(session.store.id);
+		const {
+			lotCode: _l,
+			manufacturedOn: _m,
+			...line
+		} = purchaseItem(product.id);
+
+		const created = await api.purchases.post(purchaseBody([line]), { headers });
+
+		expect(created.error).toBeNull();
+		expect(created.data?.items[0]).toMatchObject({
+			lotCode: null,
+			manufacturedOn: null,
+		});
+	});
+
+	it("answers 422 for a lot on a product without expiry, a future manufacture, a long number and a bad month", async () => {
+		const { headers, session } = await signedIn();
+		const plain = await createProduct(session.store.id);
+		const dated = await createProduct(session.store.id, { hasExpiry: true });
+		const expiry = monthOf(storeDayFrom(300));
+		const post = (item: ReturnType<typeof purchaseItem>) =>
+			api.purchases.post(purchaseBody([item]), { headers });
+
+		const lotOnPlain = await post(purchaseItem(plain.id, { lotCode: "L1" }));
+		const future = await post(
+			purchaseItem(plain.id, { manufacturedOn: monthOf(storeDayFrom(70)) }),
+		);
+		const long = await post(
+			purchaseItem(dated.id, { expiry, lotCode: "x".repeat(41) }),
+		);
+		const badMonth = await post(
+			purchaseItem(plain.id, { manufacturedOn: "2026-13" }),
+		);
+
+		expect(lotOnPlain.error?.value).toMatchObject({ field: "items.0.lotCode" });
+		expect(future.error?.value).toMatchObject({
+			field: "items.0.manufacturedOn",
+		});
+		expect(long.error?.status).toBe(422);
+		expect(badMonth.error?.status).toBe(422);
+	});
+});

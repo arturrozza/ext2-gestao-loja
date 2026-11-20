@@ -67,6 +67,10 @@ export const purchaseItems = snakeCase.table(
 		unitCost: moneyColumn().notNull(),
 		/** First day of the expiry month ("2027-03-01" = 03/2027); null when the product has no expiry. */
 		expiry: date(),
+		/** What the supplier printed on the lot; only on a product with expiry (compras.md, RN-COM-15). */
+		lotCode: text(),
+		/** First day of the month it was made; null when not told (compras.md, RN-COM-16). */
+		manufacturedOn: date(),
 		...timestamps,
 	},
 	(table) => [
@@ -80,6 +84,10 @@ export const purchaseItems = snakeCase.table(
 		check(
 			"purchase_items_expiry_first_day",
 			sql`extract(day from ${table.expiry}) = 1`,
+		),
+		check(
+			"purchase_items_manufactured_first_day",
+			sql`extract(day from ${table.manufacturedOn}) = 1`,
 		),
 	],
 );

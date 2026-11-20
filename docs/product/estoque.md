@@ -8,7 +8,8 @@ O estoque não tem tela própria: aparece na lista e na tela de [Produtos](produ
 - **RF-EST-01.** A lista de produtos mostra, no topo, o valor total em estoque da loja.
 - **RF-EST-02.** A lista de produtos mostra a quantidade em estoque de cada produto e a situação de estoque mais
   urgente dele (sem estoque, estoque baixo, vencido ou perto de vencer).
-- **RF-EST-03.** A tela do produto mostra quantidade, custo médio, valor em estoque e a quantidade por validade.
+- **RF-EST-03.** A tela do produto mostra quantidade, custo médio, valor em estoque e a quantidade por validade, com
+  os lotes de cada validade (número do lote, fabricação e quantidade), na ordem em que saem na venda.
 - **RF-EST-04.** A tela do produto mostra o histórico de movimentações, da mais recente para a mais antiga, com tipo,
   quantidade, custo, quantidade e custo médio depois da movimentação, data, motivo e autor. A movimentação de compra ou
   de venda leva à compra ou à venda de origem.
@@ -46,8 +47,9 @@ O estoque não tem tela própria: aparece na lista e na tela de [Produtos](produ
 
 ### Saída
 
-- **RN-EST-12.** Na venda, as unidades saem primeiro da validade mais próxima, depois dos lotes sem validade, e do
-  lote mais antigo dentro da mesma validade.
+- **RN-EST-12.** Na venda, as unidades saem primeiro da validade mais próxima e, depois, dos lotes sem validade.
+  Dentro da mesma validade, e entre os lotes sem validade, saem primeiro os de fabricação mais antiga, e os lotes sem
+  fabricação informada saem depois dos que têm. Em caso de empate, sai o lote que entrou antes.
 - **RN-EST-13.** Unidades vencidas não saem na venda. Saem por ajuste, com o motivo "vencido descartado".
 
 ### Ajuste
@@ -66,6 +68,11 @@ O estoque não tem tela própria: aparece na lista e na tela de [Produtos](produ
   custo.
 - **RN-EST-22.** Um ajuste aumenta no máximo 100.000 unidades de uma vez.
 - **RN-EST-23.** Produtos arquivados podem ser ajustados.
+
+### Lotes
+
+- **RN-EST-27.** Unidades de um mesmo lote são de uma mesma compra. A tela do produto lista os lotes que ainda têm
+  unidades, agrupados por validade. O lote criado por um ajuste para cima não tem número nem fabricação.
 
 ### Correção de custo
 

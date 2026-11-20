@@ -28,6 +28,9 @@ export type LedgerScope = { storeId: string; userId: string };
 export type StockEntry = PlannedEntry & {
 	/** First day of the expiry month, or null. */
 	expiry: ISODate | null;
+	lotCode: string | null;
+	/** First day of the month it was made, or null. */
+	manufacturedOn: ISODate | null;
 	purchaseItemId: string;
 };
 
@@ -52,12 +55,14 @@ export async function recordEntries(
 	const lots = await tx
 		.insert(stockLots)
 		.values(
-			entries.map(({ productId, purchaseItemId, expiry, quantity }) => ({
+			entries.map((entry) => ({
 				storeId,
-				productId,
-				purchaseItemId,
-				expiry,
-				quantity,
+				productId: entry.productId,
+				purchaseItemId: entry.purchaseItemId,
+				expiry: entry.expiry,
+				lotCode: entry.lotCode,
+				manufacturedOn: entry.manufacturedOn,
+				quantity: entry.quantity,
 			})),
 		)
 		.returning({ id: stockLots.id, purchaseItemId: stockLots.purchaseItemId });

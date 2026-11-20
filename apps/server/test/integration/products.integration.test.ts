@@ -632,7 +632,26 @@ describe("product stock", () => {
 		const { expiries, ...withoutExpiries } = read;
 		expect(listed).toEqual(withoutExpiries);
 		expect(expiries).toEqual([
-			{ expiry: null, quantity: 20, expired: false, nearExpiry: false },
+			{
+				expiry: null,
+				quantity: 20,
+				expired: false,
+				nearExpiry: false,
+				lots: [
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 10,
+					},
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 10,
+					},
+				],
+			},
 		]);
 	});
 

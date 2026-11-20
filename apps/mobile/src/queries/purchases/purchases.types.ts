@@ -29,6 +29,8 @@ type PurchaseItem = {
 	unitCost: Money;
 	total: Money;
 	expiry: ExpiryMonth | null;
+	lotCode: string | null;
+	manufacturedOn: ExpiryMonth | null;
 };
 
 export type PurchaseDetail = PurchaseSummary & {
@@ -51,5 +53,9 @@ export type PurchaseInput = {
 		unitCost: Money;
 		/** Required when the product has expiry. */
 		expiry: ExpiryMonth | null;
+		/** What the supplier printed on the lot; only for a product with expiry (compras.md, RN-COM-15). */
+		lotCode: string | null;
+		/** The month it was made; any product, never in the future nor after the expiry (RN-COM-16). */
+		manufacturedOn: ExpiryMonth | null;
 	}[];
 };

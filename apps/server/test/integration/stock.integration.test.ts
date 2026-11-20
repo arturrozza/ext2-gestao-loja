@@ -137,7 +137,20 @@ describe("expiry states", () => {
 		await setLotsExpiry(product.id, monthFrom(-1));
 
 		expect((await ProductsService.get(storeId, product.id)).expiries).toEqual([
-			{ expiry: monthFrom(-1), quantity: 1, expired: true, nearExpiry: false },
+			{
+				expiry: monthFrom(-1),
+				quantity: 1,
+				expired: true,
+				nearExpiry: false,
+				lots: [
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 1,
+					},
+				],
+			},
 		]);
 	});
 });
@@ -156,8 +169,40 @@ describe("quantity by expiry", () => {
 		const { expiries } = await ProductsService.get(storeId, product.id);
 
 		expect(expiries).toEqual([
-			{ expiry: monthFrom(0), quantity: 2, expired: false, nearExpiry: true },
-			{ expiry: monthFrom(12), quantity: 8, expired: false, nearExpiry: false },
+			{
+				expiry: monthFrom(0),
+				quantity: 2,
+				expired: false,
+				nearExpiry: true,
+				lots: [
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 2,
+					},
+				],
+			},
+			{
+				expiry: monthFrom(12),
+				quantity: 8,
+				expired: false,
+				nearExpiry: false,
+				lots: expect.arrayContaining([
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 5,
+					},
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 3,
+					},
+				]),
+			},
 		]);
 	});
 
@@ -171,7 +216,26 @@ describe("quantity by expiry", () => {
 		]);
 
 		expect((await ProductsService.get(storeId, product.id)).expiries).toEqual([
-			{ expiry: null, quantity: 5, expired: false, nearExpiry: false },
+			{
+				expiry: null,
+				quantity: 5,
+				expired: false,
+				nearExpiry: false,
+				lots: expect.arrayContaining([
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 4,
+					},
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 1,
+					},
+				]),
+			},
 		]);
 	});
 });

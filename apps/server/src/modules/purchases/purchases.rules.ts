@@ -1,6 +1,7 @@
 import { dayProblem, type ExpiryMonth, type ISODate } from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { previewOf } from "../../lib/preview";
+import { blankToNull } from "../../lib/text";
 import type { LockedProduct } from "../products/products.lock";
 import type { PurchasesModel } from "./purchases.model";
 
@@ -50,6 +51,31 @@ function expiryProblem(
 	return null;
 }
 
+/**
+ * The lot number and the manufacture month of a line (compras.md, RN-COM-15 and RN-COM-16): the number only on a
+ * product with expiry, the month never in the future. An expiry is never a month already gone, so a manufacture month
+ * that isn't in the future can't be after it either.
+ */
+function lotProblem(
+	item: ItemInput,
+	hasExpiry: boolean,
+	currentMonth: ExpiryMonth,
+): { field: string; message: string } | null {
+	if (!hasExpiry && blankToNull(item.lotCode ?? null)) {
+		return {
+			field: "lotCode",
+			message: "Só produto com validade tem número de lote.",
+		};
+	}
+	if (item.manufacturedOn && item.manufacturedOn > currentMonth) {
+		return {
+			field: "manufacturedOn",
+			message: "A fabricação não pode ser de um mês futuro.",
+		};
+	}
+	return null;
+}
+
 /** Every line against its product (locked by the caller): the first problem answers 422 on that line's field. */
 export function assertItems(
 	items: ItemInput[],
@@ -61,6 +87,8 @@ export function assertItems(
 		assertProduct(`items.${index}.productId`, product);
 		const problem = expiryProblem(item.expiry, product.hasExpiry, currentMonth);
 		if (problem) throw invalid(`items.${index}.expiry`, problem);
+		const lot = lotProblem(item, product.hasExpiry, currentMonth);
+		if (lot) throw invalid(`items.${index}.${lot.field}`, lot.message);
 	});
 }
 
