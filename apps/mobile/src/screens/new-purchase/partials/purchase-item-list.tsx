@@ -34,6 +34,8 @@ export function PurchaseItemList({
 						quantity: errors[`items.${index}.quantity`],
 						unitCost: errors[`items.${index}.unitCost`],
 						expiry: errors[`items.${index}.expiry`],
+						lotCode: errors[`items.${index}.lotCode`],
+						manufacturedOn: errors[`items.${index}.manufacturedOn`],
 					}}
 					onChange={(patch) =>
 						update((all) =>
@@ -46,7 +48,14 @@ export function PurchaseItemList({
 					onDuplicate={() =>
 						update((all) => [
 							...all,
-							{ ...item, key: nextDraftKey(), quantity: 1, expiry: "" },
+							{
+								...item,
+								key: nextDraftKey(),
+								quantity: 1,
+								expiry: "",
+								lotCode: "",
+								manufacturedOn: "",
+							},
 						])
 					}
 				/>

@@ -246,7 +246,20 @@ describe("products routes", () => {
 			"Vencido",
 		]);
 		expect(read.data?.expiries).toEqual([
-			{ expiry: monthFrom(0), quantity: 3, expired: false, nearExpiry: true },
+			{
+				expiry: monthFrom(0),
+				quantity: 3,
+				expired: false,
+				nearExpiry: true,
+				lots: [
+					{
+						id: expect.any(String),
+						lotCode: null,
+						manufacturedOn: null,
+						quantity: 3,
+					},
+				],
+			},
 		]);
 	});
 

@@ -46,6 +46,8 @@ function draftFor(
 		quantity,
 		unitCost: product.averageCost > 0 ? moneyToInput(product.averageCost) : "",
 		expiry: "",
+		lotCode: "",
+		manufacturedOn: "",
 	};
 }
 

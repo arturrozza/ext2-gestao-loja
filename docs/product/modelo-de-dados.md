@@ -8,7 +8,7 @@ código (`apps/server/src/db/schema/`).
 - Toda entidade de negócio pertence a uma loja.
 - Toda entidade guarda a data de criação e a data da última alteração.
 - Valores em dinheiro são guardados em centavos exatos. Percentuais vão de 0% a 100%, com até duas casas decimais.
-- Validade é guardada como mês e ano.
+- Validade e fabricação são guardadas como mês e ano.
 - "Único" vale dentro da loja, salvo indicação.
 - Nenhuma entidade é apagada ([regras gerais](README.md#regras-gerais)). Cadastros têm data de arquivamento ou de
   desativação; lançamentos têm data e motivo de cancelamento.
@@ -161,6 +161,8 @@ O produto não guarda quantidade nem custo: os dois vêm dos lotes e das movimen
 | Quantidade | inteiro | sim | De 1 a 100.000 |
 | Custo unitário | dinheiro | sim | Maior ou igual a zero |
 | Validade | mês | depende | Obrigatória se o produto tem validade, recusada se não tem |
+| Número do lote | texto | não | Até 40 caracteres. Só em produto com validade |
+| Fabricação | mês | não | Não pode ser futura |
 
 Uma compra tem de 1 a 100 itens.
 
@@ -176,6 +178,8 @@ também gera um lote.
 | Produto | referência | sim | |
 | Item da compra | referência | não | A origem, quando veio de uma compra. Um lote por item |
 | Validade | mês | não | Vazia quando o produto não tem validade |
+| Número do lote | texto | não | Copiado do item da compra. Vazio no lote de um ajuste |
+| Fabricação | mês | não | Copiada do item da compra. Vazia no lote de um ajuste |
 | Quantidade | inteiro | sim | Unidades que restam no lote. Nunca negativa |
 
 ### Movimentação

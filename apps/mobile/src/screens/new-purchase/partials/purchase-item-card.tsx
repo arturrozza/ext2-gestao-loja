@@ -1,4 +1,5 @@
 import { CopyIcon } from "phosphor-react-native/src/icons/Copy";
+import { HashIcon } from "phosphor-react-native/src/icons/Hash";
 import { MoneyIcon } from "phosphor-react-native/src/icons/Money";
 import { TrashIcon } from "phosphor-react-native/src/icons/Trash";
 import { Pressable, View } from "react-native";
@@ -40,7 +41,10 @@ function ItemAction({
 	);
 }
 
-/** One purchase line: quantity, unit cost and (when the product has one) expiry month/year. */
+/**
+ * One purchase line: quantity, unit cost and, when the product has expiry, the expiry month/year and the lot number;
+ * the manufacture month is optional on any product (compras.md).
+ */
 export function PurchaseItemCard({
 	item,
 	errors,
@@ -55,6 +59,8 @@ export function PurchaseItemCard({
 		quantity?: string;
 		unitCost?: string;
 		expiry?: string;
+		lotCode?: string;
+		manufacturedOn?: string;
 	};
 	onChange: (patch: Partial<PurchaseItemDraft>) => void;
 	onRemove: () => void;
@@ -105,15 +111,37 @@ export function PurchaseItemCard({
 				</View>
 			</View>
 			{item.product.hasExpiry ? (
-				<DateField
-					label="Validade (mês/ano)"
-					mode="month"
-					value={item.expiry}
-					onChange={(expiry) => onChange({ expiry })}
-					error={errors.expiry}
-					placeholder="Escolher mês e ano"
-				/>
+				<>
+					<DateField
+						label="Validade (mês/ano)"
+						mode="month"
+						value={item.expiry}
+						onChange={(expiry) => onChange({ expiry })}
+						error={errors.expiry}
+						placeholder="Escolher mês e ano"
+					/>
+					<FormField
+						label="Número do lote (opcional)"
+						icon={HashIcon}
+						value={item.lotCode}
+						onChangeText={(lotCode) => onChange({ lotCode })}
+						error={errors.lotCode}
+						maxLength={40}
+						autoCapitalize="characters"
+						placeholder="Como está na embalagem"
+					/>
+				</>
 			) : null}
+			<DateField
+				label="Fabricação (opcional)"
+				mode="month"
+				value={item.manufacturedOn}
+				onChange={(manufacturedOn) => onChange({ manufacturedOn })}
+				onClear={() => onChange({ manufacturedOn: "" })}
+				error={errors.manufacturedOn}
+				placeholder="Escolher mês e ano"
+				maximumDate={new Date()}
+			/>
 			{errors.product || errors.quantity || errors.unitCost ? (
 				<Text className="px-1 text-destructive text-sm">
 					{errors.product ?? errors.quantity ?? errors.unitCost}

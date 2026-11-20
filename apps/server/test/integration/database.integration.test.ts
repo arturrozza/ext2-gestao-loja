@@ -192,6 +192,8 @@ describe("schema checks", () => {
 			Object.fromEntries(rows.map((row) => [row.name, row.definition])),
 		).toEqual({
 			products_base_price_positive: "CHECK ((base_price > 0))",
+			purchase_items_manufactured_first_day:
+				"CHECK ((EXTRACT(day FROM manufactured_on) = (1)::numeric))",
 			purchase_items_expiry_first_day:
 				"CHECK ((EXTRACT(day FROM expiry) = (1)::numeric))",
 			purchase_items_quantity_positive: "CHECK ((quantity > 0))",
@@ -219,6 +221,8 @@ describe("schema checks", () => {
 			sales_surcharge_non_negative: "CHECK ((surcharge >= 0))",
 			resellers_default_commission_range:
 				"CHECK (((default_commission >= 0) AND (default_commission <= 10000)))",
+			stock_lots_manufactured_first_day:
+				"CHECK ((EXTRACT(day FROM manufactured_on) = (1)::numeric))",
 			stock_lots_expiry_first_day:
 				"CHECK ((EXTRACT(day FROM expiry) = (1)::numeric))",
 			stock_lots_quantity_non_negative: "CHECK ((quantity >= 0))",

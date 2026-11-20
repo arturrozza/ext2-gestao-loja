@@ -24,7 +24,7 @@ import { users } from "./users";
  * and the average cost is value ÷ quantity, worked out when needed (docs/architecture.md).
  */
 
-/** Units of a product with the same origin and expiry. The user never sees lots, only quantity per expiry. */
+/** Units of a product with the same origin and expiry. The product screen lists them under each expiry. */
 export const stockLots = snakeCase.table(
 	"stock_lots",
 	{
@@ -39,6 +39,10 @@ export const stockLots = snakeCase.table(
 		purchaseItemId: uuid().references(() => purchaseItems.id),
 		/** First day of the expiry month; null when the product has no expiry. */
 		expiry: date(),
+		/** Copied from the purchase line; null on the lot of an adjustment. */
+		lotCode: text(),
+		/** First day of the month it was made, copied from the purchase line; null when not told. */
+		manufacturedOn: date(),
 		/** Units still in it: sales and adjustments take from it, a canceled sale gives back what it took. */
 		quantity: integer().notNull(),
 		...timestamps,
@@ -50,6 +54,10 @@ export const stockLots = snakeCase.table(
 		check(
 			"stock_lots_expiry_first_day",
 			sql`extract(day from ${table.expiry}) = 1`,
+		),
+		check(
+			"stock_lots_manufactured_first_day",
+			sql`extract(day from ${table.manufacturedOn}) = 1`,
 		),
 	],
 );

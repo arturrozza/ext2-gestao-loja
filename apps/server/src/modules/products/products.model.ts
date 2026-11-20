@@ -42,12 +42,21 @@ const product = t.Object({
 	}),
 });
 
-/** Units with the same expiry ("YYYY-MM", `null`: none). Lots stay hidden from the user (estoque.md). */
+/** One lot of an expiry: what the supplier printed on it, when it was made and what's left (estoque.md). */
+const lotBalance = t.Object({
+	id: t.String(),
+	lotCode: t.Union([t.Null(), t.String()]),
+	manufacturedOn: t.Union([t.Null(), t.String()]),
+	quantity: t.Integer(),
+});
+
+/** Units with the same expiry ("YYYY-MM", `null`: none), with their lots in the order a sale takes them. */
 const expiryBalance = t.Object({
 	expiry: t.Union([t.Null(), t.String()]),
 	quantity: t.Integer(),
 	expired: t.Boolean(),
 	nearExpiry: t.Boolean(),
+	lots: t.Array(lotBalance),
 });
 
 /** One product on its own screen: with its units by expiry, soonest first. */

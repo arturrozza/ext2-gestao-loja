@@ -92,12 +92,21 @@ export type ItemPreview = {
 	photoUrl: string | null;
 };
 
-/** Units in stock with the same expiry (`null`: no expiry). Lots stay hidden from the user. */
+/** Units of one lot still in stock (estoque.md, RN-EST-27). */
+export type LotBalance = {
+	id: string;
+	lotCode: string | null;
+	manufacturedOn: ExpiryMonth | null;
+	quantity: number;
+};
+
+/** Units in stock with the same expiry (`null`: no expiry), with their lots in the order a sale takes them. */
 export type ExpiryBalance = {
 	expiry: ExpiryMonth | null;
 	quantity: number;
 	expired: boolean;
 	nearExpiry: boolean;
+	lots: LotBalance[];
 };
 
 export type MovementType =
