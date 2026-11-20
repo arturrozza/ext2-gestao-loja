@@ -1,8 +1,8 @@
 {
 	"version": "8",
 	"dialect": "postgres",
-	"id": "3138ab04-6ddb-41cf-b4e3-d280a986c6c2",
-	"prevIds": ["c629c73a-7258-4ff5-bd4c-5bbb93dd9703"],
+	"id": "03dc9396-045d-485a-a9a7-bfadd5a69b3d",
+	"prevIds": ["57721abf-1b44-42af-a89e-d790e969c160"],
 	"ddl": [
 		{
 			"values": ["cash", "term"],
@@ -1602,12 +1602,38 @@
 		{
 			"type": "payment_method",
 			"typeSchema": "public",
-			"notNull": true,
+			"notNull": false,
 			"dimensions": 0,
 			"default": null,
 			"generated": null,
 			"identity": null,
 			"name": "payment_method",
+			"entityType": "columns",
+			"schema": "public",
+			"table": "sales"
+		},
+		{
+			"type": "date",
+			"typeSchema": null,
+			"notNull": false,
+			"dimensions": 0,
+			"default": null,
+			"generated": null,
+			"identity": null,
+			"name": "due_date",
+			"entityType": "columns",
+			"schema": "public",
+			"table": "sales"
+		},
+		{
+			"type": "date",
+			"typeSchema": null,
+			"notNull": false,
+			"dimensions": 0,
+			"default": null,
+			"generated": null,
+			"identity": null,
+			"name": "paid_at",
 			"entityType": "columns",
 			"schema": "public",
 			"table": "sales"
@@ -3878,6 +3904,27 @@
 		{
 			"value": "\"profit\" = \"revenue\" - \"products_cost\" - \"sale_costs\"",
 			"name": "sales_profit_adds_up",
+			"entityType": "checks",
+			"schema": "public",
+			"table": "sales"
+		},
+		{
+			"value": "(\"payment_condition\" = 'cash' and \"due_date\" is null and \"paid_at\" = \"date\")\n\t\t\t\tor (\"payment_condition\" = 'term' and \"due_date\" >= \"date\")",
+			"name": "sales_payment_by_condition",
+			"entityType": "checks",
+			"schema": "public",
+			"table": "sales"
+		},
+		{
+			"value": "(\"paid_at\" is null) = (\"payment_method\" is null)",
+			"name": "sales_payment_method_goes_with_paid_at",
+			"entityType": "checks",
+			"schema": "public",
+			"table": "sales"
+		},
+		{
+			"value": "\"paid_at\" is null or \"paid_at\" >= \"date\"",
+			"name": "sales_paid_not_before_sale",
 			"entityType": "checks",
 			"schema": "public",
 			"table": "sales"
