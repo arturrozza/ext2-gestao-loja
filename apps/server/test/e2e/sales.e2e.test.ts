@@ -200,6 +200,34 @@ describe("sales routes", () => {
 		expect(none.data?.total).toBe(0);
 	});
 
+	it("lists every sale when the query leaves the period and the result out", async () => {
+		const { headers, session, product } = await stocked();
+		await createSale(session, [saleItem(product.id)]);
+		await createSale(session, [saleItem(product.id, { unitPrice: 1000 })]);
+		await createSale(session, [saleItem(product.id)], {
+			date: storeDayFrom(-40),
+		});
+
+		const all = await api.sales.get({ headers, query: {} });
+		const losses = await api.sales.get({
+			headers,
+			query: { result: "loss" },
+		});
+		const profits = await api.sales.get({
+			headers,
+			query: { period: "all", result: "profit" },
+		});
+		const today = await api.sales.get({
+			headers,
+			query: { period: "today" },
+		});
+
+		expect(all.data?.total).toBe(3);
+		expect(losses.data?.total).toBe(1);
+		expect(profits.data?.total).toBe(2);
+		expect(today.data?.total).toBe(2);
+	});
+
 	it("answers 422 for a bad list query", async () => {
 		const { headers } = await signedIn();
 		// What the typed client wouldn't let through.

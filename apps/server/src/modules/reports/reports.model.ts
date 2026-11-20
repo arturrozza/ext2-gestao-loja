@@ -6,12 +6,21 @@ import {
 } from "../../lib/fields";
 import { channel } from "../sales/sales.model";
 
-/** The periods of the report (relatorios.md); `custom` takes `from` and `to`. */
-const PERIODS = ["today", "7d", "month", "last_month", "custom"] as const;
+/**
+ * The periods of the report (relatorios.md); `custom` takes `from` and `to`. Literals, not `t.UnionEnum`: that one
+ * carries its first value as a default, which Elysia would fill in when `period` is left out.
+ */
+const period = t.Union([
+	t.Literal("today"),
+	t.Literal("7d"),
+	t.Literal("month"),
+	t.Literal("last_month"),
+	t.Literal("custom"),
+]);
 
 const query = t.Object({
 	/** Left out, the current month. */
-	period: t.Optional(t.UnionEnum(PERIODS)),
+	period: t.Optional(period),
 	/** Both days of a custom period, inclusive; the day the user gave each sale. Ignored on any other period. */
 	from: t.Optional(dayField),
 	to: t.Optional(dayField),

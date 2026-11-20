@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { treaty } from "@elysia/eden";
 import { app } from "../../src/app";
-import { storeToday } from "../../src/lib/dates";
+import { monthStart, storeToday } from "../../src/lib/dates";
 import { useTestDatabase } from "../support/database";
 import { signedIn } from "../support/factories/accounts";
 import { createProduct } from "../support/factories/catalog";
@@ -25,6 +25,7 @@ describe("GET /reports", () => {
 		const { data, error } = await api.reports.get({ headers, query: {} });
 
 		expect(error).toBeNull();
+		expect(data?.from).toBe(monthStart(storeToday()));
 		expect(data?.to).toBe(storeToday());
 		expect(data?.summary).toMatchObject({
 			revenue: 20_000,

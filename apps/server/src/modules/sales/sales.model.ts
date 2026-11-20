@@ -60,11 +60,7 @@ const costOf = <F extends TProperties>(fields: F) =>
 
 const status = t.Union([t.Literal("active"), t.Literal("canceled")]);
 
-/**
- * Where a term sale stands (vendas.md, "Pagamento a prazo"): `overdue` is an unpaid one past its due date. Literals,
- * not `t.UnionEnum`: that one carries its first value as a default, which Elysia would fill in on a list query that
- * leaves the filter out.
- */
+/** Where a term sale stands (vendas.md, "Pagamento a prazo"): `overdue` is an unpaid one past its due date. */
 const paymentStatus = t.Union([
 	t.Literal("unpaid"),
 	t.Literal("overdue"),
@@ -172,13 +168,22 @@ const body = t.Object({
 	dueDate: t.Optional(t.Union([t.Null(), dayField])),
 });
 
-/** The periods the lists filter by (vendas.md), on the day the user gave each sale. */
-const SALE_PERIODS = ["today", "7d", "month", "all"] as const;
-
-export type SalePeriod = (typeof SALE_PERIODS)[number];
+/*
+ * The optional filters below are unions of literals on purpose, never `t.UnionEnum`: that one carries its first value
+ * as a default, and Elysia fills it in whenever the field is left out of the query, so a filter nobody asked for
+ * would apply (a list without `result` would show only sales with a profit).
+ */
 
 /** Today, the last 7 days (today included), this month, or every sale; on the day the user gave each sale. */
-export const salePeriodField = t.UnionEnum(SALE_PERIODS);
+export const salePeriodField = t.Union([
+	t.Literal("today"),
+	t.Literal("7d"),
+	t.Literal("month"),
+	t.Literal("all"),
+]);
+
+/** The periods the lists filter by (vendas.md). */
+export type SalePeriod = UnwrapSchema<typeof salePeriodField>;
 
 const listQuery = t.Object({
 	/** Left out, every sale. */
@@ -186,7 +191,7 @@ const listQuery = t.Object({
 	/** Any of these; none means every channel. */
 	channels: t.Optional(t.Array(channel, { maxItems: CHANNELS.length })),
 	/** Only sales with a profit (above zero), or only those with a loss. */
-	result: t.Optional(t.UnionEnum(["profit", "loss"])),
+	result: t.Optional(t.Union([t.Literal("profit"), t.Literal("loss")])),
 	/** Only the term sales (not canceled) in this payment status. */
 	payment: t.Optional(paymentStatus),
 	/** The sales of one customer, or of one reseller. */
