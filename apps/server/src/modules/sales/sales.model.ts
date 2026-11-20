@@ -60,6 +60,17 @@ const costOf = <F extends TProperties>(fields: F) =>
 
 const status = t.Union([t.Literal("active"), t.Literal("canceled")]);
 
+/**
+ * Where a term sale stands (vendas.md, "Pagamento a prazo"): `overdue` is an unpaid one past its due date. Literals,
+ * not `t.UnionEnum`: that one carries its first value as a default, which Elysia would fill in on a list query that
+ * leaves the filter out.
+ */
+const paymentStatus = t.Union([
+	t.Literal("unpaid"),
+	t.Literal("overdue"),
+	t.Literal("paid"),
+]);
+
 const summary = t.Object({
 	id: t.String(),
 	/** "Venda #12". */
@@ -69,6 +80,8 @@ const summary = t.Object({
 	createdAt: t.String(),
 	channel,
 	status,
+	/** Only for a term sale that isn't canceled; `null` for a cash sale or a canceled one. */
+	paymentStatus: t.Union([t.Null(), paymentStatus]),
 	customerName: t.Union([t.Null(), t.String()]),
 	resellerName: t.Union([t.Null(), t.String()]),
 	/** In cents: with the discount and the surcharge. */
@@ -113,7 +126,12 @@ const detail = t.Object({
 	/** Profit ÷ revenue; `null` when the revenue is zero. */
 	margin: t.Union([t.Null(), t.Number()]),
 	paymentCondition,
-	paymentMethod,
+	/** `null` while a term sale is unpaid. */
+	paymentMethod: t.Union([t.Null(), paymentMethod]),
+	/** The day a term sale is expected to be paid; `null` on a cash sale. */
+	dueDate: t.Union([t.Null(), t.String()]),
+	/** The day it was paid; `null` while a term sale is unpaid. */
+	paidAt: t.Union([t.Null(), t.String()]),
 	customerId: t.Union([t.Null(), t.String()]),
 	resellerId: t.Union([t.Null(), t.String()]),
 	author: t.String(),
@@ -148,7 +166,10 @@ const body = t.Object({
 		maxItems: MAX_SALE_COSTS,
 	}),
 	paymentCondition,
-	paymentMethod,
+	/** Required on a cash sale, refused on a term one: it's given when the sale is paid. */
+	paymentMethod: t.Union([t.Null(), paymentMethod]),
+	/** Required on a term sale, refused on a cash one. Left out counts as `null`. */
+	dueDate: t.Optional(t.Union([t.Null(), dayField])),
 });
 
 /** The periods the lists filter by (vendas.md), on the day the user gave each sale. */
@@ -166,6 +187,8 @@ const listQuery = t.Object({
 	channels: t.Optional(t.Array(channel, { maxItems: CHANNELS.length })),
 	/** Only sales with a profit (above zero), or only those with a loss. */
 	result: t.Optional(t.UnionEnum(["profit", "loss"])),
+	/** Only the term sales (not canceled) in this payment status. */
+	payment: t.Optional(paymentStatus),
 	/** The sales of one customer, or of one reseller. */
 	customerId: t.Optional(t.String({ format: "uuid" })),
 	resellerId: t.Optional(t.String({ format: "uuid" })),
@@ -189,12 +212,19 @@ const cancelBody = t.Object({
 	reason: t.String({ minLength: 1, maxLength: 500, pattern: "\\S" }),
 });
 
+/** Marking a term sale as paid (vendas.md, RF-VEN-19): the day it was paid and how. */
+const payBody = t.Object({
+	paidAt: dayField,
+	paymentMethod,
+});
+
 export const SalesModel = {
 	page,
 	listQuery,
 	detail,
 	body,
 	cancelBody,
+	payBody,
 	params: t.Object({ id: t.String({ format: "uuid" }) }),
 };
 
@@ -207,4 +237,6 @@ export type SalesModel = {
 	detail: UnwrapSchema<typeof SalesModel.detail>;
 	body: UnwrapSchema<typeof SalesModel.body>;
 	cancelBody: UnwrapSchema<typeof SalesModel.cancelBody>;
+	payBody: UnwrapSchema<typeof SalesModel.payBody>;
+	paymentStatus: UnwrapSchema<typeof paymentStatus>;
 };

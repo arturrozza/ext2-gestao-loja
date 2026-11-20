@@ -1,4 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
+import { CalendarCheckIcon } from "phosphor-react-native/src/icons/CalendarCheck";
+import { CalendarDotsIcon } from "phosphor-react-native/src/icons/CalendarDots";
 import { CreditCardIcon } from "phosphor-react-native/src/icons/CreditCard";
 import { StorefrontIcon } from "phosphor-react-native/src/icons/Storefront";
 import { UserIcon } from "phosphor-react-native/src/icons/User";
@@ -17,10 +19,11 @@ import { ScreenLayout } from "@/components/screen-layout";
 import { ScreenQuery } from "@/components/screen-query";
 import { ThumbStack } from "@/components/thumb-stack";
 import { Text } from "@/components/ui/text";
-import { formatMoment } from "@/lib/dates";
+import { formatDate, formatMoment } from "@/lib/dates";
 import {
 	PAYMENT_CONDITIONS,
 	PAYMENT_METHODS,
+	PAYMENT_STATUSES,
 	plural,
 	SALE_CHANNELS,
 	SALE_COST_KINDS,
@@ -35,6 +38,7 @@ import type {
 import { useSale } from "@/queries/sales/use-sales";
 import { CancelSale } from "./partials/cancel-sale";
 import { MoneySplit } from "./partials/money-split";
+import { PaySale } from "./partials/pay-sale";
 
 function costLabel(cost: SaleCost) {
 	const name = cost.label || SALE_COST_KINDS[cost.kind];
@@ -132,6 +136,50 @@ function SaleItemRow({ item }: { item: SaleItem }) {
 	);
 }
 
+/** "Pix · À vista", or "A prazo · Vencida" with the due date and, once paid, the day and the method. */
+function PaymentRows({ sale }: { sale: SaleDetail }) {
+	const method = sale.paymentMethod
+		? PAYMENT_METHODS[sale.paymentMethod]
+		: null;
+	if (sale.paymentCondition === "cash") {
+		return (
+			<InfoRow
+				label="Pagamento"
+				icon={CreditCardIcon}
+				value={[method, PAYMENT_CONDITIONS.cash].filter(Boolean).join(" · ")}
+			/>
+		);
+	}
+	return (
+		<>
+			<InfoRow
+				label="Pagamento"
+				icon={CreditCardIcon}
+				value={[
+					PAYMENT_CONDITIONS.term,
+					sale.paymentStatus ? PAYMENT_STATUSES[sale.paymentStatus] : null,
+				]
+					.filter(Boolean)
+					.join(" · ")}
+			/>
+			{sale.dueDate ? (
+				<InfoRow
+					label="Data prevista"
+					icon={CalendarDotsIcon}
+					value={formatDate(sale.dueDate)}
+				/>
+			) : null}
+			{sale.paidAt ? (
+				<InfoRow
+					label="Paga em"
+					icon={CalendarCheckIcon}
+					value={[formatDate(sale.paidAt), method].filter(Boolean).join(" · ")}
+				/>
+			) : null}
+		</>
+	);
+}
+
 function Details({ sale }: { sale: SaleDetail }) {
 	return (
 		<ListCard title="Detalhes">
@@ -148,11 +196,7 @@ function Details({ sale }: { sale: SaleDetail }) {
 				/>
 			) : null}
 			<InfoRow label="Cliente" icon={UserIcon} value={sale.customerName} />
-			<InfoRow
-				label="Pagamento"
-				icon={CreditCardIcon}
-				value={`${PAYMENT_METHODS[sale.paymentMethod]} · ${PAYMENT_CONDITIONS[sale.paymentCondition]}`}
-			/>
+			<PaymentRows sale={sale} />
 			<InfoRow
 				label="Registrada por"
 				icon={UserCircleIcon}
@@ -182,6 +226,7 @@ export function SaleScreen() {
 					</ListCard>
 					<MoneySplit data={breakdownOf(sale)} />
 					<Details sale={sale} />
+					<PaySale sale={sale} />
 					<CancelSale sale={sale} />
 				</ScreenLayout>
 			)}

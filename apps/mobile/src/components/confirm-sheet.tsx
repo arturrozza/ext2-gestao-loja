@@ -12,6 +12,7 @@ export function ConfirmSheet({
 	title,
 	description,
 	confirmLabel,
+	confirmVariant = "destructive",
 	pending = false,
 	error,
 	onConfirm,
@@ -22,6 +23,8 @@ export function ConfirmSheet({
 	title: string;
 	description: string;
 	confirmLabel: string;
+	/** `default` when the action isn't a loss (marking a sale as paid). */
+	confirmVariant?: "destructive" | "default";
 	pending?: boolean;
 	error?: unknown;
 	onConfirm: () => void;
@@ -37,7 +40,7 @@ export function ConfirmSheet({
 						{errorMessage(error)}
 					</Text>
 				) : null}
-				<Button variant="destructive" loading={pending} onPress={onConfirm}>
+				<Button variant={confirmVariant} loading={pending} onPress={onConfirm}>
 					<Text>{confirmLabel}</Text>
 				</Button>
 				<Button variant="outline" onPress={onClose}>

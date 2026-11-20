@@ -1,4 +1,4 @@
-import { storeToday } from "../../../src/lib/dates";
+import { addDays, storeToday } from "../../../src/lib/dates";
 import type { AuthSession } from "../../../src/modules/auth/auth.model";
 import type { SalesModel } from "../../../src/modules/sales/sales.model";
 import { SalesService } from "../../../src/modules/sales/sales.service";
@@ -33,6 +33,19 @@ export function saleBody(
 		paymentCondition: "cash",
 		paymentMethod: "pix",
 		...overrides,
+	};
+}
+
+/** What turns a sale into a term one for this customer: due in `inDays` days, with no method until it's paid. */
+export function termSale(
+	customerId: string,
+	inDays = 7,
+): Partial<Omit<Body, "items">> {
+	return {
+		paymentCondition: "term",
+		paymentMethod: null,
+		customerId,
+		dueDate: addDays(storeToday(), inDays),
 	};
 }
 

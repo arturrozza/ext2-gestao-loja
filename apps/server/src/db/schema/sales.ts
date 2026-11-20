@@ -26,10 +26,10 @@ export const saleChannel = pgEnum("sale_channel", [
 	"reseller",
 ]);
 
-/** "À vista" or "A prazo": informative only, nothing is controlled from it (vendas.md). */
+/** "À vista" (born paid) or "A prazo" (paid later, all at once); vendas.md, RN-VEN-09. */
 export const paymentCondition = pgEnum("payment_condition", ["cash", "term"]);
 
-/** Informative only (vendas.md). */
+/** How the sale was paid (vendas.md). */
 export const paymentMethod = pgEnum("payment_method", [
 	"pix",
 	"cash",
@@ -70,7 +70,12 @@ export const sales = snakeCase.table(
 		resellerId: uuid().references(() => resellers.id),
 		customerId: uuid().references(() => customers.id),
 		paymentCondition: paymentCondition().notNull(),
-		paymentMethod: paymentMethod().notNull(),
+		/** Set together with `paidAt`: on a cash sale when it's entered, on a term sale when it's paid. */
+		paymentMethod: paymentMethod(),
+		/** The day a term sale is expected to be paid; only on term sales. Overdue is worked out, never stored. */
+		dueDate: date(),
+		/** The day it was paid: the sale's day for a cash sale, empty while a term sale is unpaid (vendas.md). */
+		paidAt: date(),
 		/** On the whole sale, in cents. */
 		discount: moneyColumn().notNull(),
 		surcharge: moneyColumn().notNull(),
@@ -105,6 +110,20 @@ export const sales = snakeCase.table(
 		check(
 			"sales_profit_adds_up",
 			sql`${table.profit} = ${table.revenue} - ${table.productsCost} - ${table.saleCosts}`,
+		),
+		// A cash sale is paid on its day and has no due date; a term sale is due on or after its day.
+		check(
+			"sales_payment_by_condition",
+			sql`(${table.paymentCondition} = 'cash' and ${table.dueDate} is null and ${table.paidAt} = ${table.date})
+				or (${table.paymentCondition} = 'term' and ${table.dueDate} >= ${table.date})`,
+		),
+		check(
+			"sales_payment_method_goes_with_paid_at",
+			sql`(${table.paidAt} is null) = (${table.paymentMethod} is null)`,
+		),
+		check(
+			"sales_paid_not_before_sale",
+			sql`${table.paidAt} is null or ${table.paidAt} >= ${table.date}`,
 		),
 	],
 );

@@ -102,6 +102,7 @@ export function useNewSaleForm(settings: StoreSettings) {
 		costs: initialCosts(settings),
 		paymentCondition: "cash",
 		paymentMethod: undefined,
+		dueDate: "",
 		customer: null,
 	} satisfies SaleFormValues);
 	const { values } = form;

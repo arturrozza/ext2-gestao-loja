@@ -56,11 +56,13 @@ function NewSaleForm({ settings }: { settings: StoreSettings }) {
 				<CollapsibleSection
 					title="Cliente e data"
 					summary={`${values.customer?.name ?? "Sem cliente"} · ${values.date}`}
-					forceOpen={Boolean(errors.date)}
+					forceOpen={Boolean(errors.date || errors.customer)}
 				>
 					<CustomerField
 						value={values.customer}
 						onChange={(customer) => set("customer", customer)}
+						required={values.paymentCondition === "term"}
+						error={errors.customer ?? errors.customerId}
 					/>
 					<DateField
 						label="Data da venda"

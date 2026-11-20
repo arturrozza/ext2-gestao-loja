@@ -46,9 +46,14 @@ function NewCustomer({
 export function CustomerField({
 	value,
 	onChange,
+	required = false,
+	error,
 }: {
 	value: Picked | null;
 	onChange: (customer: Picked | null) => void;
+	/** A term sale needs the customer who'll pay (vendas.md, RN-VEN-10). */
+	required?: boolean;
+	error?: string;
 }) {
 	const [picking, setPicking] = useState(false);
 	const [search, setSearch] = useState("");
@@ -68,7 +73,8 @@ export function CustomerField({
 			<PickerTrigger
 				icon={UserIcon}
 				value={value?.name ?? null}
-				placeholder="Sem cliente (opcional)"
+				placeholder={required ? "Escolher cliente" : "Sem cliente (opcional)"}
+				error={error}
 				accessibilityLabel={
 					value ? `Cliente: ${value.name}` : "Escolher cliente"
 				}

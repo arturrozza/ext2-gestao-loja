@@ -8,7 +8,11 @@ import { api, request } from "@/lib/api";
 import { isApiError } from "@/lib/api-error";
 import { useInvalidateBusinessData } from "@/queries/invalidate";
 import { pagedQuery } from "@/queries/pagination";
-import type { SaleInput, SaleListFilters } from "./sales.types";
+import type {
+	SaleInput,
+	SaleListFilters,
+	SalePaymentInput,
+} from "./sales.types";
 
 const salesKeys = {
 	all: ["sales"] as const,
@@ -28,6 +32,7 @@ export function useSales(filters: SaleListFilters) {
 						period: filters.period,
 						channels: filters.channels,
 						result: filters.result ?? undefined,
+						payment: filters.payment ?? undefined,
 						customerId: filters.customerId,
 						resellerId: filters.resellerId,
 						cursor,
@@ -68,6 +73,27 @@ export function useCancelSale(id: string) {
 	return useMutation({
 		mutationFn: (reason: string) =>
 			request(api.sales({ id }).cancel.post({ reason })),
+		onSettled: invalidate,
+	});
+}
+
+/**
+ * Paying a term sale, or taking the payment back, changes only its payment (vendas.md, RN-VEN-32): the totals stay.
+ * Refetched also after a refusal (already paid, canceled...): the screen shows the sale as it is now.
+ */
+export function usePaySale(id: string) {
+	const invalidate = useInvalidateBusinessData();
+	return useMutation({
+		mutationFn: (input: SalePaymentInput) =>
+			request(api.sales({ id }).pay.post(input)),
+		onSettled: invalidate,
+	});
+}
+
+export function useUnpaySale(id: string) {
+	const invalidate = useInvalidateBusinessData();
+	return useMutation({
+		mutationFn: () => request(api.sales({ id }).unpay.post({})),
 		onSettled: invalidate,
 	});
 }

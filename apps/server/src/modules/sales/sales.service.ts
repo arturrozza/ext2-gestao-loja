@@ -26,13 +26,17 @@ import type { SalesModel } from "./sales.model";
 import { findSale, listSales, notFound } from "./sales.queries";
 import {
 	alreadyCanceled,
+	assertCanPay,
+	assertCanUnpay,
 	assertChannel,
 	assertItems,
 	assertParty,
+	assertPayment,
 	assertSaleDate,
 	assertUniqueProducts,
 	computeTotals,
 	type PartyState,
+	type PayableSale,
 	type PlannedLine,
 	planLines,
 	type SaleTotals,
@@ -100,6 +104,9 @@ async function insertSale(
 				customerId: input.customerId,
 				paymentCondition: input.paymentCondition,
 				paymentMethod: input.paymentMethod,
+				dueDate: input.dueDate ?? null,
+				// A cash sale is paid the day it happened.
+				paidAt: input.paymentCondition === "cash" ? input.date : null,
 				discount: input.discount,
 				surcharge: input.surcharge,
 				revenue: totals.revenue,
@@ -110,6 +117,30 @@ async function insertSale(
 			.returning({ id: sales.id }),
 	);
 	return id;
+}
+
+/**
+ * A sale of the store as it stands for a payment change, locked `FOR UPDATE` so two changes can't cross; 404 when it
+ * isn't the store's.
+ */
+async function lockPayable(
+	tx: Transaction,
+	storeId: string,
+	id: string,
+): Promise<PayableSale> {
+	const [row] = await tx
+		.select({
+			paymentCondition: sales.paymentCondition,
+			date: sales.date,
+			canceledAt: sales.canceledAt,
+			paidAt: sales.paidAt,
+		})
+		.from(sales)
+		.where(and(eq(sales.id, id), eq(sales.storeId, storeId)))
+		.for("update");
+	if (!row) throw notFound();
+	const { canceledAt, ...sale } = row;
+	return { ...sale, canceled: canceledAt !== null };
 }
 
 /** A planned line with the id its row gets, made here so its ledger exit can point at it. */
@@ -251,6 +282,7 @@ export const SalesService = {
 		const today = storeToday();
 		assertSaleDate(input.date, today);
 		assertChannel(input);
+		assertPayment(input);
 		assertUniqueProducts(input.items);
 		return audited(session.user.id, async (tx) => {
 			const ids = input.items.map((item) => item.productId);
@@ -272,6 +304,39 @@ export const SalesService = {
 			await insertCosts(tx, storeId, saleId, totals.costs);
 			await recordSaleExits(tx, { storeId, userId: session.user.id }, lines);
 			return findSale(tx, storeId, saleId);
+		});
+	},
+
+	/**
+	 * Marks a term sale as paid, all at once, on the day and with the method given (vendas.md, RF-VEN-19). It changes
+	 * nothing of the revenue, costs or profit (RN-VEN-32).
+	 */
+	pay(
+		session: AuthSession,
+		id: string,
+		input: SalesModel["payBody"],
+	): Promise<SalesModel["detail"]> {
+		const storeId = session.store.id;
+		return audited(session.user.id, async (tx) => {
+			assertCanPay(await lockPayable(tx, storeId, id), input, storeToday());
+			await tx
+				.update(sales)
+				.set({ paidAt: input.paidAt, paymentMethod: input.paymentMethod })
+				.where(and(eq(sales.id, id), eq(sales.storeId, storeId)));
+			return findSale(tx, storeId, id);
+		});
+	},
+
+	/** Takes a term sale back to unpaid: the day and the method of the payment are cleared (RF-VEN-20). */
+	unpay(session: AuthSession, id: string): Promise<SalesModel["detail"]> {
+		const storeId = session.store.id;
+		return audited(session.user.id, async (tx) => {
+			assertCanUnpay(await lockPayable(tx, storeId, id));
+			await tx
+				.update(sales)
+				.set({ paidAt: null, paymentMethod: null })
+				.where(and(eq(sales.id, id), eq(sales.storeId, storeId)));
+			return findSale(tx, storeId, id);
 		});
 	},
 

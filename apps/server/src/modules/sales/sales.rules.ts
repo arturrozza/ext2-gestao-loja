@@ -1,4 +1,10 @@
-import { addDays, dayProblem, type ISODate, monthStart } from "../../lib/dates";
+import {
+	addDays,
+	dayProblem,
+	type ISODate,
+	isRealDay,
+	monthStart,
+} from "../../lib/dates";
 import { httpError } from "../../lib/http-error";
 import { MAX_CENTS, percentOf } from "../../lib/money";
 import type { LockedProduct } from "../products/products.lock";
@@ -18,6 +24,7 @@ import type { SalePeriod, SalesModel } from "./sales.model";
 
 type Body = SalesModel["body"];
 type ItemInput = Body["items"][number];
+type PayBody = SalesModel["payBody"];
 
 const invalid = (field: string | undefined, message: string, code: string) =>
 	httpError(422, { code, message, ...(field ? { field } : {}) });
@@ -33,6 +40,75 @@ export function assertSaleDate(date: ISODate, today: ISODate): void {
 		);
 	}
 	if (problem) throw invalid("date", "Confira a data da venda.", "validation");
+}
+
+/**
+ * How the sale is paid (vendas.md, RN-VEN-09 and RN-VEN-10). A cash sale gives the method and has no due date. A term
+ * sale gives a customer and a due date that isn't before the sale, and the method waits for the payment.
+ */
+export function assertPayment(input: Body): void {
+	if (input.paymentCondition === "cash") assertCashPayment(input);
+	else assertTermPayment(input);
+}
+
+function assertCashPayment({ paymentMethod, dueDate }: Body): void {
+	if (!paymentMethod) {
+		throw invalid(
+			"paymentMethod",
+			"Escolha a forma de pagamento.",
+			"validation",
+		);
+	}
+	if (dueDate) {
+		throw invalid(
+			"dueDate",
+			"Venda à vista não tem data prevista de pagamento.",
+			"validation",
+		);
+	}
+}
+
+function assertTermPayment({
+	paymentMethod,
+	dueDate,
+	customerId,
+	date,
+}: Body): void {
+	if (!customerId) {
+		throw invalid(
+			"customerId",
+			"Escolha o cliente da venda a prazo.",
+			"validation",
+		);
+	}
+	if (paymentMethod) {
+		throw invalid(
+			"paymentMethod",
+			"A forma de pagamento fica para quando a venda for paga.",
+			"validation",
+		);
+	}
+	if (!dueDate) {
+		throw invalid(
+			"dueDate",
+			"Informe a data prevista de pagamento.",
+			"validation",
+		);
+	}
+	if (!isRealDay(dueDate)) {
+		throw invalid(
+			"dueDate",
+			"Confira a data prevista de pagamento.",
+			"validation",
+		);
+	}
+	if (dueDate < date) {
+		throw invalid(
+			"dueDate",
+			"A data prevista não pode ser antes da venda.",
+			"validation",
+		);
+	}
 }
 
 /** The reseller goes with the reseller channel, and only with it (revendedoras.md). */
@@ -255,6 +331,94 @@ export type DayTotals = {
 /** Profit ÷ revenue; `null` without revenue (a sale fully discounted). */
 export function marginOf(profit: number, revenue: number): number | null {
 	return revenue > 0 ? profit / revenue : null;
+}
+
+/** What decides a sale's payment status (vendas.md, RN-VEN-29 and RN-VEN-33). */
+export type PaymentFacts = {
+	paymentCondition: "cash" | "term";
+	canceled: boolean;
+	dueDate: ISODate | null;
+	paidAt: ISODate | null;
+};
+
+/**
+ * Paid, unpaid or overdue (an unpaid one whose due date has passed) for a term sale; `null` for a cash sale and for a
+ * canceled one. Worked out on every read, never stored.
+ */
+export function paymentStatusOf(
+	{ paymentCondition, canceled, dueDate, paidAt }: PaymentFacts,
+	today: ISODate,
+): SalesModel["paymentStatus"] | null {
+	if (paymentCondition === "cash" || canceled) return null;
+	if (paidAt) return "paid";
+	return dueDate && dueDate < today ? "overdue" : "unpaid";
+}
+
+/** A sale as read to change its payment. */
+export type PayableSale = {
+	paymentCondition: "cash" | "term";
+	date: ISODate;
+	canceled: boolean;
+	paidAt: ISODate | null;
+};
+
+const paymentConflict = (code: string, message: string) =>
+	httpError(409, { code, message });
+
+/** Only a term sale that isn't canceled has a payment to change (RN-VEN-30, RN-VEN-31 and RN-VEN-33). */
+function assertTracksPayment({
+	paymentCondition,
+	canceled,
+}: PayableSale): void {
+	if (canceled) {
+		throw paymentConflict(
+			"sale_canceled",
+			"Venda cancelada não tem pagamento a controlar.",
+		);
+	}
+	if (paymentCondition === "cash") {
+		throw paymentConflict(
+			"sale_not_term",
+			"Só venda a prazo tem pagamento a controlar.",
+		);
+	}
+}
+
+/** Marking as paid (RN-VEN-30): once, on a day that isn't in the future nor before the sale. */
+export function assertCanPay(
+	sale: PayableSale,
+	{ paidAt }: PayBody,
+	today: ISODate,
+): void {
+	assertTracksPayment(sale);
+	if (sale.paidAt) {
+		throw paymentConflict("sale_already_paid", "Essa venda já foi paga.");
+	}
+	const problem = dayProblem(paidAt, today);
+	if (problem === "future") {
+		throw invalid(
+			"paidAt",
+			"A data do pagamento não pode ser no futuro.",
+			"validation",
+		);
+	}
+	if (problem || paidAt < sale.date) {
+		throw invalid(
+			"paidAt",
+			problem
+				? "Confira a data do pagamento."
+				: "O pagamento não pode ser antes da venda.",
+			"validation",
+		);
+	}
+}
+
+/** Back to unpaid (RN-VEN-31): only a paid one. */
+export function assertCanUnpay(sale: PayableSale): void {
+	assertTracksPayment(sale);
+	if (!sale.paidAt) {
+		throw paymentConflict("sale_not_paid", "Essa venda ainda não foi paga.");
+	}
 }
 
 /** A sale is canceled once (vendas.md, "Cancelamento"). */

@@ -205,6 +205,12 @@ describe("schema checks", () => {
 			sale_items_unit_cost_non_negative: "CHECK ((unit_cost >= 0))",
 			sale_items_unit_price_non_negative: "CHECK ((unit_price >= 0))",
 			sales_discount_non_negative: "CHECK ((discount >= 0))",
+			sales_paid_not_before_sale:
+				"CHECK (((paid_at IS NULL) OR (paid_at >= date)))",
+			sales_payment_by_condition:
+				"CHECK ((((payment_condition = 'cash'::payment_condition) AND (due_date IS NULL) AND (paid_at = date)) OR ((payment_condition = 'term'::payment_condition) AND (due_date >= date))))",
+			sales_payment_method_goes_with_paid_at:
+				"CHECK (((paid_at IS NULL) = (payment_method IS NULL)))",
 			sales_profit_adds_up:
 				"CHECK ((profit = ((revenue - products_cost) - sale_costs)))",
 			sales_reseller_on_reseller_channel:

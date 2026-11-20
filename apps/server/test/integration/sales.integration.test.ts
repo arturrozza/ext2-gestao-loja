@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../../src/db";
 import {
+	auditLog,
 	saleCosts,
 	saleItemLots,
 	saleItems,
@@ -29,6 +30,7 @@ import {
 	createSale,
 	saleBody,
 	saleItem,
+	termSale,
 } from "../support/factories/sales";
 import { monthFrom, setLotsExpiry } from "../support/factories/stock";
 
@@ -654,5 +656,299 @@ describe("SalesService.cancel", () => {
 		expect((await SalesService.get(session.store.id, sale.id)).status).toBe(
 			"active",
 		);
+	});
+});
+
+describe("sales paid in cash or on term", () => {
+	const rowOf = async (id: string) =>
+		(await db.select().from(sales).where(eq(sales.id, id)))[0];
+
+	it("enters a cash sale paid on its day, and a term sale unpaid with its due date and no method", async () => {
+		const { session, storeId, product } = await stocked();
+		const customer = await createCustomer(storeId);
+
+		const cash = await createSale(session, [saleItem(product.id)], {
+			date: storeDayFrom(-2),
+		});
+		const term = await createSale(
+			session,
+			[saleItem(product.id)],
+			termSale(customer.id, 7),
+		);
+
+		expect(await rowOf(cash.id)).toMatchObject({
+			paymentMethod: "pix",
+			dueDate: null,
+			paidAt: storeDayFrom(-2),
+		});
+		expect(await rowOf(term.id)).toMatchObject({
+			paymentCondition: "term",
+			paymentMethod: null,
+			dueDate: storeDayFrom(7),
+			paidAt: null,
+			customerId: customer.id,
+		});
+		expect(term).toMatchObject({
+			paymentStatus: "unpaid",
+			paymentMethod: null,
+			paidAt: null,
+		});
+		expect(cash.paymentStatus).toBeNull();
+	});
+
+	it("refuses a term sale without a customer, and a customer that's archived, and enters nothing", async () => {
+		const { session, storeId, product } = await stocked();
+		const archived = await createCustomer(storeId, { archived: true });
+
+		// The rules run before the service's first await, so a refusal throws instead of rejecting.
+		const refused = async (overrides: Parameters<typeof createSale>[2]) => {
+			try {
+				return await createSale(session, [saleItem(product.id)], overrides);
+			} catch (reason) {
+				return reason;
+			}
+		};
+
+		const noCustomer = await refused({
+			...termSale(archived.id),
+			customerId: null,
+		});
+		const archivedCustomer = await refused(termSale(archived.id));
+
+		expect(noCustomer).toMatchObject({
+			code: 422,
+			response: { field: "customerId" },
+		});
+		expect(archivedCustomer).toMatchObject({
+			code: 422,
+			response: { code: "customer_archived" },
+		});
+		expect(await db.select().from(sales)).toEqual([]);
+	});
+
+	it("keeps the database from holding a payment the rules refuse", async () => {
+		const { session, storeId, product } = await stocked();
+		const customer = await createCustomer(storeId);
+		const term = await createSale(
+			session,
+			[saleItem(product.id)],
+			termSale(customer.id),
+		);
+		const cash = await createSale(session, [saleItem(product.id)]);
+		const write = (id: string, values: Partial<typeof sales.$inferInsert>) =>
+			db
+				.update(sales)
+				.set(values)
+				.where(eq(sales.id, id))
+				.then(
+					() => "written",
+					() => "refused",
+				);
+		const day = storeDayFrom(0);
+
+		expect(await write(term.id, { paymentMethod: "pix" })).toBe("refused");
+		expect(await write(term.id, { paidAt: day })).toBe("refused");
+		expect(await write(term.id, { dueDate: storeDayFrom(-3) })).toBe("refused");
+		expect(await write(cash.id, { dueDate: day })).toBe("refused");
+		expect(await write(cash.id, { paidAt: null, paymentMethod: null })).toBe(
+			"refused",
+		);
+	});
+});
+
+describe("SalesService.pay and unpay", () => {
+	const refusal = (call: () => Promise<unknown>) =>
+		call().catch((reason) => reason);
+
+	async function termSaleOf(daysDue = 7) {
+		const signed = await stocked();
+		const customer = await createCustomer(signed.storeId);
+		const sale = await createSale(
+			signed.session,
+			[saleItem(signed.product.id, { quantity: 2 })],
+			{ date: storeDayFrom(-5), ...termSale(customer.id, daysDue) },
+		);
+		return { ...signed, sale };
+	}
+
+	it("pays the whole sale on a day with a method, without touching revenue, costs or profit", async () => {
+		const { session, sale } = await termSaleOf();
+
+		const paid = await SalesService.pay(session, sale.id, {
+			paidAt: storeDayFrom(-1),
+			paymentMethod: "debit",
+		});
+
+		expect(paid).toMatchObject({
+			paymentStatus: "paid",
+			paymentMethod: "debit",
+			paidAt: storeDayFrom(-1),
+			revenue: sale.revenue,
+			productsCost: sale.productsCost,
+			saleCosts: sale.saleCosts,
+			profit: sale.profit,
+		});
+	});
+
+	it("takes a paid sale back to unpaid, clearing the day and the method, and logs both changes", async () => {
+		const { session, sale } = await termSaleOf();
+		await SalesService.pay(session, sale.id, {
+			paidAt: storeDayFrom(0),
+			paymentMethod: "pix",
+		});
+
+		const unpaid = await SalesService.unpay(session, sale.id);
+
+		expect(unpaid).toMatchObject({
+			paymentStatus: "unpaid",
+			paymentMethod: null,
+			paidAt: null,
+		});
+		const log = await db
+			.select()
+			.from(auditLog)
+			.where(eq(auditLog.recordId, sale.id))
+			.orderBy(asc(auditLog.createdAt), asc(auditLog.id));
+		expect(log.map((entry) => entry.action)).toEqual([
+			"insert",
+			"update",
+			"update",
+		]);
+		expect(log[2]).toMatchObject({
+			userId: session.user.id,
+			oldValues: expect.objectContaining({ payment_method: "pix" }),
+			newValues: expect.objectContaining({ payment_method: null }),
+		});
+	});
+
+	it("shows an unpaid sale as overdue the day after its due date", async () => {
+		const { session, storeId, product } = await stocked();
+		const customer = await createCustomer(storeId);
+		const late = await createSale(session, [saleItem(product.id)], {
+			date: storeDayFrom(-10),
+			...termSale(customer.id, -1),
+		});
+		const lastDay = await createSale(session, [saleItem(product.id)], {
+			date: storeDayFrom(-10),
+			...termSale(customer.id, 0),
+		});
+
+		expect((await SalesService.get(storeId, late.id)).paymentStatus).toBe(
+			"overdue",
+		);
+		expect((await SalesService.get(storeId, lastDay.id)).paymentStatus).toBe(
+			"unpaid",
+		);
+	});
+
+	it("refuses a day in the future or before the sale, and changes nothing", async () => {
+		const { session, storeId, sale } = await termSaleOf();
+		const pay = (paidAt: string) =>
+			refusal(() =>
+				SalesService.pay(session, sale.id, { paidAt, paymentMethod: "pix" }),
+			);
+
+		expect(await pay(storeDayFrom(1))).toMatchObject({
+			code: 422,
+			response: { field: "paidAt" },
+		});
+		expect(await pay(storeDayFrom(-6))).toMatchObject({
+			code: 422,
+			response: { field: "paidAt" },
+		});
+		expect((await SalesService.get(storeId, sale.id)).paidAt).toBeNull();
+	});
+
+	it("refuses to pay a cash, canceled or already paid sale, and to unpay one that isn't paid", async () => {
+		const { session, storeId, product, sale } = await termSaleOf();
+		const input = { paidAt: storeDayFrom(0), paymentMethod: "pix" } as const;
+		const cash = await createSale(session, [saleItem(product.id)]);
+		const canceled = await createSale(session, [saleItem(product.id)], {
+			...termSale((await createCustomer(storeId)).id),
+		});
+		await cancelSale(session, canceled.id);
+		await SalesService.pay(session, sale.id, input);
+
+		expect(
+			await refusal(() => SalesService.pay(session, cash.id, input)),
+		).toMatchObject({ code: 409, response: { code: "sale_not_term" } });
+		expect(
+			await refusal(() => SalesService.pay(session, canceled.id, input)),
+		).toMatchObject({ code: 409, response: { code: "sale_canceled" } });
+		expect(
+			await refusal(() => SalesService.pay(session, sale.id, input)),
+		).toMatchObject({ code: 409, response: { code: "sale_already_paid" } });
+		expect(
+			await refusal(() => SalesService.unpay(session, canceled.id)),
+		).toMatchObject({ code: 409, response: { code: "sale_canceled" } });
+		expect(
+			await refusal(() => SalesService.unpay(session, cash.id)),
+		).toMatchObject({ code: 409, response: { code: "sale_not_term" } });
+		await SalesService.unpay(session, sale.id);
+		expect(
+			await refusal(() => SalesService.unpay(session, sale.id)),
+		).toMatchObject({ code: 409, response: { code: "sale_not_paid" } });
+		expect((await SalesService.get(storeId, sale.id)).paidAt).toBeNull();
+	});
+
+	it("pays once when two payments come at the same time", async () => {
+		const { session, sale } = await termSaleOf();
+		const pay = (paymentMethod: "pix" | "credit") =>
+			SalesService.pay(session, sale.id, {
+				paidAt: storeDayFrom(0),
+				paymentMethod,
+			}).catch((reason) => reason);
+
+		const results = await Promise.all([pay("pix"), pay("credit")]);
+
+		expect(results.filter((r) => r?.paymentStatus === "paid")).toHaveLength(1);
+		expect(results.filter((r) => r?.code === 409)).toHaveLength(1);
+	});
+
+	it("answers 404 for a sale of another store", async () => {
+		const { sale } = await termSaleOf();
+		const other = await signedIn();
+
+		const pay = await refusal(() =>
+			SalesService.pay(other.session, sale.id, {
+				paidAt: storeDayFrom(0),
+				paymentMethod: "pix",
+			}),
+		);
+		const unpay = await refusal(() =>
+			SalesService.unpay(other.session, sale.id),
+		);
+
+		expect(pay).toMatchObject({
+			code: 404,
+			response: { code: "sale_not_found" },
+		});
+		expect(unpay).toMatchObject({ code: 404 });
+	});
+
+	it("lists term sales by payment status, never the canceled ones", async () => {
+		const { session, storeId, product } = await stocked(20);
+		const customer = await createCustomer(storeId);
+		const enter = (daysDue: number) =>
+			createSale(session, [saleItem(product.id)], {
+				date: storeDayFrom(-10),
+				...termSale(customer.id, daysDue),
+			});
+		const unpaid = await enter(5);
+		const overdue = await enter(-2);
+		const paid = await enter(-2);
+		const canceled = await enter(-2);
+		await createSale(session, [saleItem(product.id)]);
+		await SalesService.pay(session, paid.id, {
+			paidAt: storeDayFrom(-1),
+			paymentMethod: "pix",
+		});
+		await cancelSale(session, canceled.id);
+		const idsOf = async (payment: "unpaid" | "overdue" | "paid") =>
+			(await SalesService.list(storeId, { payment })).items.map((s) => s.id);
+
+		expect(await idsOf("unpaid")).toEqual([unpaid.id]);
+		expect(await idsOf("overdue")).toEqual([overdue.id]);
+		expect(await idsOf("paid")).toEqual([paid.id]);
 	});
 });
